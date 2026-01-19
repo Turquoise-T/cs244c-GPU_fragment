@@ -1,0 +1,40 @@
+# Modernized Gavel simulator dependencies for macOS
+# Original: src/scheduler/requirements.txt
+# Tested working on Python 3.9.6 / macOS
+
+# Core - LP solver and numerics
+cvxpy>=1.4
+numpy>=1.24
+scipy>=1.10
+
+# Data handling and visualization
+pandas>=2.0
+matplotlib>=3.7
+seaborn>=0.12
+
+# Utilities
+dill
+filelock
+func_timeout
+glog
+psutil
+setproctitle
+preconditions
+
+# ML utilities (updated from sklearn)
+scikit-learn
+
+# Image processing (may be needed for some workloads)
+pillow
+opencv-python
+
+# Required for scheduler (discovered during setup)
+matrix_completion
+grpcio
+grpcio-tools
+
+# Skipped for simulation-only:
+# - torch, torchvision (only needed for workload profiling, not simulation)
+# - numa (Linux-only, not needed for simulation)
+# - gym, gym[atari] (RL policies only)
+# - annoy (approximate nearest neighbors, likely not needed)
