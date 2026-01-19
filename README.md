@@ -97,3 +97,32 @@ Results: average JCT=36721.82, utilization=0.14, makespan=215530.17
 | `policies/` | Policy implementations (what we'll extend) |
 | `scripts/sweeps/` | Entry points for running experiments |
 | `simulation_throughputs.json` | Job throughput profiles by GPU type |
+
+## Contributing
+
+### Branch Naming
+
+```
+<member>/<feature>
+```
+
+Examples:
+- `member1/alibaba-trace-loader`
+- `member2/gavel-fgd-integration`
+
+### Commit Messages
+
+Use clear, imperative messages:
+```
+Add Alibaba trace parser
+Fix JCT calculation for partial GPU jobs
+Update simulation to handle GPU sharing
+```
+
+### Pull Request Process
+
+1. Create a feature branch from `main`
+2. Make your changes with clear commits
+3. Push and open a PR against `main`
+4. Request review from at least one teammate
+5. Squash and merge once approved
