@@ -2,6 +2,7 @@
 
 CS244C Project - Gavel Validation
 Date: 2026-01-23
+Updated: 2026-01-23 (post-Codex review)
 
 ## Overview
 
@@ -14,54 +15,82 @@ This document describes our approach to annotating Gavel's source code with inli
 3. **Education**: Future readers can understand the "why" without switching between paper and code
 4. **Discrepancy Detection**: Surface any differences between paper and implementation
 
+## Design Decisions
+
+Based on Codex review and discussion:
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Quote style | **Verbatim** | Exact text for validation, no interpretation drift |
+| Tag format | **Compact** | `# PAPER[§X.Y]` - grep-friendly, minimal footprint |
+| Sidecar file | **None** | Everything inline, self-contained |
+| Execution order | **Code flow** | Follow runtime path: scheduler → policy → policies |
+| JSON files | **Separate doc** | `docs/data-schema.md` to avoid polluting data |
+| Equation scope | **Implemented + key definitions** | Mark definitions with `[def]` |
+| Copyright | **Fair use** | Public repo, educational commentary |
+
 ## Annotation Format
 
+### Python Files
+
+**Function-level annotation:**
 ```python
-# ══════════════════════════════════════════════════════════════════════════════
-# PAPER REFERENCE: Section X.Y - [Section Title]
-# ══════════════════════════════════════════════════════════════════════════════
-# "[Exact quote from paper providing intuition]"
-#
-# Equation/Algorithm:
-#   [Mathematical formulation or pseudocode from paper]
-#
-# Constraints:
-#   [Any constraints mentioned in paper]
-# ══════════════════════════════════════════════════════════════════════════════
-def function_name(self, ...):
-    # PAPER: "[Inline quote for specific implementation detail]"
-    implementation_code_here
+# PAPER[§4.1] "MaximizeX min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)"
+# PAPER[§4.1] Constraints: 0 <= X_mj <= 1, Σ_j X_mj <= 1, Σ_m X_mj * scale_factor_m <= num_workers_j
+def get_allocation(self, unflattened_throughputs, scale_factors, ...):
+    # PAPER[§4.1] "weighted max-min fairness policy with per-user weights w_m"
+    ...
 ```
 
-### Annotation Elements
+**Definition annotation:**
+```python
+# PAPER[§3.1|def] "effective throughput: time-weighted average throughput across accelerators"
+# PAPER[§3.1|def] throughput(m,X) = Σ_j T_mj * X_mj
+def get_effective_throughputs(self, X, T):
+    ...
+```
 
-| Element | Purpose | Example |
-|---------|---------|---------|
-| Section header | Link to paper location | `Section 4.1 - Max-Min Fairness` |
-| Block quote | Intuition/motivation | `"The classical LAS policy implements..."` |
-| Equation | Mathematical formulation | `MaximizeX min_m (1/w_m) * throughput(m,X)` |
-| Constraints | Validity conditions | `0 <= X_mj <= 1` |
-| Inline comment | Line-level mapping | `# PAPER: "priorities are updated as rounds complete"` |
-| Discrepancy note | Implementation differences | `# NOTE: Paper says X, code does Y because...` |
+**Discrepancy annotation:**
+```python
+# NOTE: Paper says "6-minute rounds" but code uses configurable `round_duration` parameter
+```
+
+**Investigation needed:**
+```python
+# TODO[§5]: Unclear how lease renewal interacts with priority computation
+```
+
+### Annotation Tag Reference
+
+| Tag | Purpose | Example |
+|-----|---------|---------|
+| `# PAPER[§X.Y]` | Direct quote/equation from section | `# PAPER[§4.1] "max-min fairness over..."` |
+| `# PAPER[§X.Y\|def]` | Definition (conceptual, not always implemented) | `# PAPER[§3.1\|def] "effective throughput..."` |
+| `# PAPER[§X.Y\|alg]` | Algorithm reference | `# PAPER[§5\|alg] Algorithm 1: SCHEDULE_JOBS` |
+| `# PAPER[§X.Y\|eq]` | Equation reference | `# PAPER[§4.1\|eq] Eq. 1: constraint formulation` |
+| `# NOTE:` | Implementation differs from paper | `# NOTE: Paper says X, code does Y` |
+| `# TODO[§X.Y]:` | Needs investigation | `# TODO[§5]: verify round duration logic` |
 
 ## File Mapping
 
-### Core Algorithm Files (Full Annotation)
+### Execution Order (Code Flow)
 
-| Priority | File | Paper Section | Key Concepts |
-|----------|------|---------------|--------------|
-| 1 | `policy.py` | §3.1 | Effective throughput, allocation matrix X, constraints |
-| 2 | `max_min_fairness.py` | §4.1 | LAS policy, weighted fairness, optimization problem |
-| 3 | `max_min_fairness_water_filling.py` | §4.3 | Hierarchical policies, water filling algorithm |
-| 4 | `finish_time_fairness.py` | §4.2 | Themis ρ metric, finish-time optimization |
-| 5 | `fifo.py` | §4.2 | FIFO as throughput maximization |
-| 6 | `min_total_duration.py` | §4.2 | Makespan minimization |
-| 7 | `max_sum_throughput.py` | §4.2 | Cost minimization, SLO constraints |
-| 8 | `scheduler.py` | §5 | Round-based mechanism, Algorithm 1, priority computation |
+Files are annotated following the runtime execution path:
+
+| Order | File | Paper Section | Key Concepts |
+|-------|------|---------------|--------------|
+| 1 | `scheduler.py` | §5 | Round-based mechanism, Algorithm 1, priority computation |
+| 2 | `policy.py` | §3.1 | Effective throughput, allocation matrix X, constraints |
+| 3 | `max_min_fairness.py` | §4.1 | LAS policy, weighted fairness, optimization problem |
+| 4 | `max_min_fairness_water_filling.py` | §4.3 | Hierarchical policies, water filling algorithm |
+| 5 | `finish_time_fairness.py` | §4.2 | Themis ρ metric, finish-time optimization |
+| 6 | `fifo.py` | §4.2 | FIFO as throughput maximization |
+| 7 | `min_total_duration.py` | §4.2 | Makespan minimization |
+| 8 | `max_sum_throughput.py` | §4.2 | Cost minimization, SLO constraints |
 | 9 | `throughput_estimator.py` | §6 | Matrix completion, fingerprinting |
 | 10 | `job_id_pair.py` | §3.1 | Space sharing job combinations |
 
-### Supporting Files (Key Section Annotation)
+### Supporting Files
 
 | File | Paper Section | Key Concepts |
 |------|---------------|--------------|
@@ -75,7 +104,7 @@ def function_name(self, ...):
 | `utils.py` | §3.1 | Placement sensitivity helpers |
 | `worker.py` | §5 | Worker state management |
 
-### Baseline Comparison Files (Light Annotation)
+### Baseline Comparison Files
 
 | File | Paper Section | Purpose |
 |------|---------------|---------|
@@ -83,12 +112,15 @@ def function_name(self, ...):
 | `gandiva.py` | §7.3, §8 | Gandiva baseline for comparison |
 | `max_min_fairness_strategy_proof.py` | §4.4 | Strategy proofness extension |
 
-### Data Files (Document Schema)
+### Data Files
+
+Documented in `docs/data-schema.md` (separate file):
 
 | File | Paper Section | Contents |
 |------|---------------|----------|
 | `simulation_throughputs.json` | §3.1, Table 2 | Throughput matrix T for simulation |
 | `physical_cluster_throughputs.json` | §7.1 | Throughput matrix T for physical cluster |
+| `traces/msr/cluster_specs.json` | §7.1 | Cluster configuration |
 
 ## Paper-to-Code Concept Mapping
 
@@ -149,52 +181,52 @@ def function_name(self, ...):
 
 ## Execution Plan
 
-### Phase 1: Core Abstraction (policy.py)
+### Phase 1: Core Mechanism (scheduler.py)
+- [ ] Add Algorithm 1 pseudocode from paper
+- [ ] Document priority computation formula
+- [ ] Add round-based allocation logic
+- [ ] Document job placement strategy
+
+### Phase 2: Core Abstraction (policy.py)
 - [ ] Add effective throughput definition and equations
 - [ ] Document allocation matrix X structure
 - [ ] Document all three constraints
 - [ ] Add space sharing extension formulas
 
-### Phase 2: Primary Policy (max_min_fairness.py)
+### Phase 3: Primary Policy (max_min_fairness.py)
 - [ ] Add LAS objective function
 - [ ] Document X^equal normalization
 - [ ] Add scale factor adjustment for distributed jobs
 - [ ] Document constraint formulation in cvxpy
 
-### Phase 3: Other Policies
+### Phase 4: Other Policies
+- [ ] `max_min_fairness_water_filling.py` - Water filling algorithm
 - [ ] `finish_time_fairness.py` - Themis ρ metric
 - [ ] `fifo.py` - Priority-weighted throughput
 - [ ] `min_total_duration.py` - Makespan objective
 - [ ] `max_sum_throughput.py` - Cost objective
 
-### Phase 4: Hierarchical (max_min_fairness_water_filling.py)
-- [ ] Document water filling algorithm
-- [ ] Add entity/job weight handling
-- [ ] Document bottleneck detection MILP
-
-### Phase 5: Scheduling Mechanism (scheduler.py)
-- [ ] Add Algorithm 1 pseudocode
-- [ ] Document priority computation
-- [ ] Add round-based allocation logic
-- [ ] Document job placement strategy
+### Phase 5: Throughput Estimation
+- [ ] `throughput_estimator.py` - Matrix completion
+- [ ] `job_id_pair.py` - Space sharing combinations
 
 ### Phase 6: Supporting Components
-- [ ] `throughput_estimator.py` - Matrix completion
 - [ ] `gavel_iterator.py` - Application API
-- [ ] `job_id_pair.py` - Space sharing combinations
-- [ ] `job.py`, `lease.py` - State management
+- [ ] `job.py`, `job_table.py`, `lease.py` - State management
+- [ ] `utils.py`, `worker.py` - Helpers
 
-### Phase 7: Baselines and Data
+### Phase 7: Documentation
+- [ ] Create `docs/data-schema.md` for JSON files
 - [ ] `allox.py`, `gandiva.py` - Baseline descriptions
-- [ ] `simulation_throughputs.json` - Schema documentation
 
 ## Success Criteria
 
-1. **Complete Coverage**: All 22 files have appropriate annotations
-2. **Equation Accuracy**: Every paper equation appears in the relevant code file
-3. **Discrepancy Documentation**: Any differences between paper and code are noted
+1. **Complete Coverage**: All 22 Python files have appropriate annotations
+2. **Equation Accuracy**: All implemented equations + key definitions appear in code
+3. **Discrepancy Documentation**: Any differences between paper and code are noted with `# NOTE:`
 4. **Validation Ready**: Annotations enable claim-by-claim verification
 5. **Self-Documenting**: New reader can understand algorithm from code + comments alone
+6. **Data Documentation**: `docs/data-schema.md` documents all JSON file schemas
 
 ## Verification Checklist
 
@@ -209,9 +241,18 @@ After annotation, verify these paper claims are traceable to code:
 - [ ] Round duration balances accuracy vs overhead (§5)
 - [ ] Heterogeneity-aware placement improves throughput (§3.1)
 
+## Paper Reference
+
+- **Paper**: "Heterogeneity-Aware Cluster Scheduling Policies for Deep Learning Workloads"
+- **Authors**: Narayanan, Santhanam, Kazhamiaka, Phanishayee, Zaharia
+- **Venue**: OSDI 2020
+- **Version**: USENIX open access PDF
+
 ## Notes
 
-- Verbosity level: Moderate (equations + surrounding context paragraph)
+- Verbosity: Verbatim quotes for validation accuracy
+- Format: Compact `# PAPER[§X.Y]` tags
 - Preserve existing code comments where relevant
 - Use `# NOTE:` prefix for implementation differences
-- Use `# TODO:` prefix for unclear mappings needing investigation
+- Use `# TODO[§X.Y]:` prefix for unclear mappings needing investigation
+- Public repo: Fair use for educational commentary applies
