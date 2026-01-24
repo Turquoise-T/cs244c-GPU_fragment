@@ -1,3 +1,5 @@
+# PAPER[§5] "Lease: specifies max_steps and max_duration for a scheduling round"
+# PAPER[§5] "Jobs receive leases that bound their execution within each round"
 class Lease:
     def __init__(self, max_steps, max_duration):
         self._max_steps = max_steps
