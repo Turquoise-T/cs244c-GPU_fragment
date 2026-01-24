@@ -7,6 +7,9 @@ import numpy as np
 from policy import Policy, PolicyWithPacking
 from proportional import ProportionalPolicy
 
+# PAPER[§4.1] "MaximizeX min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)"
+# PAPER[§4.1] "LAS (Least Attained Service) prioritizes jobs with less accumulated service"
+# PAPER[§4.1|def] X^equal = proportional_throughputs (equal time share baseline)
 class MaxMinFairnessPolicy(Policy):
 
     def __init__(self, solver):
@@ -32,6 +35,7 @@ class MaxMinFairnessPolicy(Policy):
             cluster_spec)
 
 
+# PAPER[§4.1] MaxMinFairness_Perf: heterogeneity-aware variant using actual throughputs
 class MaxMinFairnessPolicyWithPerf(Policy):
 
     def __init__(self, solver):
@@ -62,10 +66,12 @@ class MaxMinFairnessPolicyWithPerf(Policy):
                                        1.0 / proportional_throughputs.reshape((m, 1)))
 
         x = cp.Variable(throughputs.shape)
+        # PAPER[§4.1] "scale_factor adjustment: distributed jobs counted as scale_factor jobs"
         # Multiply throughputs by scale_factors to ensure that scale_factor
         # is taken into account while allocating times to different jobs.
         # A job run on 1 GPU should receive `scale_factor` more time than
         # a job run on `scale_factor` GPUs if throughputs are equal.
+        # PAPER[§4.1|eq] Objective: Maximize min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)
         objective = cp.Maximize(
             cp.min(cp.sum(cp.multiply(
                 np.multiply(throughputs * priority_weights.reshape((m, 1)),
