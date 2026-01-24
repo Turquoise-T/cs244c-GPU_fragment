@@ -5,6 +5,9 @@ import numpy as np
 
 from policy import Policy
 
+# PAPER[§4.1|def] "X^equal: equal time share baseline allocation"
+# PAPER[§4.1] "Each job receives equal fraction of each worker type"
+# PAPER[§4.1] "Used to normalize effective throughput in fairness policies"
 class IsolatedPolicy(Policy):
 
     def __init__(self):

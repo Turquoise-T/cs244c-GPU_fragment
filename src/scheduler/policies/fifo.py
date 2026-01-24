@@ -7,6 +7,9 @@ import random
 import job_id_pair
 from policy import Policy, PolicyWithPacking
 
+# PAPER[§4.2] "FIFO: process jobs in arrival order"
+# PAPER[§4.2|eq] "MaximizeX Σ_m throughput(m,X)/throughput(m,X^fastest) * (M-m)"
+# PAPER[§4.2] "Equivalent to throughput maximization with arrival-order priority"
 class FIFOPolicy(Policy):
     def __init__(self, mode='base', seed=None, packing_threshold=1.5):
         self._name = 'FIFO'
