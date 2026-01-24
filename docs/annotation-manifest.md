@@ -2,7 +2,7 @@
 
 Generated: 2026-01-24
 
-Total annotations: 69
+Total annotations: 73
 
 ## Summary by Section
 
@@ -20,13 +20,13 @@ Total annotations: 69
 
 ### Core Scheduler
 - `scheduler.py` (11 annotations) - Round-based scheduling, Algorithm 1, priority computation
-- `policy.py` (7 annotations) - Base policy with constraints
-- `throughput_estimator.py` (5 annotations) - Matrix completion
+- `policy.py` (8 annotations) - Base policy with constraints
+- `throughput_estimator.py` (6 annotations) - Matrix completion
 
 ### Fairness Policies
-- `max_min_fairness.py` (6 annotations) - LAS objective
+- `max_min_fairness.py` (7 annotations) - Max-min fairness objective
 - `max_min_fairness_water_filling.py` (8 annotations) - Water filling algorithm
-- `finish_time_fairness.py` (6 annotations) - Themis rho metric
+- `finish_time_fairness.py` (7 annotations) - Themis rho metric
 - `isolated.py` (3 annotations) - X^equal baseline
 
 ### Other Policies
