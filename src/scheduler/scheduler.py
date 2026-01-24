@@ -54,6 +54,8 @@ BASE_JOB_PORT = 60570
 MAX_PORT = 65535
 
 class Scheduler:
+    # PAPER[§5] "Gavel uses a round-based scheduling mechanism where each round lasts 6 minutes"
+    # PAPER[§5|def] time_per_iteration=360 (default) corresponds to 6-minute scheduling rounds
 
     # TODO: Make assign_SLOs a configurable parameter from scripts.
     def __init__(self, policy, simulate=False, throughputs_file=None,
@@ -711,6 +713,8 @@ class Scheduler:
                         num_gpus=unused_workers, worker_type=worker_type,
                         num_active_jobs=len(self._jobs)))
 
+    # PAPER[§5] "strided worker assignment to minimize number of servers used"
+    # PAPER[§5] Jobs sorted by scale_factor (largest first) to reduce fragmentation
     def _assign_workers_to_job(self, job_id, scale_factor, worker_type,
                                worker_state, worker_assignments):
         """Assign workers to jobs.
@@ -763,6 +767,9 @@ class Scheduler:
                 self._running_jobs.add(single_job_id)
 
     # @preconditions(lambda self: self._simulate or self._scheduler_lock.locked())
+    # PAPER[§5|alg] Algorithm 1: SCHEDULE_JOBS
+    # PAPER[§5] "greedily selects jobs in decreasing order of priority until all workers are assigned"
+    # PAPER[§5] Jobs sorted by (priority, deficit, allocation) for tie-breaking
     def _schedule_jobs_on_workers_helper(self, worker_types):
         """Greedily selects the jobs to run in the next round by iterating
            through the job list in sorted priority order.
@@ -855,6 +862,8 @@ class Scheduler:
 
 
     # @preconditions(lambda self: self._simulate or self._scheduler_lock.locked())
+    # PAPER[§5] "jobs that were running in the previous round are given priority on the same workers"
+    # PAPER[§5] "this minimizes preemption overhead through lease extensions"
     def _schedule_jobs_on_workers(self):
         """Attempts to schedule jobs on as many alive workers as possible.
 
@@ -2355,6 +2364,9 @@ class Scheduler:
                     break
 
     # @preconditions(lambda self: self._simulate or self._scheduler_lock.locked())
+    # PAPER[§5] "priority of job m on worker type j is X_mj / fraction_of_time_received_mj"
+    # PAPER[§5] "jobs with higher priority are scheduled first"
+    # PAPER[§5] Priority = allocation / fraction_received; new jobs get allocation * 1e9
     def _update_priorities(self):
         """Updates each per-worker priority data structure.
 
