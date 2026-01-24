@@ -8,7 +8,8 @@ import numpy as np
 from policy import Policy, PolicyWithPacking
 from proportional import ProportionalPolicy
 
-
+# PAPER[§4.3] "Hierarchical max-min fairness using water filling algorithm"
+# PAPER[§4.3] "Iteratively solve LP until all jobs are bottlenecked"
 class WaterFillingAlgorithm:
 
     def __init__(self, priority_reweighting_policies):
@@ -17,6 +18,8 @@ class WaterFillingAlgorithm:
         self._lp = None
         self._milp = None
 
+    # PAPER[§4.3|def] "entity_weights w_s: weight assigned to each entity (user/group)"
+    # PAPER[§4.3] "job weights w_m^job distributed within entity based on reweighting policy"
     def _compute_priority_weights(self, entity_weights, priority_weights, entity_to_job_mapping,
                                   final_normalized_effective_throughputs, job_ids):
         returned_priority_weights = {}
@@ -151,6 +154,8 @@ class WaterFillingAlgorithm:
 
         return x.value, self._lp_objective.value, mask
 
+    # PAPER[§4.3] "bottleneck detection: jobs that cannot improve without hurting others"
+    # PAPER[§4.3] "uses MILP to find jobs at their maximum achievable throughput"
     def _get_bottleneck_jobs(self, job_ids, priority_weights,
                              proportional_throughputs,
                              scale_factors_array, m, n,
@@ -232,6 +237,8 @@ class WaterFillingAlgorithm:
 
         return z.value
 
+    # PAPER[§4.3|alg] "Water filling: iteratively raise allocation until jobs bottleneck"
+    # PAPER[§4.3] "Each iteration: solve LP, find bottlenecked jobs, freeze them, repeat"
     def _run_get_allocation_iterations(self, job_ids, m, n,
                                        proportional_throughputs,
                                        scale_factors_array,
