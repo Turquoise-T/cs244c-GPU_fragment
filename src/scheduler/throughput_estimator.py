@@ -12,6 +12,8 @@ DEFAULT_MATRIX_COMPLETION_MU = 1e-2
 def cosine_distance(a, b):
     return 1.0 - np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
+# PAPER[§6] "Throughput estimation using matrix completion and fingerprinting"
+# PAPER[§6] "Match unknown jobs to reference job types using partial measurements"
 class ThroughputEstimator:
     def __init__(self, oracle_throughputs, worker_types, job_types,
                  num_reference_job_types, profiling_percentage, seed=0,
@@ -79,6 +81,9 @@ class ThroughputEstimator:
                         self._normalized_throughputs[true_job_type_idx][offset]
         return profiled_jobs
 
+    # PAPER[§6] "Fingerprinting: match job to reference using partial throughput profile"
+    # PAPER[§6] "Matrix completion fills in unmeasured throughput values"
+    # PAPER[§6] "Cosine similarity finds closest reference job type"
     def match_job_to_reference_job(self, true_job_type):
         """Uses matrix completion to match a job to a reference job type.
 
