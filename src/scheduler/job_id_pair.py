@@ -1,5 +1,7 @@
 import hashlib
 
+# PAPER[§3.1] "Space sharing: multiple jobs can share a single accelerator"
+# PAPER[§3.1] "JobIdPair represents either a single job or a pair of co-located jobs"
 class JobIdPair():
 
     def __init__(self, job0, job1):
@@ -76,6 +78,7 @@ class JobIdPair():
                              'single job id')
         return self._job0 in other._as_set
 
+    # PAPER[§3.1] "is_pair() returns True for space-shared job combinations"
     def is_pair(self):
         return self._is_pair
 

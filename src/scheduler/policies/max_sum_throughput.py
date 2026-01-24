@@ -6,6 +6,9 @@ import numpy as np
 
 from policy import Policy, PolicyWithPacking
 
+# PAPER[§4.2] "Cost minimization: maximize throughput per unit cost"
+# PAPER[§4.2|eq] "MaximizeX Σ_m throughput(m,X) / Σ_m(Σ_j cost_j * X_mj)"
+# PAPER[§4.2] "Supports SLO constraints for job completion deadlines"
 class ThroughputSumWithPerf(Policy):
 
     def __init__(self, solver):

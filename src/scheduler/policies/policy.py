@@ -6,6 +6,8 @@ import numpy as np
 
 import job_id_pair
 
+# PAPER[§3.1|def] "allocation matrix X where X_mj = fraction of time job m spends on accelerator j"
+# PAPER[§3.1|def] "effective throughput: throughput(m,X) = Σ_j T_mj * X_mj"
 class Policy:
 
     def __init__(self, solver='ECOS'):
@@ -16,6 +18,7 @@ class Policy:
     def name(self):
         return self._name
 
+    # PAPER[§3.1|def] "scale_factor s_m: number of workers needed for distributed training"
     def scale_factors_array(self, scale_factors, job_ids, m, n):
         scale_factors_array = np.zeros((m, n))
         for i in range(m):
@@ -53,6 +56,9 @@ class Policy:
                 d[job_ids[i]][worker_types[j]] = m[i][j]
         return d
 
+    # PAPER[§3.1|eq] Constraint (1): 0 <= X_mj <= 1
+    # PAPER[§3.1|eq] Constraint (2): Σ_j X_mj <= 1 (job cannot use more than 100% of time)
+    # PAPER[§3.1|eq] Constraint (3): Σ_m X_mj * scale_factor_m <= num_workers_j (capacity)
     def get_base_constraints(self, x, scale_factors_array):
         """Return base constraints."""
         return [
@@ -160,6 +166,8 @@ class PolicyWithPacking(Policy):
                 d[job_id_combinations[i]][worker_types[j]] = m[i][j]
         return d
 
+    # PAPER[§3.1|eq] Same constraints as Policy but extended for job packing (space sharing)
+    # PAPER[§3.1] "space sharing: multiple jobs share the same GPU in a time-multiplexed manner"
     def get_base_constraints(self, x, single_job_ids,
                              scale_factors_array, relevant_combinations):
         """Return base constraints."""

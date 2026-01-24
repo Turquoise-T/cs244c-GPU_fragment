@@ -17,10 +17,13 @@ from runtime.rpc import iterator_client
 logging.getLogger('filelock').setLevel(logging.CRITICAL)
 
 INFINITY = (1e9)
+# PAPER[§5] "Jobs request lease renewal at 75% of lease completion"
 LEASE_UPDATE_FRACTION = 0.75
 LOG_FORMAT = '[{asctime}] [{event}] [{status}] {message}'
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
+# PAPER[§5] "GavelIterator wraps PyTorch DataLoader to enforce lease-based execution"
+# PAPER[§5] "Runtime component that communicates with scheduler for lease renewal"
 class GavelIterator:
     def __init__(self, data_loader, checkpoint_dir, load_checkpoint_func,
                  save_checkpoint_func, synthetic_data=False,
@@ -92,6 +95,7 @@ class GavelIterator:
             self._time_until_next_lease_update <= 0):
             self._update_lease()
 
+        # PAPER[§5] "Lease expiration triggers job preemption for round-based scheduling"
         # Check if the lease has expired.
         lease_expired = (self._duration >= self._lease.max_duration or
                          self._steps >= self._lease.max_steps)
