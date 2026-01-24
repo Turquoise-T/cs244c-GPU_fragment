@@ -8,8 +8,8 @@ from policy import Policy, PolicyWithPacking
 from proportional import ProportionalPolicy
 
 # PAPER[§4.1] "MaximizeX min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)"
-# PAPER[§4.1] "LAS (Least Attained Service) prioritizes jobs with less accumulated service"
-# PAPER[§4.1|def] X^equal = proportional_throughputs (equal time share baseline)
+# PAPER[§4.1] "Max-min fairness: maximize minimum normalized throughput across jobs"
+# PAPER[§4.1|def] "throughput(m,X^equal) = proportional_throughputs (baseline for normalization)"
 class MaxMinFairnessPolicy(Policy):
 
     def __init__(self, solver):
@@ -24,6 +24,7 @@ class MaxMinFairnessPolicy(Policy):
         if throughputs is None: return None
         (job_ids, worker_types) = index
 
+        # PAPER[§4.1] "Heterogeneity-agnostic variant: sets all throughputs to 1.0"
         new_unflattened_throughputs = {}
         for job_id in unflattened_throughputs:
             new_unflattened_throughputs[job_id] = {}

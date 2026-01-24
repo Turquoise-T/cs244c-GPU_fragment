@@ -68,6 +68,7 @@ class ThroughputEstimator:
             assert((self._normalized_throughputs == \
                     self._reference_throughputs).all())
 
+    # PAPER[§6] "Partial profiling: measure subset of throughputs based on profiling_percentage"
     def _profile_jobs(self, true_job_type):
         true_job_type_idx = self._job_types.index(true_job_type)
         profiled_jobs = {}
@@ -83,7 +84,7 @@ class ThroughputEstimator:
 
     # PAPER[§6] "Fingerprinting: match job to reference using partial throughput profile"
     # PAPER[§6] "Matrix completion fills in unmeasured throughput values"
-    # PAPER[§6] "Cosine similarity finds closest reference job type"
+    # PAPER[§6] "Cosine distance (1 - similarity) finds closest reference job type"
     def match_job_to_reference_job(self, true_job_type):
         """Uses matrix completion to match a job to a reference job type.
 

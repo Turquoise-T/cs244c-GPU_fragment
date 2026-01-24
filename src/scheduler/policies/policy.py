@@ -18,6 +18,7 @@ class Policy:
     def name(self):
         return self._name
 
+    # PAPER[§3.1|def] "scale_factor s_m: number of workers needed for distributed training"
     def scale_factors_array(self, scale_factors, job_ids, m, n):
         scale_factors_array = np.zeros((m, n))
         for i in range(m):

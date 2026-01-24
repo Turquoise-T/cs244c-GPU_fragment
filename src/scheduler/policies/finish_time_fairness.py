@@ -8,7 +8,7 @@ import numpy as np
 from policy import Policy, PolicyWithPacking
 from isolated import IsolatedPolicy
 
-# PAPER[§4.2] "Finish-time fairness (Themis): equalize job completion times"
+# PAPER[§4.2] "Finish-time fairness (Themis): equalize completion-time ratio ρ across jobs"
 # PAPER[§4.2|eq] "rho(m,X) = (t_m + remaining/throughput) / (t_isolated + remaining/throughput_isolated)"
 # PAPER[§4.2] "Objective: MinimizeX max_m rho(m,X)"
 class FinishTimeFairnessPolicy(Policy):
@@ -82,6 +82,7 @@ class FinishTimeFairnessPolicyWithPerf(Policy):
             throughputs, index, scale_factors, cluster_spec)
         expected_time_fractions = []
         for i in range(len(job_ids)):
+            # PAPER[§4.2] "Cumulative isolated time: tracks time job would have spent in isolation"
             if job_ids[i] not in self._cumulative_isolated_time:
                 self._cumulative_isolated_time[job_ids[i]] = 0
             if job_ids[i] in self._num_steps_remaining_prev_iteration:
