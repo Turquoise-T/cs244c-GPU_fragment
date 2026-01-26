@@ -1,3 +1,7 @@
+# PAPER[§2.1] "Job state includes model type, total training steps, and resource requirements"
+# PAPER[§3.1|def] "scale_factor: number of workers job needs for data parallelism"
+# PAPER[§4.1] "priority_weight w_m: weight for weighted max-min fairness"
+# PAPER[§4.2] "SLO: deadline constraint for finish-time fairness policies"
 class Job:
     def __init__(self, job_id, job_type, command, working_directory,
                  num_steps_arg, total_steps, duration, scale_factor=1,

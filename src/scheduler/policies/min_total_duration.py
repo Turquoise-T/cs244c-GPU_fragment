@@ -6,6 +6,9 @@ import numpy as np
 
 from policy import Policy, PolicyWithPacking
 
+# PAPER[§4.2] "Makespan minimization: minimize time for all jobs to complete"
+# PAPER[§4.2|eq] "MinimizeX max_m num_steps_m / throughput(m,X)"
+# PAPER[§4.2] "Binary search over T to find minimum feasible makespan"
 class MinTotalDurationPolicy(Policy):
 
     def __init__(self, solver):

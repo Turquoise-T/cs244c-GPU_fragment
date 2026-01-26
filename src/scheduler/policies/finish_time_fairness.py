@@ -8,6 +8,9 @@ import numpy as np
 from policy import Policy, PolicyWithPacking
 from isolated import IsolatedPolicy
 
+# PAPER[§4.2] "Finish-time fairness (Themis): equalize completion-time ratio ρ across jobs"
+# PAPER[§4.2|eq] "rho(m,X) = (t_m + remaining/throughput) / (t_isolated + remaining/throughput_isolated)"
+# PAPER[§4.2] "Objective: MinimizeX max_m rho(m,X)"
 class FinishTimeFairnessPolicy(Policy):
 
     def __init__(self, solver):
@@ -79,6 +82,7 @@ class FinishTimeFairnessPolicyWithPerf(Policy):
             throughputs, index, scale_factors, cluster_spec)
         expected_time_fractions = []
         for i in range(len(job_ids)):
+            # PAPER[§4.2] "Cumulative isolated time: tracks time job would have spent in isolation"
             if job_ids[i] not in self._cumulative_isolated_time:
                 self._cumulative_isolated_time[job_ids[i]] = 0
             if job_ids[i] in self._num_steps_remaining_prev_iteration:
@@ -88,10 +92,13 @@ class FinishTimeFairnessPolicyWithPerf(Policy):
                     self._isolated_throughputs_prev_iteration[job_ids[i]]
 
             allocation_throughput = cp.sum(cp.multiply(throughputs[i], x[i]))
+            # PAPER[§4.2] expected_time_isolated = t_isolated + remaining / throughput_isolated
             expected_time_isolated = self._cumulative_isolated_time[job_ids[i]] + \
                 (num_steps_remaining[job_ids[i]] / isolated_throughputs[i])
+            # PAPER[§4.2] expected_time_allocation = t_m + remaining / throughput(m,X)
             expected_time_allocation = times_since_start[job_ids[i]] + \
                 (num_steps_remaining[job_ids[i]] * cp.inv_pos(allocation_throughput))
+            # PAPER[§4.2] rho = expected_time_allocation / expected_time_isolated
             expected_time_fraction = expected_time_allocation / expected_time_isolated
             expected_time_fractions.append(expected_time_fraction)
         if len(expected_time_fractions) == 1:
