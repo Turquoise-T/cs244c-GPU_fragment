@@ -283,6 +283,8 @@ class Scheduler:
         self._max_rounds = max_rounds
         # Number of completed rounds.
         self._num_completed_rounds = 0
+        # Flag indicating JCT threshold was exceeded (early exit from simulation)
+        self._jct_threshold_exceeded = False
 
         port = SCHEDULER_PORT
         callbacks = {
@@ -615,6 +617,10 @@ class Scheduler:
                 return jobs_to_complete.issubset(self._completed_jobs)
             else:
                 return False
+
+    def jct_threshold_exceeded(self):
+        """Returns True if simulation exited early due to JCT threshold."""
+        return self._jct_threshold_exceeded
 
     def reset_workers(self):
         """Sends a shutdown signal to every worker and ends the scheduler."""
@@ -1143,7 +1149,8 @@ class Scheduler:
                  checkpoint_file=None,
                  num_gpus_per_server=None,
                  ideal=False,
-                 output_trace_file_name=None):
+                 output_trace_file_name=None,
+                 max_jct=None):
         """Simulates the scheduler execution.
 
            Simulation can be performed using a trace or with continuously
@@ -1272,6 +1279,20 @@ class Scheduler:
                     'Number of completed jobs: {0}'.format(num_completed_jobs))
                 if self.is_done(jobs_to_complete):
                     break
+                # Early exit if partial JCT exceeds threshold (system saturated)
+                if max_jct is not None and num_completed_jobs > 0:
+                    completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
+                    partial_jcts = [self._job_completion_times[job_id]
+                                    for job_id in completed_in_window
+                                    if job_id in self._job_completion_times]
+                    if len(partial_jcts) > 0:
+                        current_avg_jct = sum(partial_jcts) / len(partial_jcts)
+                        if current_avg_jct > max_jct:
+                            self._logger.info(
+                                'Early exit: partial JCT {0:.2f}s > max_jct {1:.2f}s'.format(
+                                    current_avg_jct, max_jct))
+                            self._jct_threshold_exceeded = True
+                            break
             elif (num_total_jobs is not None and
                     remaining_jobs <= 0):
                 break
