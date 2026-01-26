@@ -64,6 +64,11 @@ class FGDScheduler:
         
         # Leases (similar to Gavel)
         self._leases: Dict[str, Lease] = {}
+
+    def _clone_nodes(self) -> Dict[str, Node]:
+        """Deep-copy nodes for dry-run scheduling (Gavel-style)."""
+        return {node.node_id: copy.deepcopy(node) for node in self._nodes}
+
     
     def register_node(self, node_id: str, total_cpu: float, total_memory: float,
                      num_gpus: int, gpu_type: str = "V100"):
@@ -219,8 +224,8 @@ class FGDScheduler:
         """
         scheduled_assignments = {}
         
-        # work on a mutable per-round view of nodes
-        round_nodes = {n.node_id: n for n in self._nodes}
+        # dry-run cluster state
+        dry_run_nodes = {n.node_id: n for n in self._nodes}
 
         # Sort pending jobs by priority (can be customized)
         pending_jobs = sorted(self._pending_jobs, 
@@ -230,7 +235,7 @@ class FGDScheduler:
         still_pending = []
         
         for job in pending_jobs:
-            node, gpu_indices = self._schedule_job_fgd(job, round_nodes)
+            node, gpu_indices = self._schedule_job_fgd(job, dry_run_nodes)
 
             if node is not None:
                 scheduled_assignments[job.job_id] = (node.node_id, gpu_indices)
@@ -281,7 +286,6 @@ class FGDScheduler:
                 job = self._jobs[job_id]
                 node = self._node_dict[node_id]
                 self._allocate_job(job, node, gpu_indices)
-                # self._pending_jobs.remove(job)
             
             # Print cluster state
             self._print_cluster_state()
