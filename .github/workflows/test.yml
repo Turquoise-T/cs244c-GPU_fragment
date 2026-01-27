@@ -26,6 +26,7 @@ jobs:
       - name: Generate protobuf stubs
         run: |
           cd src/scheduler
+          mkdir -p runtime/rpc_stubs
           make rpc_stubs
 
       - name: Run unit tests
