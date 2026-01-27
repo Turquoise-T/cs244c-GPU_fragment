@@ -56,7 +56,14 @@ ssh farmshare "cd ~/gavel/cluster && sbatch submit_benchmark.sbatch"
 
 **Root cause** - LP solver is only 8% of runtime. The bottleneck is the simulation loop itself (80% in event processing). Optimizing the solver doesn't help.
 
-**What works** - Saturation detection (exit when no progress at >90% utilization) and convergence detection (exit when JCT stabilizes, CV < 15%) help high-load experiments finish faster.
+**What works** - Saturation detection via completion rate in `scheduler.simulate()`:
+- `utilization_threshold=0.99` - Only check when cluster utilization > 99%
+- `completion_rate_threshold=0.1` - Exit if completion rate < 0.1 jobs/hr
+- `min_simulated_time=36000` - Wait 10h simulated time before checking (warm-up)
+- `min_runtime=300` - Wait 5 min wall-clock time before checking
+- At 7 jobs/hr: triggers early, saving hours of compute time
+- Normal runs (0.5-4 jobs/hr) complete fully since utilization < 99%
+- Properties: `sched.saturated` (bool), `sched.partial_jct` (JCT at exit)
 
 ## Testing
 

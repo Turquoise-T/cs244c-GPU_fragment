@@ -285,6 +285,9 @@ class Scheduler:
         self._num_completed_rounds = 0
         # Flag indicating JCT threshold was exceeded (early exit from simulation)
         self._jct_threshold_exceeded = False
+        # Saturation detection state
+        self._saturated = False
+        self._partial_jct = None  # JCT at early exit
 
         port = SCHEDULER_PORT
         callbacks = {
@@ -621,6 +624,40 @@ class Scheduler:
     def jct_threshold_exceeded(self):
         """Returns True if simulation exited early due to JCT threshold."""
         return self._jct_threshold_exceeded
+
+    @property
+    def saturated(self):
+        """Returns True if simulation exited early due to system saturation."""
+        return self._saturated
+
+    @property
+    def partial_jct(self):
+        """Returns the partial JCT at early exit, or None if not set."""
+        return self._partial_jct
+
+    def _get_current_utilization(self):
+        """Calculate current cluster utilization during simulation.
+
+        Returns None if utilization cannot be calculated yet (no workers tracked).
+        """
+        if not self._cumulative_worker_time_so_far:
+            return None
+
+        utilizations = []
+        current_timestamp = self._current_timestamp
+        for worker_id in self._cumulative_worker_time_so_far:
+            if worker_id not in self._worker_start_times:
+                continue
+            total_runtime = current_timestamp - self._worker_start_times[worker_id]
+            if total_runtime <= 0:
+                continue
+            worker_time = self._cumulative_worker_time_so_far[worker_id]
+            utilization = worker_time / total_runtime
+            utilizations.append(min(utilization, 1.0))  # Cap at 1.0
+
+        if not utilizations:
+            return None
+        return sum(utilizations) / len(utilizations)
 
     def reset_workers(self):
         """Sends a shutdown signal to every worker and ends the scheduler."""
@@ -1150,7 +1187,11 @@ class Scheduler:
                  num_gpus_per_server=None,
                  ideal=False,
                  output_trace_file_name=None,
-                 max_jct=None):
+                 max_jct=None,
+                 completion_rate_threshold=0.1,
+                 min_simulated_time=36000,
+                 utilization_threshold=0.99,
+                 min_runtime=300):
         """Simulates the scheduler execution.
 
            Simulation can be performed using a trace or with continuously
@@ -1269,14 +1310,27 @@ class Scheduler:
                     self._all_jobs.append((0, job))
                     job_id = self.add_job(job, timestamp=0)
 
+        # Track wall-clock start time for min_runtime check
+        simulation_start_time = time.time()
+
         while True:
             if debug:
                 input('Press Enter to continue...')
             if jobs_to_complete is not None:
                 num_completed_jobs = \
                     len(jobs_to_complete.intersection(self._completed_jobs))
+                # Calculate metrics for logging
+                current_util = self._get_current_utilization()
+                completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
+                jcts_so_far = [self._job_completion_times[job_id]
+                               for job_id in completed_in_window
+                               if job_id in self._job_completion_times]
+                avg_jct = sum(jcts_so_far) / len(jcts_so_far) if jcts_so_far else 0
                 self._logger.info(
-                    'Number of completed jobs: {0}'.format(num_completed_jobs))
+                    'METRICS completed={0} util={1:.4f} avg_jct={2:.2f}'.format(
+                        num_completed_jobs,
+                        current_util if current_util else 0,
+                        avg_jct))
                 if self.is_done(jobs_to_complete):
                     break
                 # Early exit if partial JCT exceeds threshold (system saturated)
@@ -1293,6 +1347,43 @@ class Scheduler:
                                     current_avg_jct, max_jct))
                             self._jct_threshold_exceeded = True
                             break
+
+                # Saturation detection via completion rate
+                # If completion rate << arrival rate, system is saturated
+                # Only trigger when utilization > threshold (to avoid false early exits)
+                # Only use for non-measurement-window experiments (when tracking all jobs)
+                # JobIdPair stores job ID in _job0, plain int is used directly
+                min_job_id_in_window = min(j[0] if hasattr(j, '_job0') else j
+                                          for j in jobs_to_complete) if jobs_to_complete else 0
+                is_measurement_window = min_job_id_in_window > 100  # Heuristic: measurement windows start late
+
+                # Check utilization threshold and minimum runtime first
+                current_utilization = self._get_current_utilization()
+                elapsed_runtime = time.time() - simulation_start_time
+
+                if (not is_measurement_window and
+                    elapsed_runtime >= min_runtime and  # Wait for min wall-clock time
+                    self._current_timestamp >= min_simulated_time and
+                    num_completed_jobs >= 50 and  # Need enough jobs for reliable rate
+                    current_utilization is not None and
+                    current_utilization >= utilization_threshold):  # Only check when cluster is saturated
+                    completion_rate = num_completed_jobs / (self._current_timestamp / 3600.0)  # jobs per hour
+
+                    if completion_rate < completion_rate_threshold:
+                        self._logger.info(
+                            'Early exit (saturation): completion rate {0:.3f} jobs/hr < {1} jobs/hr, '
+                            'utilization={2:.1%}, runtime={3:.1f}s'.format(
+                                completion_rate, completion_rate_threshold,
+                                current_utilization, elapsed_runtime))
+                        self._saturated = True
+                        # Calculate partial JCT for reporting
+                        completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
+                        partial_jcts = [self._job_completion_times[job_id]
+                                        for job_id in completed_in_window
+                                        if job_id in self._job_completion_times]
+                        if len(partial_jcts) > 0:
+                            self._partial_jct = sum(partial_jcts) / len(partial_jcts)
+                        break
             elif (num_total_jobs is not None and
                     remaining_jobs <= 0):
                 break
