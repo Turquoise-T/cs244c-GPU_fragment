@@ -58,6 +58,25 @@ ssh farmshare "cd ~/gavel/cluster && sbatch submit_benchmark.sbatch"
 
 **What works** - Saturation detection (exit when no progress at >90% utilization) and convergence detection (exit when JCT stabilizes, CV < 15%) help high-load experiments finish faster.
 
+## Testing
+
+### Unit Tests
+```bash
+cd src/scheduler/tests
+python -m unittest policies_tests -v
+```
+
+### Integration Test (Run Before Committing)
+```bash
+cd src/scheduler/tests
+python -m unittest integration_test -v
+```
+
+Verifies deterministic output for fixed config (36:36:36 cluster, 50 jobs, seed=0):
+- Agnostic JCT = 73063.45s
+- Gavel JCT = 57171.41s
+- **Any deviation = regression**
+
 ## Performance Expectations
 
 | Load | Runtime |
