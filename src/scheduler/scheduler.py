@@ -1215,7 +1215,8 @@ class Scheduler:
                  completion_rate_threshold=0.1,
                  min_simulated_time=36000,
                  utilization_threshold=0.99,
-                 min_runtime=300):
+                 min_runtime=300,
+                 max_runtime=900):  # Hard timeout: 15 minutes
         """Simulates the scheduler execution.
 
            Simulation can be performed using a trace or with continuously
@@ -1404,6 +1405,20 @@ class Scheduler:
                 # Check utilization threshold and minimum runtime first
                 current_utilization = self._get_current_utilization()
                 elapsed_runtime = time.time() - simulation_start_time
+
+                # Hard timeout: exit if running too long (default 15 min)
+                if elapsed_runtime >= max_runtime:
+                    self._logger.info(
+                        'Early exit (timeout): runtime {0:.1f}s >= max_runtime {1}s'.format(
+                            elapsed_runtime, max_runtime))
+                    self._saturated = True
+                    completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
+                    partial_jcts = [self._job_completion_times[job_id]
+                                    for job_id in completed_in_window
+                                    if job_id in self._job_completion_times]
+                    if len(partial_jcts) > 0:
+                        self._partial_jct = sum(partial_jcts) / len(partial_jcts)
+                    break
 
                 if (elapsed_runtime >= min_runtime and  # Wait for min wall-clock time
                     self._current_timestamp >= min_simulated_time and
