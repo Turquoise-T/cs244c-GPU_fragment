@@ -45,6 +45,11 @@ def main():
 
     exp = experiments[args.index]
 
+    # Generate name if not present
+    if 'name' not in exp:
+        multi_str = 'multi' if exp.get('multi_gpu', False) else 'single'
+        exp['name'] = f"{exp['figure']}_{exp['policy']}_{exp['jobs_per_hr']}jph_{multi_str}_s{exp['seed']}"
+
     print("=" * 70)
     print(f"BENCHMARK EXPERIMENT: {exp['name']}")
     print("=" * 70)

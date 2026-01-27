@@ -4,6 +4,7 @@ import collections
 import copy
 import faulthandler
 import heapq
+import json
 import numpy as np
 import os
 # from preconditions import preconditions
@@ -515,8 +516,18 @@ class Scheduler:
             if timestamp is None:
                 timestamp = self.get_current_timestamp()
             self._per_job_start_timestamps[job_id] = timestamp
-            self._logger.info(
-                '[Job dispatched]\tJob ID: {job_id}'.format(job_id=job_id))
+
+            # Log job arrival event
+            arrival_event = {
+                'event': 'job_arrival',
+                'job_id': str(job_id),
+                'job_type': job_type,
+                'scale_factor': scale_factor,
+                'total_steps': job.total_steps,
+                'arrival_time': timestamp,
+                'sim_time': self._current_timestamp,
+            }
+            self._logger.info('EVENT ' + json.dumps(arrival_event))
             self._scheduler_cv.notifyAll()
 
         return job_id
@@ -546,6 +557,19 @@ class Scheduler:
             self._jobs[job_id].priority_weight
         job_type = self._jobs[job_id].job_type
         scale_factor = self._jobs[job_id].scale_factor
+
+        # Log job completion event
+        completion_event = {
+            'event': 'job_complete',
+            'job_id': str(job_id),
+            'job_type': job_type,
+            'scale_factor': scale_factor,
+            'start_time': self._per_job_start_timestamps[job_id],
+            'end_time': self._per_job_latest_timestamps[job_id],
+            'duration': duration,
+            'sim_time': self._current_timestamp,
+        }
+        self._logger.info('EVENT ' + json.dumps(completion_event))
         job_type_key = (job_type, scale_factor)
         del self._jobs[job_id]
         if self._num_failures_per_job[job_id] >= MAX_FAILED_ATTEMPTS:
@@ -1313,6 +1337,7 @@ class Scheduler:
         # Track wall-clock start time for min_runtime check
         simulation_start_time = time.time()
 
+        round_number = 0
         while True:
             if debug:
                 input('Press Enter to continue...')
@@ -1326,11 +1351,36 @@ class Scheduler:
                                for job_id in completed_in_window
                                if job_id in self._job_completion_times]
                 avg_jct = sum(jcts_so_far) / len(jcts_so_far) if jcts_so_far else 0
-                self._logger.info(
-                    'METRICS completed={0} util={1:.4f} avg_jct={2:.2f}'.format(
-                        num_completed_jobs,
-                        current_util if current_util else 0,
-                        avg_jct))
+
+                # Comprehensive telemetry for time series visualization
+                telemetry = {
+                    'round': round_number,
+                    'sim_time': self._current_timestamp,
+                    'wall_time': time.time() - simulation_start_time,
+                    'jobs_generated': num_jobs_generated,
+                    'jobs_active': len(self._jobs),
+                    'jobs_running': len(running_jobs),
+                    'jobs_completed_total': len(self._completed_jobs),
+                    'jobs_completed_window': num_completed_jobs,
+                    'jobs_queued': len(self._jobs) - len(running_jobs),
+                    'utilization': current_util if current_util else 0,
+                    'avg_jct': avg_jct,
+                    'next_arrival': next_job_arrival_time,
+                }
+                # Per-GPU-type utilization (count available workers from SetQueue)
+                with self._available_worker_ids.mutex:
+                    available_workers = set(self._available_worker_ids.queue)
+                for worker_type in cluster_spec:
+                    total_gpus = cluster_spec[worker_type]
+                    available = len([w for w in available_workers
+                                    if self._worker_id_to_worker_type_mapping.get(w) == worker_type])
+                    in_use = total_gpus - available
+                    telemetry[f'{worker_type}_used'] = in_use
+                    telemetry[f'{worker_type}_total'] = total_gpus
+
+                self._logger.info('TELEMETRY ' + json.dumps(telemetry))
+                round_number += 1
+
                 if self.is_done(jobs_to_complete):
                     break
                 # Early exit if partial JCT exceeds threshold (system saturated)
@@ -1592,6 +1642,17 @@ class Scheduler:
                                 self._num_lease_extensions += 1
                     self._current_worker_assignments = scheduled_jobs
                     self._print_schedule_summary()
+
+                    # Log scheduling round event
+                    schedule_event = {
+                        'event': 'schedule_round',
+                        'round': round_number,
+                        'sim_time': self._current_timestamp,
+                        'num_jobs_scheduled': len(scheduled_jobs),
+                        'assignments': {str(jid): len(wids) for jid, wids in scheduled_jobs.items()},
+                    }
+                    self._logger.info('EVENT ' + json.dumps(schedule_event))
+
                 for (job_id, worker_ids) in scheduled_jobs.items():
                     worker_type = \
                         self._worker_id_to_worker_type_mapping[worker_ids[0]]
