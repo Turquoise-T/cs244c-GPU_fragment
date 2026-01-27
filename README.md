@@ -44,6 +44,9 @@ make rpc_stubs
 
 # Verify installation
 python -c "import scheduler; print('Setup OK')"
+
+# Enable pre-commit hooks (runs tests before each commit)
+git config core.hooksPath .githooks
 ```
 
 ## Run a Test Simulation
