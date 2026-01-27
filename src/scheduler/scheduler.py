@@ -1401,18 +1401,11 @@ class Scheduler:
                 # Saturation detection via completion rate
                 # If completion rate << arrival rate, system is saturated
                 # Only trigger when utilization > threshold (to avoid false early exits)
-                # Only use for non-measurement-window experiments (when tracking all jobs)
-                # JobIdPair stores job ID in _job0, plain int is used directly
-                min_job_id_in_window = min(j[0] if hasattr(j, '_job0') else j
-                                          for j in jobs_to_complete) if jobs_to_complete else 0
-                is_measurement_window = min_job_id_in_window > 100  # Heuristic: measurement windows start late
-
                 # Check utilization threshold and minimum runtime first
                 current_utilization = self._get_current_utilization()
                 elapsed_runtime = time.time() - simulation_start_time
 
-                if (not is_measurement_window and
-                    elapsed_runtime >= min_runtime and  # Wait for min wall-clock time
+                if (elapsed_runtime >= min_runtime and  # Wait for min wall-clock time
                     self._current_timestamp >= min_simulated_time and
                     num_completed_jobs >= 50 and  # Need enough jobs for reliable rate
                     current_utilization is not None and
