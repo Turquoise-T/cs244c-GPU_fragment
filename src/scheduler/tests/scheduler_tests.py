@@ -5,6 +5,15 @@ import unittest
 class TestScheduler(unittest.TestCase):
 
     def test_simple(self):
+        trace_file = '../traces/simple.trace'
+        reference_output = '../traces/simple.output'
+
+        # Skip if required files don't exist
+        if not os.path.exists(os.path.join(os.path.dirname(__file__), trace_file)):
+            self.skipTest(f"Required file {trace_file} does not exist")
+        if not os.path.exists(os.path.join(os.path.dirname(__file__), reference_output)):
+            self.skipTest(f"Required file {reference_output} does not exist")
+
         FNULL = open(os.devnull, 'w')
         subprocess.check_call('python3 run_scheduler_with_trace.py '
                                '-t traces/simple.trace '

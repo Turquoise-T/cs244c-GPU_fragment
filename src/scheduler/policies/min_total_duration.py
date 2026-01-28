@@ -6,6 +6,20 @@ import numpy as np
 
 from policy import Policy, PolicyWithPacking
 
+
+def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS"):
+    """Solve CVXPY problem with automatic fallback on solver failure.
+
+    Attempts to solve with the primary solver (typically ECOS for speed).
+    If the primary solver fails with a SolverError, automatically retries
+    with the fallback solver (SCS, which is slower but more numerically stable).
+    """
+    try:
+        return cvxprob.solve(solver=primary_solver)
+    except cp.error.SolverError as e:
+        print(f"WARNING: Solver '{primary_solver}' failed, retrying with '{fallback_solver}'")
+        return cvxprob.solve(solver=fallback_solver)
+
 # PAPER[§4.2] "Makespan minimization: minimize time for all jobs to complete"
 # PAPER[§4.2|eq] "MinimizeX max_m num_steps_m / throughput(m,X)"
 # PAPER[§4.2] "Binary search over T to find minimum feasible makespan"
@@ -18,20 +32,11 @@ class MinTotalDurationPolicy(Policy):
 
     def get_allocation(self, unflattened_throughputs, scale_factors,
                        num_steps_remaining, cluster_spec):
-        throughputs, index = super().flatten(unflattened_throughputs,
-                                             cluster_spec)
-        if throughputs is None: return None
-        (job_ids, worker_types) = index
-
-        new_unflattened_throughputs = {}
-        for job_id in unflattened_throughputs:
-            new_unflattened_throughputs[job_id] = {}
-            for worker_type in unflattened_throughputs[job_id]:
-                 new_unflattened_throughputs[job_id][worker_type] = \
-                     unflattened_throughputs[job_id]['v100']
-
+        # FIX: Pass through actual throughputs instead of V100 hardcoding.
+        # Zero-throughput cases are now handled via explicit constraints
+        # in MinTotalDurationPolicyWithPerf.get_allocation_helper().
         return self._min_total_duration_perf_policy.get_allocation(
-            new_unflattened_throughputs, scale_factors, num_steps_remaining,
+            unflattened_throughputs, scale_factors, num_steps_remaining,
             cluster_spec)
 
 
@@ -51,8 +56,17 @@ class MinTotalDurationPolicyWithPerf(Policy):
             cp.sum(cp.multiply(throughputs, x), axis=1) >= (
                 self._num_steps_remaining / T)
         )
+
+        # FIX: Explicitly constrain zero-throughput allocations to zero.
+        # This prevents allocating jobs to GPU types they cannot run on.
+        (m, n) = throughputs.shape
+        for i in range(m):
+            for j in range(n):
+                if throughputs[i, j] == 0:
+                    constraints.append(x[i, j] == 0)
+
         cvxprob = cp.Problem(objective, constraints)
-        result = cvxprob.solve(solver=self._solver)
+        result = _solve_with_fallback(cvxprob, self._solver)
 
         return cvxprob.status, x
 
@@ -125,7 +139,7 @@ class MinTotalDurationPolicyWithPacking(PolicyWithPacking):
                 cp.sum(cp.multiply(throughputs[indexes], x[indexes])) >=
                     (num_steps_remaining / T))
         cvxprob = cp.Problem(objective, constraints)
-        result = cvxprob.solve(solver=self._solver)
+        result = _solve_with_fallback(cvxprob, self._solver)
 
         return cvxprob.status, x
 
