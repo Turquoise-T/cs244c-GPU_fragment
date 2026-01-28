@@ -1338,6 +1338,12 @@ class Scheduler:
         # Track wall-clock start time for min_runtime check
         simulation_start_time = time.time()
 
+        # Track completion times for windowed completion rate calculation
+        # Deque of sim_times for last 100 job completions (automatically discards old entries)
+        RATE_WINDOW_SIZE = 100
+        all_completion_times = collections.deque(maxlen=RATE_WINDOW_SIZE)
+        last_total_completed_count = 0
+
         round_number = 0
         while True:
             if debug:
@@ -1345,6 +1351,15 @@ class Scheduler:
             if jobs_to_complete is not None:
                 num_completed_jobs = \
                     len(jobs_to_complete.intersection(self._completed_jobs))
+
+                # Track completion timestamps for windowed rate calculation (ALL jobs, not just measurement window)
+                total_completed = len(self._completed_jobs)
+                if total_completed > last_total_completed_count:
+                    new_completions = total_completed - last_total_completed_count
+                    for _ in range(new_completions):
+                        all_completion_times.append(self._current_timestamp)
+                    last_total_completed_count = total_completed
+
                 # Calculate metrics for logging
                 current_util = self._get_current_utilization()
                 completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
@@ -1378,6 +1393,16 @@ class Scheduler:
                     in_use = total_gpus - available
                     telemetry[f'{worker_type}_used'] = in_use
                     telemetry[f'{worker_type}_total'] = total_gpus
+
+                # Add windowed completion rate (last N jobs, up to 100)
+                if len(all_completion_times) >= 2:
+                    time_span = all_completion_times[-1] - all_completion_times[0]
+                    if time_span > 0:
+                        telemetry['windowed_completion_rate'] = len(all_completion_times) / (time_span / 3600.0)
+                    else:
+                        telemetry['windowed_completion_rate'] = None
+                else:
+                    telemetry['windowed_completion_rate'] = None
 
                 self._logger.info('TELEMETRY ' + json.dumps(telemetry))
                 round_number += 1
@@ -1420,18 +1445,25 @@ class Scheduler:
                         self._partial_jct = sum(partial_jcts) / len(partial_jcts)
                     break
 
+                # Saturation detection using windowed completion rate (last 100 jobs from entire run)
                 if (elapsed_runtime >= min_runtime and  # Wait for min wall-clock time
                     self._current_timestamp >= min_simulated_time and
-                    num_completed_jobs >= 50 and  # Need enough jobs for reliable rate
+                    len(all_completion_times) >= RATE_WINDOW_SIZE and  # Need 100 jobs for windowed rate
                     current_utilization is not None and
                     current_utilization >= utilization_threshold):  # Only check when cluster is saturated
-                    completion_rate = num_completed_jobs / (self._current_timestamp / 3600.0)  # jobs per hour
 
-                    if completion_rate < completion_rate_threshold:
+                    # Calculate windowed completion rate from last 100 completions (all jobs, not just measurement window)
+                    time_span = all_completion_times[-1] - all_completion_times[0]
+                    if time_span > 0:
+                        windowed_rate = RATE_WINDOW_SIZE / (time_span / 3600.0)  # jobs per hour
+                    else:
+                        windowed_rate = float('inf')  # All completed at same time
+
+                    if windowed_rate < completion_rate_threshold:
                         self._logger.info(
-                            'Early exit (saturation): completion rate {0:.3f} jobs/hr < {1} jobs/hr, '
+                            'Early exit (saturation): windowed completion rate {0:.3f} jobs/hr < {1} jobs/hr, '
                             'utilization={2:.1%}, runtime={3:.1f}s'.format(
-                                completion_rate, completion_rate_threshold,
+                                windowed_rate, completion_rate_threshold,
                                 current_utilization, elapsed_runtime))
                         self._saturated = True
                         # Calculate partial JCT for reporting
