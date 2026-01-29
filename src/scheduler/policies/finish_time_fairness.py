@@ -8,6 +8,28 @@ import numpy as np
 from policy import Policy, PolicyWithPacking
 from isolated import IsolatedPolicy
 
+
+def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS"):
+    """Solve CVXPY problem with automatic fallback on solver failure.
+
+    Attempts to solve with the primary solver (typically ECOS for speed).
+    If the primary solver fails with a SolverError, automatically retries
+    with the fallback solver (SCS, which is slower but more numerically stable).
+
+    Args:
+        cvxprob: CVXPY Problem object
+        primary_solver: Primary solver to try first (e.g., "ECOS")
+        fallback_solver: Fallback solver if primary fails (default: "SCS")
+
+    Returns:
+        The solve result value
+    """
+    try:
+        return cvxprob.solve(solver=primary_solver)
+    except cp.error.SolverError as e:
+        print(f"WARNING: Solver '{primary_solver}' failed, retrying with '{fallback_solver}'")
+        return cvxprob.solve(solver=fallback_solver)
+
 # PAPER[§4.2] "Finish-time fairness (Themis): equalize completion-time ratio ρ across jobs"
 # PAPER[§4.2|eq] "rho(m,X) = (t_m + remaining/throughput) / (t_isolated + remaining/throughput_isolated)"
 # PAPER[§4.2] "Objective: MinimizeX max_m rho(m,X)"
@@ -22,22 +44,11 @@ class FinishTimeFairnessPolicy(Policy):
                        unflattened_priority_weights,
                        times_since_start,
                        num_steps_remaining, cluster_spec):
-        throughputs, index = super().flatten(unflattened_throughputs,
-                                             cluster_spec)
-        if throughputs is None: return None
-        (job_ids, worker_types) = index
-
-        new_unflattened_throughputs = {}
-        for job_id in unflattened_throughputs:
-            new_unflattened_throughputs[job_id] = {}
-            for worker_type in unflattened_throughputs[job_id]:
-                 # Hardcode worker_type to v100 since all other worker types
-                 # have a throughput of 0 for some job.
-                 new_unflattened_throughputs[job_id][worker_type] = \
-                     unflattened_throughputs[job_id]['v100']
-
+        # FIX: Pass through actual throughputs instead of V100 hardcoding.
+        # Zero-throughput cases are now handled via explicit constraints
+        # in FinishTimeFairnessPolicyWithPerf.get_allocation().
         return self._finish_time_fairness_perf_policy.get_allocation(
-            new_unflattened_throughputs, scale_factors,
+            unflattened_throughputs, scale_factors,
             unflattened_priority_weights,
             times_since_start,
             num_steps_remaining, cluster_spec)
@@ -109,8 +120,15 @@ class FinishTimeFairnessPolicyWithPerf(Policy):
         # Make sure that the allocation can fit in the cluster.
         constraints = self.get_base_constraints(x, scale_factors_array)
 
+        # FIX: Explicitly constrain zero-throughput allocations to zero.
+        # This prevents allocating jobs to GPU types they cannot run on.
+        for i in range(m):
+            for j in range(n):
+                if throughputs[i, j] == 0:
+                    constraints.append(x[i, j] == 0)
+
         cvxprob = cp.Problem(objective, constraints)
-        result = cvxprob.solve(solver=self._solver)
+        result = _solve_with_fallback(cvxprob, self._solver)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')
@@ -212,7 +230,7 @@ class FinishTimeFairnessPolicyWithPacking(PolicyWithPacking):
                 if scale_factors_array[i,j] == 0:
                     constraints.append(x[i,j] == 0)
         cvxprob = cp.Problem(objective, constraints)
-        result = cvxprob.solve(solver=self._solver)
+        result = _solve_with_fallback(cvxprob, self._solver)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')

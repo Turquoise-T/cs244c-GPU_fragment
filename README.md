@@ -73,33 +73,134 @@ Configuration: cluster_spec=v100:4|p100:4|k80:4, policy=FIFO, seed=42, num_total
 Results: average JCT=36721.82, utilization=0.14, makespan=215530.17
 ```
 
+## Running Experiments on FarmShare
+
+For large-scale experiments (e.g., replicating Gavel paper figures), use Stanford's FarmShare cluster.
+
+### Prerequisites
+
+1. **SSH access to FarmShare** - Ensure you can SSH to `rice.stanford.edu`
+2. **SSH multiplexing (recommended)** - Keep a persistent connection for faster commands
+
+Add to `~/.ssh/config`:
+```
+Host farmshare
+    HostName rice.stanford.edu
+    User <your-sunetid>
+    ControlMaster auto
+    ControlPath ~/.ssh/sockets/%r@%h-%p
+    ControlPersist 600
+```
+
+Create the socket directory and connect:
+```bash
+mkdir -p ~/.ssh/sockets
+ssh farmshare  # Keep this terminal open
+```
+
+### Initial Setup (One-Time)
+
+```bash
+# 1. Sync code to FarmShare (from local machine)
+rsync -avz --exclude='.venv' --exclude='__pycache__' --exclude='results*' \
+    /path/to/gavel farmshare:~/
+
+# 2. SSH to FarmShare and set up Python environment
+ssh farmshare
+python3 -m venv ~/.venv
+source ~/.venv/bin/activate
+pip install cvxpy numpy
+```
+
+### Syncing Code Changes
+
+When you modify code locally, sync to FarmShare before running experiments:
+
+```bash
+# Sync scheduler code
+rsync -avz src/scheduler/ farmshare:~/gavel/src/scheduler/
+
+# Sync experiment scripts
+rsync -avz experiments/ farmshare:~/gavel/experiments/
+```
+
+### Running Experiments
+
+See `experiments/replication/README.md` for detailed instructions on running the paper replication experiments.
+
+#### Quick Start
+
+```bash
+# Single experiment (interactive)
+ssh farmshare
+cd ~/gavel/experiments/replication
+source ~/.venv/bin/activate
+python3 scripts/run_benchmark.py --index 0 --experiments-file configs/experiments_full.json --output-dir results/test
+
+# Batch experiments (SLURM)
+ssh farmshare "cd ~/gavel/experiments/replication && sbatch slurm/submit_full.sbatch"
+
+# Check job status
+ssh farmshare "squeue -u \$USER"
+```
+
+### Retrieving Results
+
+```bash
+# Sync results back to local machine
+rsync -avz --exclude='simulation.log' \
+    farmshare:~/gavel/experiments/replication/results/ \
+    ./experiments/replication/results/
+```
+
+### Troubleshooting
+
+**Solver failures (ECOS):**
+- See `experiments/replication/debug/2025-01-27-ecos-solver-failures-research.md`
+- The codebase includes ECOS-to-SCS fallback to handle these cases
+
+**Out of memory:**
+- Increase `--mem` in the sbatch file (default 8G, try 16G)
+
 ## Project Structure
 
 ```
 .
-├── docs/plans/              # Design documents
-├── requirements-sim.txt     # macOS-compatible dependencies
-├── src/
-│   └── scheduler/
-│       ├── scheduler.py     # Main scheduler logic
-│       ├── policies/        # Scheduling policies (FIFO, LAS, Gavel, etc.)
-│       ├── scripts/
-│       │   └── sweeps/      # Simulation scripts
-│       │       ├── run_sweep_static.py    # Static trace simulation
-│       │       └── run_sweep_continuous.py # Continuous job arrival
-│       ├── traces/          # Trace data (Philly, etc.)
-│       └── simulation_throughputs.json    # Throughput profiles for simulation
-└── osdi20-narayanan_deepak.pdf  # Gavel paper
+├── src/scheduler/           # Core scheduler code
+│   ├── scheduler.py         # Main scheduler logic and simulation loop
+│   ├── policies/            # Scheduling policies (FIFO, LAS, Gavel, etc.)
+│   ├── scripts/sweeps/      # Simulation scripts
+│   ├── traces/              # Trace data (Philly, etc.)
+│   └── simulation_throughputs.json  # Throughput profiles
+│
+├── experiments/             # Experiment-specific code and results
+│   └── replication/         # Gavel paper replication (Figs 9, 10, 11)
+│       ├── configs/         # Experiment configurations (JSON)
+│       ├── results/         # Experiment outputs and CSVs
+│       ├── figures/         # Generated plots
+│       ├── scripts/         # Experiment runner, generators, plotting
+│       ├── slurm/           # SLURM batch scripts for FarmShare
+│       ├── debug/           # Telemetry tools and investigation notes
+│       └── README.md        # Replication-specific documentation
+│
+├── scripts/                 # Shared utilities
+│   ├── sync_results.sh      # FarmShare result sync helper
+│   └── compress_completed_logs.sh  # Log compression utility
+│
+├── docs/                    # Documentation
+│   └── plans/               # Design documents
+│
+└── requirements-sim.txt     # Python dependencies
 ```
 
 ### Key Files
 
 | File | Purpose |
 |------|---------|
-| `scheduler.py` | Core scheduling logic and simulation loop |
-| `policies/` | Policy implementations (what we'll extend) |
-| `scripts/sweeps/` | Entry points for running experiments |
-| `simulation_throughputs.json` | Job throughput profiles by GPU type |
+| `src/scheduler/scheduler.py` | Core scheduling logic and simulation loop |
+| `src/scheduler/policies/` | Policy implementations (what we'll extend) |
+| `src/scheduler/simulation_throughputs.json` | Job throughput profiles by GPU type |
+| `experiments/replication/` | Complete Gavel paper replication with results |
 
 ## Contributing
 

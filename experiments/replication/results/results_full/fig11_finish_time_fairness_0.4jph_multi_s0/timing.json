@@ -1,0 +1,22 @@
+{
+  "experiment": {
+    "figure": "fig11",
+    "policy": "finish_time_fairness",
+    "seed": 0,
+    "lambda": 9000.0,
+    "jobs_per_hr": 0.4,
+    "cluster_spec": "36:36:36",
+    "window_start": 4000,
+    "window_end": 5000,
+    "multi_gpu": true,
+    "name": "fig11_finish_time_fairness_0.4jph_multi_s0"
+  },
+  "start_time": "2026-01-27T18:24:38.760977",
+  "rounds": [],
+  "end_time": "2026-01-27T18:25:25.529746",
+  "total_seconds": 46.76875042915344,
+  "saturated": true,
+  "partial_jct": null,
+  "average_jct": Infinity,
+  "utilization": 0.16401734421089523
+}

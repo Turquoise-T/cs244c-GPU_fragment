@@ -4,6 +4,7 @@ import collections
 import copy
 import faulthandler
 import heapq
+import json
 import numpy as np
 import os
 # from preconditions import preconditions
@@ -285,6 +286,9 @@ class Scheduler:
         self._num_completed_rounds = 0
         # Flag indicating JCT threshold was exceeded (early exit from simulation)
         self._jct_threshold_exceeded = False
+        # Saturation detection state
+        self._saturated = False
+        self._partial_jct = None  # JCT at early exit
 
         port = SCHEDULER_PORT
         callbacks = {
@@ -512,8 +516,18 @@ class Scheduler:
             if timestamp is None:
                 timestamp = self.get_current_timestamp()
             self._per_job_start_timestamps[job_id] = timestamp
-            self._logger.info(
-                '[Job dispatched]\tJob ID: {job_id}'.format(job_id=job_id))
+
+            # Log job arrival event
+            arrival_event = {
+                'event': 'job_arrival',
+                'job_id': str(job_id),
+                'job_type': job_type,
+                'scale_factor': scale_factor,
+                'total_steps': job.total_steps,
+                'arrival_time': timestamp,
+                'sim_time': self._current_timestamp,
+            }
+            self._logger.info('EVENT ' + json.dumps(arrival_event))
             self._scheduler_cv.notifyAll()
 
         return job_id
@@ -543,6 +557,19 @@ class Scheduler:
             self._jobs[job_id].priority_weight
         job_type = self._jobs[job_id].job_type
         scale_factor = self._jobs[job_id].scale_factor
+
+        # Log job completion event
+        completion_event = {
+            'event': 'job_complete',
+            'job_id': str(job_id),
+            'job_type': job_type,
+            'scale_factor': scale_factor,
+            'start_time': self._per_job_start_timestamps[job_id],
+            'end_time': self._per_job_latest_timestamps[job_id],
+            'duration': duration,
+            'sim_time': self._current_timestamp,
+        }
+        self._logger.info('EVENT ' + json.dumps(completion_event))
         job_type_key = (job_type, scale_factor)
         del self._jobs[job_id]
         if self._num_failures_per_job[job_id] >= MAX_FAILED_ATTEMPTS:
@@ -621,6 +648,40 @@ class Scheduler:
     def jct_threshold_exceeded(self):
         """Returns True if simulation exited early due to JCT threshold."""
         return self._jct_threshold_exceeded
+
+    @property
+    def saturated(self):
+        """Returns True if simulation exited early due to system saturation."""
+        return self._saturated
+
+    @property
+    def partial_jct(self):
+        """Returns the partial JCT at early exit, or None if not set."""
+        return self._partial_jct
+
+    def _get_current_utilization(self):
+        """Calculate current cluster utilization during simulation.
+
+        Returns None if utilization cannot be calculated yet (no workers tracked).
+        """
+        if not self._cumulative_worker_time_so_far:
+            return None
+
+        utilizations = []
+        current_timestamp = self._current_timestamp
+        for worker_id in self._cumulative_worker_time_so_far:
+            if worker_id not in self._worker_start_times:
+                continue
+            total_runtime = current_timestamp - self._worker_start_times[worker_id]
+            if total_runtime <= 0:
+                continue
+            worker_time = self._cumulative_worker_time_so_far[worker_id]
+            utilization = worker_time / total_runtime
+            utilizations.append(min(utilization, 1.0))  # Cap at 1.0
+
+        if not utilizations:
+            return None
+        return sum(utilizations) / len(utilizations)
 
     def reset_workers(self):
         """Sends a shutdown signal to every worker and ends the scheduler."""
@@ -1150,7 +1211,12 @@ class Scheduler:
                  num_gpus_per_server=None,
                  ideal=False,
                  output_trace_file_name=None,
-                 max_jct=None):
+                 max_jct=None,
+                 completion_rate_threshold=0.1,
+                 min_simulated_time=36000,
+                 utilization_threshold=0.99,
+                 min_runtime=300,
+                 max_simulated_time=7200000):  # Simulated time timeout: 2000 hours
         """Simulates the scheduler execution.
 
            Simulation can be performed using a trace or with continuously
@@ -1269,14 +1335,79 @@ class Scheduler:
                     self._all_jobs.append((0, job))
                     job_id = self.add_job(job, timestamp=0)
 
+        # Track wall-clock start time for min_runtime check
+        simulation_start_time = time.time()
+
+        # Track completion times for windowed completion rate calculation
+        # Deque of sim_times for last 100 job completions (automatically discards old entries)
+        RATE_WINDOW_SIZE = 100
+        all_completion_times = collections.deque(maxlen=RATE_WINDOW_SIZE)
+        last_total_completed_count = 0
+
+        round_number = 0
         while True:
             if debug:
                 input('Press Enter to continue...')
             if jobs_to_complete is not None:
                 num_completed_jobs = \
                     len(jobs_to_complete.intersection(self._completed_jobs))
-                self._logger.info(
-                    'Number of completed jobs: {0}'.format(num_completed_jobs))
+
+                # Track completion timestamps for windowed rate calculation (ALL jobs, not just measurement window)
+                total_completed = len(self._completed_jobs)
+                if total_completed > last_total_completed_count:
+                    new_completions = total_completed - last_total_completed_count
+                    for _ in range(new_completions):
+                        all_completion_times.append(self._current_timestamp)
+                    last_total_completed_count = total_completed
+
+                # Calculate metrics for logging
+                current_util = self._get_current_utilization()
+                completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
+                jcts_so_far = [self._job_completion_times[job_id]
+                               for job_id in completed_in_window
+                               if job_id in self._job_completion_times
+                               and self._job_completion_times[job_id] is not None]
+                avg_jct = sum(jcts_so_far) / len(jcts_so_far) if jcts_so_far else 0
+
+                # Comprehensive telemetry for time series visualization
+                telemetry = {
+                    'round': round_number,
+                    'sim_time': self._current_timestamp,
+                    'wall_time': time.time() - simulation_start_time,
+                    'jobs_generated': num_jobs_generated,
+                    'jobs_active': len(self._jobs),
+                    'jobs_running': len(running_jobs),
+                    'jobs_completed_total': len(self._completed_jobs),
+                    'jobs_completed_window': num_completed_jobs,
+                    'jobs_queued': len(self._jobs) - len(running_jobs),
+                    'utilization': current_util if current_util else 0,
+                    'avg_jct': avg_jct,
+                    'next_arrival': next_job_arrival_time,
+                }
+                # Per-GPU-type utilization (count available workers from SetQueue)
+                with self._available_worker_ids.mutex:
+                    available_workers = set(self._available_worker_ids.queue)
+                for worker_type in cluster_spec:
+                    total_gpus = cluster_spec[worker_type]
+                    available = len([w for w in available_workers
+                                    if self._worker_id_to_worker_type_mapping.get(w) == worker_type])
+                    in_use = total_gpus - available
+                    telemetry[f'{worker_type}_used'] = in_use
+                    telemetry[f'{worker_type}_total'] = total_gpus
+
+                # Add windowed completion rate (last N jobs, up to 100)
+                if len(all_completion_times) >= 2:
+                    time_span = all_completion_times[-1] - all_completion_times[0]
+                    if time_span > 0:
+                        telemetry['windowed_completion_rate'] = len(all_completion_times) / (time_span / 3600.0)
+                    else:
+                        telemetry['windowed_completion_rate'] = None
+                else:
+                    telemetry['windowed_completion_rate'] = None
+
+                self._logger.info('TELEMETRY ' + json.dumps(telemetry))
+                round_number += 1
+
                 if self.is_done(jobs_to_complete):
                     break
                 # Early exit if partial JCT exceeds threshold (system saturated)
@@ -1284,7 +1415,8 @@ class Scheduler:
                     completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
                     partial_jcts = [self._job_completion_times[job_id]
                                     for job_id in completed_in_window
-                                    if job_id in self._job_completion_times]
+                                    if job_id in self._job_completion_times
+                                    and self._job_completion_times[job_id] is not None]
                     if len(partial_jcts) > 0:
                         current_avg_jct = sum(partial_jcts) / len(partial_jcts)
                         if current_avg_jct > max_jct:
@@ -1293,6 +1425,59 @@ class Scheduler:
                                     current_avg_jct, max_jct))
                             self._jct_threshold_exceeded = True
                             break
+
+                # Saturation detection via completion rate
+                # If completion rate << arrival rate, system is saturated
+                # Only trigger when utilization > threshold (to avoid false early exits)
+                # Check utilization threshold and minimum runtime first
+                current_utilization = self._get_current_utilization()
+                elapsed_runtime = time.time() - simulation_start_time
+
+                # Simulated time timeout: exit if simulation has run too long (default 2000 hours)
+                if self._current_timestamp >= max_simulated_time:
+                    self._logger.info(
+                        'Early exit (sim timeout): sim_time {0:.1f}hrs >= max {1:.1f}hrs'.format(
+                            self._current_timestamp / 3600, max_simulated_time / 3600))
+                    self._saturated = True
+                    completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
+                    partial_jcts = [self._job_completion_times[job_id]
+                                    for job_id in completed_in_window
+                                    if job_id in self._job_completion_times
+                                    and self._job_completion_times[job_id] is not None]
+                    if len(partial_jcts) > 0:
+                        self._partial_jct = sum(partial_jcts) / len(partial_jcts)
+                    break
+
+                # Saturation detection using windowed completion rate (last 100 jobs from entire run)
+                if (elapsed_runtime >= min_runtime and  # Wait for min wall-clock time
+                    self._current_timestamp >= min_simulated_time and
+                    len(all_completion_times) >= RATE_WINDOW_SIZE and  # Need 100 jobs for windowed rate
+                    current_utilization is not None and
+                    current_utilization >= utilization_threshold):  # Only check when cluster is saturated
+
+                    # Calculate windowed completion rate from last 100 completions (all jobs, not just measurement window)
+                    time_span = all_completion_times[-1] - all_completion_times[0]
+                    if time_span > 0:
+                        windowed_rate = RATE_WINDOW_SIZE / (time_span / 3600.0)  # jobs per hour
+                    else:
+                        windowed_rate = float('inf')  # All completed at same time
+
+                    if windowed_rate < completion_rate_threshold:
+                        self._logger.info(
+                            'Early exit (saturation): windowed completion rate {0:.3f} jobs/hr < {1} jobs/hr, '
+                            'utilization={2:.1%}, runtime={3:.1f}s'.format(
+                                windowed_rate, completion_rate_threshold,
+                                current_utilization, elapsed_runtime))
+                        self._saturated = True
+                        # Calculate partial JCT for reporting
+                        completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
+                        partial_jcts = [self._job_completion_times[job_id]
+                                        for job_id in completed_in_window
+                                        if job_id in self._job_completion_times
+                                        and self._job_completion_times[job_id] is not None]
+                        if len(partial_jcts) > 0:
+                            self._partial_jct = sum(partial_jcts) / len(partial_jcts)
+                        break
             elif (num_total_jobs is not None and
                     remaining_jobs <= 0):
                 break
@@ -1501,6 +1686,17 @@ class Scheduler:
                                 self._num_lease_extensions += 1
                     self._current_worker_assignments = scheduled_jobs
                     self._print_schedule_summary()
+
+                    # Log scheduling round event
+                    schedule_event = {
+                        'event': 'schedule_round',
+                        'round': round_number,
+                        'sim_time': self._current_timestamp,
+                        'num_jobs_scheduled': len(scheduled_jobs),
+                        'assignments': {str(jid): len(wids) for jid, wids in scheduled_jobs.items()},
+                    }
+                    self._logger.info('EVENT ' + json.dumps(schedule_event))
+
                 for (job_id, worker_ids) in scheduled_jobs.items():
                     worker_type = \
                         self._worker_id_to_worker_type_mapping[worker_ids[0]]
