@@ -1365,7 +1365,8 @@ class Scheduler:
                 completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
                 jcts_so_far = [self._job_completion_times[job_id]
                                for job_id in completed_in_window
-                               if job_id in self._job_completion_times]
+                               if job_id in self._job_completion_times
+                               and self._job_completion_times[job_id] is not None]
                 avg_jct = sum(jcts_so_far) / len(jcts_so_far) if jcts_so_far else 0
 
                 # Comprehensive telemetry for time series visualization
@@ -1414,7 +1415,8 @@ class Scheduler:
                     completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
                     partial_jcts = [self._job_completion_times[job_id]
                                     for job_id in completed_in_window
-                                    if job_id in self._job_completion_times]
+                                    if job_id in self._job_completion_times
+                                    and self._job_completion_times[job_id] is not None]
                     if len(partial_jcts) > 0:
                         current_avg_jct = sum(partial_jcts) / len(partial_jcts)
                         if current_avg_jct > max_jct:
@@ -1440,7 +1442,8 @@ class Scheduler:
                     completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
                     partial_jcts = [self._job_completion_times[job_id]
                                     for job_id in completed_in_window
-                                    if job_id in self._job_completion_times]
+                                    if job_id in self._job_completion_times
+                                    and self._job_completion_times[job_id] is not None]
                     if len(partial_jcts) > 0:
                         self._partial_jct = sum(partial_jcts) / len(partial_jcts)
                     break
@@ -1470,7 +1473,8 @@ class Scheduler:
                         completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
                         partial_jcts = [self._job_completion_times[job_id]
                                         for job_id in completed_in_window
-                                        if job_id in self._job_completion_times]
+                                        if job_id in self._job_completion_times
+                                        and self._job_completion_times[job_id] is not None]
                         if len(partial_jcts) > 0:
                             self._partial_jct = sum(partial_jcts) / len(partial_jcts)
                         break
