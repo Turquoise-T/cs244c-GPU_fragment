@@ -7,6 +7,22 @@ import numpy as np
 from policy import Policy, PolicyWithPacking
 from proportional import ProportionalPolicy
 
+
+def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS", **kwargs):
+    """Solve CVXPY problem with automatic fallback on solver failure.
+
+    Attempts to solve with the primary solver (typically ECOS for speed).
+    If the primary solver fails with a SolverError, automatically retries
+    with the fallback solver (SCS, which is slower but more numerically stable).
+    """
+    try:
+        return cvxprob.solve(solver=primary_solver, **kwargs)
+    except cp.error.SolverError as e:
+        print(f"WARNING: Solver '{primary_solver}' failed, retrying with '{fallback_solver}'")
+        # Use SCS-specific kwargs when falling back to SCS
+        fallback_kwargs = {'acceleration_lookback': 0} if fallback_solver == "SCS" else {}
+        return cvxprob.solve(solver=fallback_solver, **fallback_kwargs)
+
 # PAPER[§4.1] "MaximizeX min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)"
 # PAPER[§4.1] "Max-min fairness: maximize minimum normalized throughput across jobs"
 # PAPER[§4.1|def] "throughput(m,X^equal) = proportional_throughputs (baseline for normalization)"
@@ -79,8 +95,16 @@ class MaxMinFairnessPolicyWithPerf(Policy):
                             scale_factors_array), x), axis=1)))
         # Make sure that the allocation can fit in the cluster.
         constraints = self.get_base_constraints(x, scale_factors_array)
+
+        # FIX: Explicitly constrain zero-throughput allocations to zero.
+        # This prevents allocating jobs to GPU types they cannot run on.
+        for i in range(m):
+            for j in range(n):
+                if throughputs[i, j] == 0:
+                    constraints.append(x[i, j] == 0)
+
         cvxprob = cp.Problem(objective, constraints)
-        result = cvxprob.solve(solver=self._solver)
+        result = _solve_with_fallback(cvxprob, self._solver)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')
@@ -258,7 +282,7 @@ class MaxMinFairnessPolicyWithPacking(PolicyWithPacking):
                                       axis=1)))
 
         cvxprob = cp.Problem(objective, constraints)
-        result = cvxprob.solve(solver=self._solver)
+        result = _solve_with_fallback(cvxprob, self._solver)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')
@@ -357,7 +381,7 @@ class MaxMinFairnessPolicyWithPacking(PolicyWithPacking):
         else:
             kwargs = {}
 
-        result = cvxprob.solve(solver=self._solver, **kwargs)
+        result = _solve_with_fallback(cvxprob, self._solver, **kwargs)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')

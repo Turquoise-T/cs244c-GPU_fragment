@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# Pre-commit hook: runs unit and integration tests before allowing commit.
+# Blocks commit if any test fails.
+
+echo "Running pre-commit tests..."
+
+# Change to scheduler directory
+cd "$(git rev-parse --show-toplevel)/src/scheduler/tests" || exit 1
+
+# Activate virtual environment
+source ../../../.venv/bin/activate 2>/dev/null || {
+    echo "Warning: Could not activate virtual environment"
+    echo "Skipping tests - run manually: cd src/scheduler/tests && python -m unittest integration_test -v"
+    exit 0
+}
+
+# Run unit tests (fast)
+echo "Running unit tests..."
+python -m unittest policies_tests -v 2>&1 | tail -5
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+    echo ""
+    echo "COMMIT BLOCKED: Unit tests failed"
+    exit 1
+fi
+
+# Run integration tests (deterministic output check)
+echo ""
+echo "Running integration tests..."
+python -m unittest integration_test 2>&1 | tail -10
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+    echo ""
+    echo "COMMIT BLOCKED: Integration tests failed"
+    echo "This likely means you changed scheduler behavior unintentionally."
+    exit 1
+fi
+
+echo ""
+echo "All tests passed. Proceeding with commit."
+exit 0

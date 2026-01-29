@@ -1,7 +1,6 @@
-import sys; sys.path.append("..")
-from throughput_estimator import ThroughputEstimator
-from job_table import JobTable
-import utils
+import os
+import sys
+sys.path.append("..")
 
 import numpy as np
 import unittest
@@ -9,15 +8,29 @@ import unittest
 class TestThroughputEstimator(unittest.TestCase):
 
     def setUp(self):
+        oracle_file = '../oracle_throughputs_v2.json'
+        oracle_path = os.path.join(os.path.dirname(__file__), oracle_file)
+
+        if not os.path.exists(oracle_path):
+            self.skipTest(f"Required file {oracle_file} does not exist")
+
+        from throughput_estimator import ThroughputEstimator
+        from job_table import JobTable
+        import utils
+
         self._oracle_throughputs = \
-            utils.read_all_throughputs_json_v2('../oracle_throughputs_v2.json')
+            utils.read_all_throughputs_json_v2(oracle_path)
         self._worker_types = ['k80', 'p100', 'v100']
         self._job_types = [(JobTable[i].model, 1) for i in range(len(JobTable))]
+        self._ThroughputEstimator = ThroughputEstimator
 
     def test_no_estimation(self):
+        if not hasattr(self, '_oracle_throughputs'):
+            self.skipTest("setUp was skipped due to missing files")
+
         num_reference_models = len(self._job_types)
         profiling_percentage = 1.0
-        estimator = ThroughputEstimator(self._oracle_throughputs,
+        estimator = self._ThroughputEstimator(self._oracle_throughputs,
                                         self._worker_types, self._job_types,
                                         num_reference_models,
                                         profiling_percentage)
@@ -46,9 +59,12 @@ class TestThroughputEstimator(unittest.TestCase):
                                              estimated_throughput)))
 
     def test_estimation(self):
+        if not hasattr(self, '_oracle_throughputs'):
+            self.skipTest("setUp was skipped due to missing files")
+
         num_reference_models = 16
         profiling_percentage = 0.6
-        estimator = ThroughputEstimator(self._oracle_throughputs,
+        estimator = self._ThroughputEstimator(self._oracle_throughputs,
                                         self._worker_types, self._job_types,
                                         num_reference_models,
                                         profiling_percentage)

@@ -1,0 +1,19 @@
+
+======================================================================
+BENCHMARK RESULTS: fig11_finish_time_fairness_perf_0.4jph_multi_s0
+======================================================================
+
+Configuration:
+  Policy: finish_time_fairness_perf
+  Load: 0.4 jobs/hr
+  Cluster: 36:36:36 (V100:P100:K80)
+  Measurement window: jobs 4000-5000
+
+Results:
+  Total runtime: 36.97 seconds (0.62 minutes)
+  Saturated (early exit): True
+  Partial JCT at exit: N/A seconds
+  Average JCT: inf seconds (inf hours)
+  Utilization: 11.27%
+
+======================================================================

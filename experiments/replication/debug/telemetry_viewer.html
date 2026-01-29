@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Telemetry Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .controls { margin-bottom: 20px; display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; }
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-weight: bold; font-size: 12px; }
+        select, input { padding: 5px; min-width: 150px; }
+        input[type="number"] { width: 80px; min-width: 80px; }
+        .chart-container { width: 100%; height: 600px; }
+        .file-list { margin-bottom: 10px; }
+        .file-item { display: inline-flex; align-items: center; margin-right: 15px; }
+        .file-item input[type="checkbox"] { margin-right: 5px; min-width: auto; }
+        .color-box { width: 12px; height: 12px; display: inline-block; margin-right: 5px; }
+        .legend { margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 5px; }
+        .legend-item { display: inline-block; margin-right: 20px; }
+        .legend-color { display: inline-block; width: 30px; height: 3px; margin-right: 5px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <h2>Telemetry Viewer</h2>
+
+    <div class="file-list" id="fileList"></div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>X-Axis:</label>
+            <select id="xAxis"></select>
+        </div>
+        <div class="control-group">
+            <label>Y-Axis:</label>
+            <select id="yAxis"></select>
+        </div>
+        <div class="control-group">
+            <label>JCT Window Size:</label>
+            <input type="number" id="jctWindow" value="50" min="10" max="500">
+        </div>
+        <div class="control-group">
+            <label>Show Phases:</label>
+            <input type="checkbox" id="showPhases" checked style="min-width: auto;">
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="chart"></canvas>
+    </div>
+
+    <div class="legend">
+        <span class="legend-item"><span class="legend-color" style="background: rgba(0,255,0,0.3);"></span>Warm-up (jobs &lt;4000)</span>
+        <span class="legend-item"><span class="legend-color" style="background: rgba(255,255,0,0.3);"></span>Measurement (jobs 4000-5000)</span>
+        <span class="legend-item"><span class="legend-color" style="background: rgba(255,0,0,0.3);"></span>Cool-down (jobs &gt;5000)</span>
+    </div>
+
+    <script>
+        const COLORS = [
+            'rgb(54, 162, 235)',
+            'rgb(255, 99, 132)',
+            'rgb(75, 192, 192)',
+            'rgb(255, 159, 64)',
+            'rgb(153, 102, 255)',
+        ];
+
+        let allData = {};
+        let completionData = {};
+        let chart = null;
+        let fields = [];
+
+        async function loadData() {
+            const telemetryFiles = [
+                'telemetry_data/fig11_finish_time_fairness_0.4jph_multi_s0_telemetry.json',
+                'telemetry_data/fig11_finish_time_fairness_1.0jph_multi_s0_telemetry.json',
+                'telemetry_data/fig11_finish_time_fairness_1.6jph_multi_s0_telemetry.json',
+                'telemetry_data/fig11_finish_time_fairness_2.4jph_multi_s2_telemetry.json'
+            ];
+
+            const completionFiles = [
+                'telemetry_data/fig11_finish_time_fairness_0.4jph_multi_s0_completions.json',
+                'telemetry_data/fig11_finish_time_fairness_1.0jph_multi_s0_completions.json',
+                'telemetry_data/fig11_finish_time_fairness_1.6jph_multi_s0_completions.json',
+                'telemetry_data/fig11_finish_time_fairness_2.4jph_multi_s2_completions.json'
+            ];
+
+            // Load telemetry
+            for (let i = 0; i < telemetryFiles.length; i++) {
+                const file = telemetryFiles[i];
+                const name = file.split('/').pop().replace('_telemetry.json', '');
+                try {
+                    const response = await fetch(file);
+                    const text = await response.text();
+                    const lines = text.trim().split('\n');
+                    allData[name] = lines.map(line => {
+                        const d = JSON.parse(line);
+                        // Convert times from seconds to hours
+                        d.sim_time_hrs = d.sim_time / 3600;
+                        d.wall_time_min = d.wall_time / 60;
+                        d.avg_jct_hrs = d.avg_jct / 3600;
+                        return d;
+                    });
+                    console.log('Loaded telemetry ' + name + ': ' + allData[name].length + ' points');
+                } catch (e) {
+                    console.error('Failed to load ' + file, e);
+                }
+            }
+
+            // Load completions
+            for (let i = 0; i < completionFiles.length; i++) {
+                const file = completionFiles[i];
+                const name = file.split('/').pop().replace('_completions.json', '');
+                try {
+                    const response = await fetch(file);
+                    const data = await response.json();
+                    completionData[name] = data;
+                    console.log('Loaded completions ' + name + ': ' + data.length + ' events');
+                } catch (e) {
+                    console.error('Failed to load ' + file, e);
+                }
+            }
+
+            // Compute windowed JCT and add to telemetry
+            computeWindowedJCT();
+
+            const firstKey = Object.keys(allData)[0];
+            if (firstKey && allData[firstKey].length > 0) {
+                fields = Object.keys(allData[firstKey][0]);
+            }
+
+            setupControls();
+            setupFileList();
+            updateChart();
+        }
+
+        function computeWindowedJCT() {
+            const windowSize = parseInt(document.getElementById('jctWindow').value) || 50;
+
+            Object.keys(allData).forEach(name => {
+                const telemetry = allData[name];
+                const completions = completionData[name] || [];
+
+                // Filter to measurement window jobs (4000-5000)
+                const windowCompletions = completions
+                    .filter(c => c.job_id >= 4000 && c.job_id < 5000)
+                    .sort((a, b) => a.sim_time - b.sim_time);
+
+                // For each telemetry point, compute windowed JCT
+                let completionIdx = 0;
+                telemetry.forEach(t => {
+                    // Find completions up to this sim_time
+                    while (completionIdx < windowCompletions.length &&
+                           windowCompletions[completionIdx].sim_time <= t.sim_time) {
+                        completionIdx++;
+                    }
+
+                    // Compute windowed JCT from last N completions
+                    if (completionIdx >= windowSize) {
+                        const recentCompletions = windowCompletions.slice(completionIdx - windowSize, completionIdx);
+                        const avgJct = recentCompletions.reduce((sum, c) => sum + c.duration, 0) / windowSize;
+                        t.windowed_jct_hrs = avgJct / 3600;
+
+                        // Also compute completion rate for last N jobs
+                        const timeSpan = recentCompletions[windowSize-1].sim_time - recentCompletions[0].sim_time;
+                        t.windowed_completion_rate = timeSpan > 0 ? (windowSize / (timeSpan / 3600)) : 0;
+                    } else if (completionIdx > 0) {
+                        const recentCompletions = windowCompletions.slice(0, completionIdx);
+                        const avgJct = recentCompletions.reduce((sum, c) => sum + c.duration, 0) / completionIdx;
+                        t.windowed_jct_hrs = avgJct / 3600;
+                        t.windowed_completion_rate = null;
+                    } else {
+                        t.windowed_jct_hrs = null;
+                        t.windowed_completion_rate = null;
+                    }
+                });
+            });
+
+            // Update fields list
+            const firstKey = Object.keys(allData)[0];
+            if (firstKey && allData[firstKey].length > 0) {
+                fields = Object.keys(allData[firstKey][0]);
+            }
+        }
+
+        function getPhaseAnnotations(xField) {
+            if (!document.getElementById('showPhases').checked) return {};
+
+            const annotations = {};
+            let idx = 0;
+
+            Object.keys(allData).forEach(name => {
+                const checkbox = document.querySelector('input[data-name="' + name + '"]');
+                if (!checkbox || !checkbox.checked) return;
+
+                const data = allData[name];
+
+                // Find phase transitions
+                let warmupEnd = null;
+                let measurementEnd = null;
+
+                for (let i = 0; i < data.length; i++) {
+                    if (warmupEnd === null && data[i].jobs_completed_window > 0) {
+                        warmupEnd = data[i][xField];
+                    }
+                    if (warmupEnd !== null && measurementEnd === null &&
+                        data[i].jobs_completed_window >= 1000) {
+                        measurementEnd = data[i][xField];
+                    }
+                }
+
+                // Use last point if measurement didn't complete
+                const lastX = data[data.length - 1][xField];
+                if (measurementEnd === null) measurementEnd = lastX;
+
+                // Add phase regions
+                if (warmupEnd !== null) {
+                    annotations['warmup_' + idx] = {
+                        type: 'box',
+                        xMin: 0,
+                        xMax: warmupEnd,
+                        backgroundColor: 'rgba(0, 255, 0, 0.05)',
+                        borderWidth: 0
+                    };
+                    annotations['measurement_' + idx] = {
+                        type: 'box',
+                        xMin: warmupEnd,
+                        xMax: measurementEnd,
+                        backgroundColor: 'rgba(255, 255, 0, 0.1)',
+                        borderWidth: 0
+                    };
+                    if (measurementEnd < lastX) {
+                        annotations['cooldown_' + idx] = {
+                            type: 'box',
+                            xMin: measurementEnd,
+                            xMax: lastX,
+                            backgroundColor: 'rgba(255, 0, 0, 0.05)',
+                            borderWidth: 0
+                        };
+                    }
+                }
+                idx++;
+            });
+
+            return annotations;
+        }
+
+        function setupFileList() {
+            const container = document.getElementById('fileList');
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+
+            Object.keys(allData).forEach((name, i) => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = 'file_' + i;
+                checkbox.checked = true;
+                checkbox.dataset.name = name;
+                checkbox.onchange = updateChart;
+
+                const colorBox = document.createElement('span');
+                colorBox.className = 'color-box';
+                colorBox.style.backgroundColor = COLORS[i % COLORS.length];
+
+                const label = document.createElement('label');
+                label.htmlFor = 'file_' + i;
+                label.textContent = name;
+
+                div.appendChild(checkbox);
+                div.appendChild(colorBox);
+                div.appendChild(label);
+                container.appendChild(div);
+            });
+        }
+
+        function setupControls() {
+            const xSelect = document.getElementById('xAxis');
+            const ySelect = document.getElementById('yAxis');
+
+            // Clear existing options
+            while (xSelect.options.length > 0) xSelect.remove(0);
+            while (ySelect.options.length > 0) ySelect.remove(0);
+
+            fields.forEach(field => {
+                xSelect.add(new Option(field, field));
+                ySelect.add(new Option(field, field));
+            });
+
+            xSelect.value = 'wall_time_min';
+            ySelect.value = 'jobs_completed_window';
+
+            xSelect.onchange = updateChart;
+            ySelect.onchange = updateChart;
+            document.getElementById('jctWindow').onchange = function() {
+                computeWindowedJCT();
+                setupControls();
+                updateChart();
+            };
+            document.getElementById('showPhases').onchange = updateChart;
+        }
+
+        function updateChart() {
+            const xField = document.getElementById('xAxis').value;
+            const yField = document.getElementById('yAxis').value;
+
+            const datasets = [];
+
+            Object.keys(allData).forEach((name, i) => {
+                const checkbox = document.querySelector('input[data-name="' + name + '"]');
+                if (!checkbox || !checkbox.checked) return;
+
+                const data = allData[name];
+                const points = data.map(d => ({
+                    x: d[xField],
+                    y: d[yField]
+                })).filter(p => p.x !== undefined && p.y !== undefined && p.y !== null);
+
+                datasets.push({
+                    label: name,
+                    data: points,
+                    borderColor: COLORS[i % COLORS.length],
+                    backgroundColor: COLORS[i % COLORS.length],
+                    pointRadius: 0,
+                    borderWidth: 2,
+                    fill: false,
+                    showLine: true
+                });
+            });
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            const ctx = document.getElementById('chart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        title: { display: true, text: yField + ' vs ' + xField },
+                        annotation: {
+                            annotations: getPhaseAnnotations(xField)
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: xField } },
+                        y: { title: { display: true, text: yField } }
+                    }
+                }
+            });
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
