@@ -4,7 +4,8 @@
 
 # Core - LP solver and numerics
 cvxpy>=1.4
-ecos  # ECOS solver for cvxpy
+# ecos  # ECOS solver (optional). On macOS, building needs: sudo xcodebuild -license
+#       # Without ecos, run sweeps with: --solver SCS (cvxpy installs SCS as wheel)
 numpy>=1.24
 scipy>=1.10
 

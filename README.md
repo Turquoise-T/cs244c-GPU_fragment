@@ -40,6 +40,8 @@ pip install -r requirements-sim.txt
 
 # Generate protobuf stubs (required once)
 cd src/scheduler
+# If "make rpc_stubs" fails (e.g. Xcode license), run instead:
+# python -m grpc_tools.protoc -Iruntime/protobuf --python_out=runtime/rpc_stubs --grpc_python_out=runtime/rpc_stubs runtime/protobuf/common.proto runtime/protobuf/enums.proto runtime/protobuf/iterator_to_scheduler.proto runtime/protobuf/scheduler_to_worker.proto runtime/protobuf/worker_to_scheduler.proto
 make rpc_stubs
 
 # Verify installation
@@ -64,8 +66,10 @@ python scripts/sweeps/run_sweep_static.py \
   --num-data-points 1 \
   --seeds 42 \
   --log-dir /tmp/gavel_test \
+  --solver SCS \
   -v
 ```
+(On macOS without ECOS installed, use `--solver SCS`; you can omit it if ECOS is installed.)
 
 Expected output:
 ```
