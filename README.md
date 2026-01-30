@@ -73,6 +73,30 @@ Configuration: cluster_spec=v100:4|p100:4|k80:4, policy=FIFO, seed=42, num_total
 Results: average JCT=36721.82, utilization=0.14, makespan=215530.17
 ```
 
+## Run a Simulation with FGD
+With a similar setup as the section above, from inside the `venv` within the `src/scheduler` folder, run the following commands:
+
+```bash
+# Run FGD policy
+python3 scripts/drivers/simulate_scheduler_with_trace.py \
+  -t traces/physical_cluster/small_test.trace \
+  -p fgd \
+  -c 4:4:4 \
+  --num_gpus_per_server 4:4:4 \
+  --throughputs_file simulation_throughputs.json \
+  --seed 42
+
+# Run baseline for comparison
+python3 scripts/drivers/simulate_scheduler_with_trace.py \
+  -t traces/physical_cluster/small_test.trace \
+  -p max_min_fairness_perf \
+  -c 4:4:4 \
+  --num_gpus_per_server 4:4:4 \
+  --throughputs_file simulation_throughputs.json \
+  --seed 42
+```
+
+
 ## Running Experiments on FarmShare
 
 For large-scale experiments (e.g., replicating Gavel paper figures), use Stanford's FarmShare cluster.
