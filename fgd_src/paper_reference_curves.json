@@ -1,0 +1,88 @@
+{
+  "_description": "Reference data extracted from FGD ATC'23 paper Figures 7 and 9. Values are approximate readings from the published plots. X-axis 'demand_pct' = Arrived workloads in % of cluster GPU capacity.",
+  "_source": "Weng et al., 'Beware of Fragmentation: Scheduling GPU-Sharing Workloads with Fragmentation Gradient Descent', ATC'23",
+  "_cluster": "Cluster H: 1213 nodes, 6212 GPUs (T4, P100, V100, G2, G3, A10)",
+  "_workload": "openb_pod_list_default (8152 pods), tune_ratio=1.3, 10 seeds (42-51)",
+
+  "fig7a_frag_rate_pct": {
+    "_description": "Frag Rate (%) - percentage of unallocated GPUs that are fragmented. Rises to ~100% as cluster fills.",
+    "_x_axis": "Arrived workloads (% of cluster GPU capacity)",
+    "_y_axis": "Frag Rate (%)",
+    "demand_pct": [0, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90, 95, 100, 105, 110, 120],
+    "random":     [15, 15, 16, 18, 20, 25, 32, 42, 58, 72, 90, 97, 98, 98, 98, 98],
+    "dotprod":    [15, 15, 15, 17, 18, 22, 28, 37, 52, 67, 85, 95, 97, 98, 98, 98],
+    "clustering": [15, 15, 15, 15, 16, 18, 22, 30, 42, 58, 80, 93, 97, 97, 97, 97],
+    "packing":    [15, 15, 15, 15, 15, 17, 19, 24, 32, 45, 72, 92, 97, 97, 97, 97],
+    "bestfit":    [15, 15, 15, 14, 15, 16, 18, 22, 30, 42, 68, 90, 96, 97, 97, 97],
+    "fgd":        [14, 14, 14, 14, 14, 14, 15, 17, 20, 27, 37, 55, 82, 92, 96, 97]
+  },
+
+  "fig7b_frag_over_total_pct": {
+    "_description": "Frag/Total (%) - fragmented GPUs as percentage of TOTAL cluster GPUs. This is the key metric for comparing policies early on. Our code calls this 'frag_ratio'.",
+    "_x_axis": "Arrived workloads (% of cluster GPU capacity)",
+    "_y_axis": "Frag / Total (%)",
+    "demand_pct": [0, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90, 95, 100, 110, 120],
+    "random":     [14.5, 14.5, 14.5, 14.5, 14.0, 13.5, 13.5, 14.0, 15.0, 15.5, 16.0, 14.0, 10.0, 10.0, 10.0],
+    "dotprod":    [15.0, 15.0, 15.0, 15.0, 15.0, 14.8, 14.5, 15.0, 16.0, 16.0, 16.0, 13.5, 10.0, 9.5, 9.5],
+    "clustering": [15.0, 15.0, 14.5, 14.0, 13.5, 13.0, 12.5, 12.0, 12.0, 11.5, 11.0, 9.5, 8.0, 8.0, 8.5],
+    "packing":    [15.0, 15.0, 14.5, 14.0, 13.5, 12.5, 11.5, 10.5, 10.0, 9.5, 9.0, 8.5, 8.0, 7.5, 7.5],
+    "bestfit":    [15.0, 15.0, 14.5, 14.0, 13.0, 12.5, 11.5, 10.5, 10.0, 9.5, 9.0, 8.5, 8.0, 8.0, 8.5],
+    "fgd":        [14.0, 14.0, 13.5, 13.0, 12.0, 11.0, 10.0, 8.5, 7.0, 6.5, 6.0, 5.5, 5.0, 5.0, 5.0]
+  },
+
+  "fig9a_unalloc_gpu_pct": {
+    "_description": "Unallocated GPU (%) - fraction of total GPUs not allocated. Our 'alloc_ratio' = 1 - (unalloc_pct/100). All traces start at ~25% unallocated at x=75.",
+    "_x_axis": "Arrived workloads (% of cluster GPU capacity)",
+    "_y_axis": "Unallocated GPU (%)",
+    "demand_pct": [75, 80, 85, 90, 95, 100, 105, 110, 115, 120],
+    "random":     [25.0, 23.0, 20.5, 18.0, 15.5, 13.0, 12.0, 11.5, 11.0, 10.5],
+    "dotprod":    [25.0, 22.0, 17.0, 13.0, 10.5, 10.0, 10.0, 10.0, 9.5, 9.5],
+    "clustering": [25.0, 21.0, 15.0, 9.5, 7.5, 7.0, 7.0, 7.0, 7.0, 7.0],
+    "packing":    [25.0, 20.0, 13.0, 8.0, 7.0, 6.5, 6.5, 6.5, 6.5, 6.5],
+    "bestfit":    [25.0, 20.0, 13.0, 8.0, 7.0, 6.5, 6.5, 6.5, 6.5, 6.5],
+    "fgd":        [25.0, 20.0, 12.5, 7.5, 5.5, 5.0, 5.0, 5.0, 5.0, 5.0],
+    "ideal":      [25.0, 20.0, 15.0, 10.0, 5.0, 0.0, null, null, null, null]
+  },
+
+  "fig9b_occupied_nodes": {
+    "_description": "Number of GPU nodes with at least one allocated GPU. All policies asymptote to ~1200 by ~90% demand.",
+    "_x_axis": "Arrived workloads (% of cluster GPU capacity)",
+    "_y_axis": "Occupied nodes (count, max ~1213)",
+    "demand_pct": [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+    "random":     [0, 350, 620, 810, 950, 1050, 1110, 1150, 1180, 1200, 1200],
+    "dotprod":    [0, 200, 400, 580, 730, 860, 960, 1050, 1120, 1180, 1200],
+    "clustering": [0, 300, 500, 650, 780, 880, 960, 1040, 1100, 1170, 1200],
+    "packing":    [0, 120, 240, 360, 480, 590, 700, 810, 940, 1100, 1200],
+    "bestfit":    [0, 120, 240, 360, 480, 590, 700, 810, 940, 1100, 1200],
+    "fgd":        [0, 120, 240, 350, 470, 580, 690, 800, 920, 1080, 1200]
+  },
+
+  "fig9c_pending_gpus_at_96pct": {
+    "_description": "Total GPU-equivalents of pending (rejected) tasks when cumulative demand reaches 96% of capacity. Broken down by task GPU request size. Read carefully from stacked bar chart.",
+    "_x_condition": "demand = 96% of cluster GPU capacity",
+    "fgd":        {"total": 55,  "lt1_gpu": 25,  "1_gpu": 25,  "2_gpu": 5,   "8_gpu": 0},
+    "bestfit":    {"total": 195, "lt1_gpu": 45,  "1_gpu": 145, "2_gpu": 0,   "8_gpu": 5},
+    "packing":    {"total": 250, "lt1_gpu": 58,  "1_gpu": 180, "2_gpu": 0,   "8_gpu": 12},
+    "clustering": {"total": 275, "lt1_gpu": 63,  "1_gpu": 195, "2_gpu": 0,   "8_gpu": 17},
+    "dotprod":    {"total": 320, "lt1_gpu": 74,  "1_gpu": 221, "2_gpu": 0,   "8_gpu": 25},
+    "random":     {"total": 680, "lt1_gpu": 75,  "1_gpu": 455, "2_gpu": 0,   "8_gpu": 150}
+  },
+
+  "fig9d_frag_breakdown_pct": {
+    "_description": "Breakdown of fragmented GPUs into three categories (percentages of total fragmented GPUs, sums to 100%). 'non_gpu' = fragmented due to non-GPU resource shortage (CPU/mem). 'stranded' = GPU available but unreachable due to scheduling topology. 'deficient' = GPU capacity too small for pending tasks.",
+    "fgd":        {"non_gpu": 15, "stranded": 10, "deficient": 75},
+    "bestfit":    {"non_gpu": 15, "stranded": 20, "deficient": 65},
+    "packing":    {"non_gpu": 15, "stranded": 30, "deficient": 55},
+    "clustering": {"non_gpu": 15, "stranded": 35, "deficient": 50},
+    "dotprod":    {"non_gpu": 15, "stranded": 40, "deficient": 45},
+    "random":     {"non_gpu": 15, "stranded": 40, "deficient": 45}
+  },
+
+  "_validation_checks": {
+    "policy_ordering_frag_at_100pct_demand": "Random > DotProd > Clustering > Packing ~ BestFit > FGD",
+    "fgd_frag_reduction_vs_bestfit_at_80pct": "~30% lower (7.0 vs 10.0 in fig7b)",
+    "fgd_frag_reduction_vs_random_at_80pct": "~53% lower (7.0 vs 15.0 in fig7b)",
+    "fgd_unalloc_at_100pct_demand": "~5% (vs 13% random, 6.5% bestfit)",
+    "fgd_pending_gpus_at_96pct": "~50 (vs 700 random, 200 bestfit) -- 4x better than bestfit"
+  }
+}
