@@ -5,46 +5,95 @@ FGD (Fragmentation Gradient Descent) Placement Algorithm
 Based on: "Beware of Fragmentation: Scheduling GPU-Sharing Workloads with
           Fragmentation Gradient Descent" (ATC 2023)
 
-IMPORTANT: FGD is a PLACEMENT algorithm, NOT an allocation policy.
-- Allocation (Policy class): Decides time-share fractions X_mj for each job on each worker type
-- Placement (FGD): Decides WHICH specific GPUs/workers a job runs on to minimize fragmentation
+FGD is a PLACEMENT algorithm that minimizes GPU fragmentation when placing
+jobs that use FRACTIONAL GPUs (GPU sharing).
 
-The existing Gavel policies (FIFO, MaxMinFairness, etc.) handle allocation.
-FGD should be used in the scheduler when assigning workers to jobs, as an
-alternative to the default strided assignment in _assign_workers_to_job().
-
-Fragmentation Definition (from paper):
---------------------------------------
-Fragmentation occurs when GPU resources become unusable due to partial allocation.
-A "fragment" is created when a server has some but not all GPUs allocated,
-leaving the remaining GPUs potentially unusable for jobs requiring multiple GPUs.
-
-For example:
-- Server with 4 GPUs, job needs 2 GPUs
-- If GPUs are allocated poorly, remaining 2 GPUs might be on different servers
-- This creates fragmentation: those GPUs can't serve another 2-GPU job together
-
-FGD Approach:
+Key Concepts:
 -------------
-When placing a job, FGD computes the "fragmentation gradient" (Δfrag) for each
-candidate placement and chooses the one that minimizes the fragmentation increase.
+1. GPU Sharing: Multiple jobs can share the same GPU
+   - Job A needs 0.3 GPU, Job B needs 0.5 GPU → can share 1 GPU
+   - Represented as gpu_milli (0-1000, where 1000 = 1.0 GPU)
+
+2. Fragmentation: When GPU resources are split across multiple GPUs
+   - GPU-A has 0.3 free, GPU-B has 0.4 free
+   - Total free = 0.7 GPU, but a job needing 0.5 GPU can't use it efficiently
+   - FGD minimizes this "scattered" free space
+
+3. Fragmentation Gradient (Δfrag):
+   - For each candidate GPU, compute how much fragmentation would increase
+   - Pick the GPU with minimum Δfrag
 
 Integration with Gavel:
 -----------------------
-To use FGD placement in Gavel, modify scheduler.py:
-1. In _schedule_jobs_on_workers_helper(), replace the call to _assign_workers_to_job()
-   with a call to fgd_assign_workers() when FGD is enabled.
-2. Add a placement_strategy parameter to the Scheduler class ('strided' or 'fgd').
+This module provides GPU-sharing-aware placement for Gavel's scheduler.
+Enable with placement_strategy='fgd' and set gpu_sharing_mode=True.
 """
 
 import numpy as np
 from typing import Dict, List, Set, Tuple, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+
+# =============================================================================
+# GPU State for Fractional GPU Sharing
+# =============================================================================
+
+@dataclass
+class GPUState:
+    """
+    Represents the state of a single GPU with fractional allocation support.
+    
+    Attributes:
+        gpu_id: Unique identifier for this GPU
+        server_id: Which server this GPU belongs to
+        total_milli: Total capacity in milli-GPU (typically 1000)
+        used_milli: Currently used capacity in milli-GPU
+        job_assignments: List of (job_id, milli) tuples for jobs on this GPU
+    """
+    gpu_id: int
+    server_id: int
+    total_milli: int = 1000  # 1000 milli = 1.0 GPU
+    used_milli: int = 0
+    job_assignments: List[Tuple[int, int]] = field(default_factory=list)
+    
+    @property
+    def free_milli(self) -> int:
+        """Available capacity in milli-GPU."""
+        return self.total_milli - self.used_milli
+    
+    @property
+    def free_fraction(self) -> float:
+        """Available capacity as fraction (0.0-1.0)."""
+        return self.free_milli / 1000.0
+    
+    @property
+    def used_fraction(self) -> float:
+        """Used capacity as fraction (0.0-1.0)."""
+        return self.used_milli / 1000.0
+    
+    @property
+    def is_empty(self) -> bool:
+        """GPU has no allocations."""
+        return self.used_milli == 0
+    
+    @property
+    def is_full(self) -> bool:
+        """GPU is fully allocated."""
+        return self.free_milli == 0
+    
+    @property
+    def is_partial(self) -> bool:
+        """GPU has some but not full allocation (fragmented)."""
+        return not self.is_empty and not self.is_full
+    
+    def can_fit(self, milli_needed: int) -> bool:
+        """Check if this GPU can accommodate the requested milli-GPU."""
+        return self.free_milli >= milli_needed
 
 
 @dataclass
 class ServerState:
-    """Represents the state of a single server."""
+    """Represents the state of a single server (for whole-GPU allocation)."""
     server_id: int
     total_gpus: int
     allocated_gpus: int
@@ -52,60 +101,356 @@ class ServerState:
     
     @property
     def is_empty(self) -> bool:
-        """Server has no allocated GPUs."""
         return self.allocated_gpus == 0
     
     @property
     def is_full(self) -> bool:
-        """Server has all GPUs allocated."""
         return self.available_gpus == 0
     
     @property
     def is_partial(self) -> bool:
-        """Server has some but not all GPUs allocated (fragmented)."""
         return not self.is_empty and not self.is_full
 
 
+# =============================================================================
+# Fragmentation Metrics for GPU Sharing
+# =============================================================================
+
+def compute_gpu_fragmentation(gpu_states: List[GPUState]) -> float:
+    """
+    Compute cluster-wide GPU fragmentation metric.
+    
+    Fragmentation = sum of "unusable" free space on partial GPUs.
+    A GPU is fragmented if it has some free space but not enough for
+    typical workloads.
+    
+    Args:
+        gpu_states: List of GPUState objects.
+        
+    Returns:
+        Total fragmentation score (lower is better).
+    """
+    fragmentation = 0.0
+    for gpu in gpu_states:
+        if gpu.is_partial:
+            # Fragmentation contribution = free space that's "trapped"
+            # Weight by how small the free space is (smaller = more fragmented)
+            fragmentation += gpu.free_fraction
+    return fragmentation
+
+
+def compute_fragmentation_increment_gpu(
+    gpu: GPUState,
+    milli_to_allocate: int
+) -> float:
+    """
+    Compute the fragmentation increment (Δfrag) if we allocate on this GPU.
+    
+    Based on FGD paper Algorithm 1:
+    Δ = F_n-(M) - F_n(M)
+    where F is the fragmentation function, n- is after allocation, n is before.
+    
+    Args:
+        gpu: Current GPU state.
+        milli_to_allocate: milli-GPU to allocate (0-1000).
+        
+    Returns:
+        Fragmentation increment. Lower (or negative) is better.
+    """
+    if not gpu.can_fit(milli_to_allocate):
+        return float('inf')
+    
+    # Current fragmentation contribution
+    if gpu.is_empty:
+        old_frag = 0.0
+    elif gpu.is_partial:
+        old_frag = gpu.free_fraction
+    else:  # full
+        old_frag = 0.0
+    
+    # New state after allocation
+    new_free_milli = gpu.free_milli - milli_to_allocate
+    new_used_milli = gpu.used_milli + milli_to_allocate
+    
+    # New fragmentation contribution
+    if new_free_milli == 0:  # Will be full - no fragmentation
+        new_frag = 0.0
+    elif new_used_milli == 0:  # Still empty - no fragmentation (impossible here)
+        new_frag = 0.0
+    else:  # Partial
+        new_frag = new_free_milli / 1000.0
+    
+    return new_frag - old_frag
+
+
+# =============================================================================
+# FGD Placement Algorithm for GPU Sharing
+# =============================================================================
+
+def fgd_select_gpu(
+    gpu_states: List[GPUState],
+    milli_needed: int
+) -> Optional[int]:
+    """
+    Select the best GPU for placement using FGD algorithm.
+    
+    FGD Algorithm (from paper):
+    1. For each GPU that can fit the job
+    2. Compute Δfrag = fragmentation increment if we place here
+    3. Select GPU with minimum Δfrag
+    
+    Tie-breaking: Prefer GPUs with less free space (pack tightly)
+    
+    Args:
+        gpu_states: Current state of all GPUs.
+        milli_needed: milli-GPU required by the job.
+        
+    Returns:
+        GPU ID to place the job on, or None if no GPU can fit it.
+    """
+    best_gpu = None
+    best_delta = float('inf')
+    best_free = float('inf')  # For tie-breaking
+    
+    for gpu in gpu_states:
+        if not gpu.can_fit(milli_needed):
+            continue
+        
+        delta = compute_fragmentation_increment_gpu(gpu, milli_needed)
+        
+        # Select GPU with minimum fragmentation increment
+        # Tie-break by preferring GPUs with less free space (pack tightly)
+        if (delta < best_delta or 
+            (delta == best_delta and gpu.free_milli < best_free)):
+            best_delta = delta
+            best_gpu = gpu.gpu_id
+            best_free = gpu.free_milli
+    
+    return best_gpu
+
+
+def fgd_select_gpus_multi(
+    gpu_states: List[GPUState],
+    milli_needed: int,
+    num_gpus: int
+) -> Optional[List[int]]:
+    """
+    Select multiple GPUs for a job that needs multiple GPUs.
+    
+    For jobs that need multiple GPUs (scale_factor > 1), we need to
+    select num_gpus GPUs, each with milli_needed capacity.
+    
+    Args:
+        gpu_states: Current state of all GPUs.
+        milli_needed: milli-GPU required per GPU.
+        num_gpus: Number of GPUs needed.
+        
+    Returns:
+        List of GPU IDs, or None if cannot fit.
+    """
+    # Make a copy to simulate allocations
+    simulated = [
+        GPUState(g.gpu_id, g.server_id, g.total_milli, g.used_milli, list(g.job_assignments))
+        for g in gpu_states
+    ]
+    
+    selected = []
+    for _ in range(num_gpus):
+        gpu_id = fgd_select_gpu(simulated, milli_needed)
+        if gpu_id is None:
+            return None
+        
+        selected.append(gpu_id)
+        # Update simulated state
+        simulated[gpu_id].used_milli += milli_needed
+    
+    return selected
+
+
+# =============================================================================
+# Baseline Placement Algorithms for Comparison
+# =============================================================================
+
+def bestfit_select_gpu(
+    gpu_states: List[GPUState],
+    milli_needed: int
+) -> Optional[int]:
+    """
+    Best-fit placement: Select GPU with least free space that can fit the job.
+    
+    This is a common baseline that minimizes wasted space per-GPU but
+    can lead to fragmentation across the cluster.
+    """
+    best_gpu = None
+    best_free = float('inf')
+    
+    for gpu in gpu_states:
+        if gpu.can_fit(milli_needed) and gpu.free_milli < best_free:
+            best_free = gpu.free_milli
+            best_gpu = gpu.gpu_id
+    
+    return best_gpu
+
+
+def worstfit_select_gpu(
+    gpu_states: List[GPUState],
+    milli_needed: int
+) -> Optional[int]:
+    """
+    Worst-fit placement: Select GPU with most free space.
+    
+    This spreads load evenly but can lead to more fragmentation.
+    """
+    best_gpu = None
+    best_free = -1
+    
+    for gpu in gpu_states:
+        if gpu.can_fit(milli_needed) and gpu.free_milli > best_free:
+            best_free = gpu.free_milli
+            best_gpu = gpu.gpu_id
+    
+    return best_gpu
+
+
+def firstfit_select_gpu(
+    gpu_states: List[GPUState],
+    milli_needed: int
+) -> Optional[int]:
+    """
+    First-fit placement: Select first GPU that can fit the job.
+    """
+    for gpu in gpu_states:
+        if gpu.can_fit(milli_needed):
+            return gpu.gpu_id
+    return None
+
+
+# =============================================================================
+# GPU Sharing Cluster State Manager
+# =============================================================================
+
+class GPUSharingCluster:
+    """
+    Manages GPU state for a cluster with GPU sharing support.
+    
+    This class tracks per-GPU usage and provides placement decisions
+    using FGD or baseline algorithms.
+    """
+    
+    def __init__(self, num_servers: int, gpus_per_server: int):
+        """
+        Initialize cluster state.
+        
+        Args:
+            num_servers: Number of servers in the cluster.
+            gpus_per_server: Number of GPUs per server.
+        """
+        self.num_servers = num_servers
+        self.gpus_per_server = gpus_per_server
+        self.total_gpus = num_servers * gpus_per_server
+        
+        # Initialize GPU states
+        self.gpu_states: List[GPUState] = []
+        gpu_id = 0
+        for server_id in range(num_servers):
+            for _ in range(gpus_per_server):
+                self.gpu_states.append(GPUState(
+                    gpu_id=gpu_id,
+                    server_id=server_id,
+                    total_milli=1000,
+                    used_milli=0,
+                    job_assignments=[]
+                ))
+                gpu_id += 1
+    
+    def place_job(self, job_id: int, gpu_milli: int, num_gpus: int = 1,
+                  strategy: str = 'fgd') -> Optional[List[int]]:
+        """
+        Place a job on the cluster using the specified strategy.
+        
+        Args:
+            job_id: Unique job identifier.
+            gpu_milli: milli-GPU required (0-1000).
+            num_gpus: Number of GPUs needed (for multi-GPU jobs).
+            strategy: Placement strategy ('fgd', 'bestfit', 'worstfit', 'firstfit').
+            
+        Returns:
+            List of GPU IDs where the job was placed, or None if cannot fit.
+        """
+        if num_gpus == 1:
+            # Single GPU job
+            if strategy == 'fgd':
+                gpu_id = fgd_select_gpu(self.gpu_states, gpu_milli)
+            elif strategy == 'bestfit':
+                gpu_id = bestfit_select_gpu(self.gpu_states, gpu_milli)
+            elif strategy == 'worstfit':
+                gpu_id = worstfit_select_gpu(self.gpu_states, gpu_milli)
+            elif strategy == 'firstfit':
+                gpu_id = firstfit_select_gpu(self.gpu_states, gpu_milli)
+            else:
+                raise ValueError(f"Unknown strategy: {strategy}")
+            
+            if gpu_id is None:
+                return None
+            
+            # Update state
+            self.gpu_states[gpu_id].used_milli += gpu_milli
+            self.gpu_states[gpu_id].job_assignments.append((job_id, gpu_milli))
+            return [gpu_id]
+        else:
+            # Multi-GPU job
+            gpu_ids = fgd_select_gpus_multi(self.gpu_states, gpu_milli, num_gpus)
+            if gpu_ids is None:
+                return None
+            
+            for gpu_id in gpu_ids:
+                self.gpu_states[gpu_id].used_milli += gpu_milli
+                self.gpu_states[gpu_id].job_assignments.append((job_id, gpu_milli))
+            return gpu_ids
+    
+    def remove_job(self, job_id: int) -> None:
+        """Remove a job from the cluster, freeing its GPU resources."""
+        for gpu in self.gpu_states:
+            to_remove = [(jid, milli) for jid, milli in gpu.job_assignments if jid == job_id]
+            for jid, milli in to_remove:
+                gpu.used_milli -= milli
+                gpu.job_assignments.remove((jid, milli))
+    
+    def get_fragmentation(self) -> float:
+        """Get current cluster fragmentation score."""
+        return compute_gpu_fragmentation(self.gpu_states)
+    
+    def get_utilization(self) -> float:
+        """Get current GPU utilization (0.0-1.0)."""
+        total_used = sum(gpu.used_milli for gpu in self.gpu_states)
+        total_capacity = self.total_gpus * 1000
+        return total_used / total_capacity
+    
+    def print_state(self) -> None:
+        """Print current cluster state for debugging."""
+        print("\n=== GPU Cluster State ===")
+        for server_id in range(self.num_servers):
+            server_gpus = [g for g in self.gpu_states if g.server_id == server_id]
+            gpu_strs = []
+            for g in server_gpus:
+                if g.is_empty:
+                    gpu_strs.append(f"[____]")
+                elif g.is_full:
+                    gpu_strs.append(f"[FULL]")
+                else:
+                    gpu_strs.append(f"[{g.used_fraction:.1f} ]")
+            print(f"Server {server_id}: {' '.join(gpu_strs)}")
+        print(f"Fragmentation: {self.get_fragmentation():.3f}")
+        print(f"Utilization: {self.get_utilization():.1%}")
+
+
+# =============================================================================
+# Legacy Support: Whole-GPU Allocation (Original Gavel Integration)
+# =============================================================================
+
 def compute_fragmentation(server_states: List[ServerState]) -> int:
-    """
-    Compute current cluster fragmentation.
-    
-    Fragmentation metric: Count of servers with partial allocation.
-    A server is "fragmented" if it has some but not all GPUs allocated.
-    
-    This is a simple metric that captures the essence of FGD's goal:
-    minimize the number of partially-used servers.
-    
-    Args:
-        server_states: List of ServerState objects representing each server.
-        
-    Returns:
-        Number of fragmented (partially allocated) servers.
-    """
+    """Compute fragmentation for whole-GPU allocation."""
     return sum(1 for s in server_states if s.is_partial)
-
-
-def compute_fragmentation_weighted(server_states: List[ServerState]) -> float:
-    """
-    Compute weighted fragmentation metric.
-    
-    More sophisticated metric that considers HOW fragmented each server is.
-    Fragmentation for a server = available_gpus / total_gpus (when partial)
-    
-    Higher values indicate worse fragmentation.
-    
-    Args:
-        server_states: List of ServerState objects.
-        
-    Returns:
-        Sum of fragmentation ratios across all partially-used servers.
-    """
-    total_frag = 0.0
-    for s in server_states:
-        if s.is_partial:
-            # Fragmentation ratio: what fraction of GPUs are wasted/unavailable
-            total_frag += s.available_gpus / s.total_gpus
-    return total_frag
 
 
 def compute_fragmentation_increment(
@@ -113,86 +458,27 @@ def compute_fragmentation_increment(
     server_id: int,
     gpus_to_allocate: int
 ) -> float:
-    """
-    Compute the fragmentation increment (Δfrag) if we allocate GPUs on a server.
-    
-    This is the core of FGD: for each candidate server, compute how much
-    the fragmentation would increase if we placed the job there.
-    
-    Args:
-        server_states: Current server states.
-        server_id: The server to consider for placement.
-        gpus_to_allocate: Number of GPUs the job needs.
-        
-    Returns:
-        The change in fragmentation (Δfrag) if we place the job on this server.
-        Lower is better.
-    """
+    """Compute fragmentation increment for whole-GPU allocation."""
     server = server_states[server_id]
     
     if server.available_gpus < gpus_to_allocate:
-        # Cannot fit on this server
         return float('inf')
     
-    # Current fragmentation state of this server
     was_empty = server.is_empty
     was_partial = server.is_partial
     
-    # Compute new state after allocation
     new_available = server.available_gpus - gpus_to_allocate
     new_allocated = server.allocated_gpus + gpus_to_allocate
     will_be_full = (new_available == 0)
     will_be_partial = (new_allocated > 0 and new_available > 0)
     
-    # Compute fragmentation change
     delta = 0.0
-    
-    # If server was empty and becomes partial: +1 fragmented server
     if was_empty and will_be_partial:
         delta += 1.0
-    
-    # If server was partial and becomes full: -1 fragmented server (good!)
     if was_partial and will_be_full:
         delta -= 1.0
     
-    # If server was empty and becomes full: no change (ideal case)
-    # If server was partial and stays partial: no change in count
-    
     return delta
-
-
-def compute_fragmentation_increment_weighted(
-    server_states: List[ServerState],
-    server_id: int,
-    gpus_to_allocate: int
-) -> float:
-    """
-    Compute weighted fragmentation increment.
-    
-    More nuanced metric that considers the severity of fragmentation.
-    """
-    server = server_states[server_id]
-    
-    if server.available_gpus < gpus_to_allocate:
-        return float('inf')
-    
-    # Current weighted fragmentation contribution from this server
-    if server.is_partial:
-        old_frag = server.available_gpus / server.total_gpus
-    else:
-        old_frag = 0.0
-    
-    # New state
-    new_available = server.available_gpus - gpus_to_allocate
-    new_allocated = server.allocated_gpus + gpus_to_allocate
-    
-    # New weighted fragmentation contribution
-    if new_allocated > 0 and new_available > 0:
-        new_frag = new_available / server.total_gpus
-    else:
-        new_frag = 0.0
-    
-    return new_frag - old_frag
 
 
 def fgd_select_server(
@@ -200,39 +486,17 @@ def fgd_select_server(
     gpus_needed: int,
     use_weighted: bool = False
 ) -> Optional[int]:
-    """
-    Select the best server for job placement using FGD algorithm.
-    
-    FGD Algorithm (simplified):
-    1. For each candidate server that can fit the job
-    2. Compute the fragmentation increment (Δfrag) if we place the job there
-    3. Select the server with the minimum Δfrag
-    
-    Tie-breaking: Prefer servers with fewer available GPUs (pack tightly)
-    
-    Args:
-        server_states: Current state of all servers.
-        gpus_needed: Number of GPUs the job requires.
-        use_weighted: Use weighted fragmentation metric if True.
-        
-    Returns:
-        Server ID to place the job on, or None if no server can fit it.
-    """
+    """Select best server for whole-GPU allocation using FGD."""
     best_server = None
     best_delta = float('inf')
-    best_available = float('inf')  # For tie-breaking
-    
-    compute_fn = (compute_fragmentation_increment_weighted if use_weighted
-                  else compute_fragmentation_increment)
+    best_available = float('inf')
     
     for server in server_states:
         if server.available_gpus < gpus_needed:
             continue
-            
-        delta = compute_fn(server_states, server.server_id, gpus_needed)
         
-        # Select server with minimum fragmentation increment
-        # Tie-break by preferring servers with fewer available GPUs (pack tightly)
+        delta = compute_fragmentation_increment(server_states, server.server_id, gpus_needed)
+        
         if (delta < best_delta or 
             (delta == best_delta and server.available_gpus < best_available)):
             best_delta = delta
@@ -248,31 +512,11 @@ def fgd_select_servers_multi_gpu(
     gpus_per_server: int,
     use_weighted: bool = False
 ) -> Optional[List[int]]:
-    """
-    Select multiple servers for a distributed job using FGD.
-    
-    For jobs that span multiple servers (e.g., 8 GPUs across 2 servers with 4 GPUs each),
-    we need to select multiple servers while minimizing total fragmentation.
-    
-    This is a greedy approach: repeatedly select the best single server until
-    we have enough GPUs.
-    
-    Args:
-        server_states: Current state of all servers.
-        gpus_needed: Total number of GPUs the job requires.
-        gpus_per_server: Number of GPUs per server (cluster configuration).
-        use_weighted: Use weighted fragmentation metric if True.
-        
-    Returns:
-        List of server IDs to place the job on, or None if cannot fit.
-    """
+    """Select multiple servers for a multi-GPU job using FGD."""
     if gpus_needed <= gpus_per_server:
-        # Single server job
         server_id = fgd_select_server(server_states, gpus_needed, use_weighted)
         return [server_id] if server_id is not None else None
     
-    # Multi-server job: need to select multiple servers
-    # Make a copy of server states to simulate allocations
     simulated_states = [
         ServerState(s.server_id, s.total_gpus, s.allocated_gpus, s.available_gpus)
         for s in server_states
@@ -282,26 +526,19 @@ def fgd_select_servers_multi_gpu(
     remaining_gpus = gpus_needed
     
     while remaining_gpus > 0:
-        # How many GPUs to allocate from next server
         gpus_from_this_server = min(remaining_gpus, gpus_per_server)
-        
-        # Find best server for this chunk
         server_id = fgd_select_server(simulated_states, gpus_from_this_server, use_weighted)
         
         if server_id is None:
-            return None  # Cannot fit job
+            return None
         
         selected_servers.append(server_id)
-        
-        # Update simulated state
         s = simulated_states[server_id]
         simulated_states[server_id] = ServerState(
-            s.server_id,
-            s.total_gpus,
+            s.server_id, s.total_gpus,
             s.allocated_gpus + gpus_from_this_server,
             s.available_gpus - gpus_from_this_server
         )
-        
         remaining_gpus -= gpus_from_this_server
     
     return selected_servers
@@ -321,13 +558,13 @@ def build_server_states_from_gavel(
     
     In Gavel:
     - worker_ids is a list of lists, where worker_ids[server_id] contains
-      the GPU/worker IDs for that server
+      the GPU/worker IDs for that server (gets modified during assignment)
     - assigned_worker_ids is a set of already-assigned worker IDs
     
     Args:
         worker_ids: Gavel's worker_ids structure (list of lists by server).
         assigned_worker_ids: Set of already assigned worker IDs.
-        gpus_per_server: Number of GPUs per server.
+        gpus_per_server: Number of GPUs per server (total capacity).
         
     Returns:
         List of ServerState objects.
@@ -335,9 +572,13 @@ def build_server_states_from_gavel(
     server_states = []
     
     for server_id, server_workers in enumerate(worker_ids):
-        # Count how many GPUs are still available (not assigned) on this server
+        # Count how many GPUs are still in the list and not assigned
         available = sum(1 for w in server_workers if w not in assigned_worker_ids)
-        allocated = gpus_per_server - available
+        # Total GPUs allocated = gpus_per_server - current available
+        # Note: some workers may have been popped from the list already
+        total_in_list = len(server_workers)
+        already_popped = gpus_per_server - total_in_list
+        allocated = already_popped + (total_in_list - available)
         
         server_states.append(ServerState(
             server_id=server_id,
@@ -379,34 +620,43 @@ def fgd_assign_workers_to_job(
     worker_ids = worker_state['worker_ids']
     assigned_worker_ids = worker_state['assigned_worker_ids']
     
+    # Check if job already has some workers assigned
+    worker_ids_for_job = []
+    if job_id in worker_assignments:
+        worker_ids_for_job = list(worker_assignments[job_id])
+    
+    # Calculate how many more workers we need
+    workers_needed = scale_factor - len(worker_ids_for_job)
+    
+    if workers_needed <= 0:
+        # Job already has all workers it needs
+        worker_assignments[job_id] = tuple(worker_ids_for_job)
+        return
+    
     # Build server states for FGD
     server_states = build_server_states_from_gavel(
         worker_ids, assigned_worker_ids, gpus_per_server
     )
     
     # Use FGD to select best server(s)
-    if scale_factor <= gpus_per_server:
+    if workers_needed <= gpus_per_server:
         # Single-server placement
-        server_id = fgd_select_server(server_states, scale_factor, use_weighted)
+        server_id = fgd_select_server(server_states, workers_needed, use_weighted)
         if server_id is None:
             raise RuntimeError(f'FGD: Could not find server for job {job_id}')
         selected_servers = [server_id]
-        gpus_from_servers = [scale_factor]
+        gpus_from_servers = [workers_needed]
     else:
         # Multi-server placement
         selected_servers = fgd_select_servers_multi_gpu(
-            server_states, scale_factor, gpus_per_server, use_weighted
+            server_states, workers_needed, gpus_per_server, use_weighted
         )
         if selected_servers is None:
             raise RuntimeError(f'FGD: Could not find servers for job {job_id}')
-        gpus_from_servers = [min(gpus_per_server, scale_factor - i * gpus_per_server)
+        gpus_from_servers = [min(gpus_per_server, workers_needed - i * gpus_per_server)
                             for i in range(len(selected_servers))]
     
     # Collect worker IDs from selected servers
-    worker_ids_for_job = []
-    if job_id in worker_assignments:
-        worker_ids_for_job = list(worker_assignments[job_id])
-    
     for server_id, gpus_needed in zip(selected_servers, gpus_from_servers):
         server_workers = worker_ids[server_id]
         gpus_collected = 0
@@ -425,117 +675,3 @@ def fgd_assign_workers_to_job(
     worker_assignments[job_id] = tuple(worker_ids_for_job)
 
 
-# ============================================================================
-# Utility Functions for Testing and Debugging
-# ============================================================================
-
-def print_cluster_state(server_states: List[ServerState]) -> None:
-    """Print current cluster state for debugging."""
-    print("\n=== Cluster State ===")
-    print(f"{'Server':<10} {'Total':<8} {'Allocated':<12} {'Available':<12} {'Status':<10}")
-    print("-" * 52)
-    for s in server_states:
-        status = "EMPTY" if s.is_empty else ("FULL" if s.is_full else "PARTIAL")
-        print(f"{s.server_id:<10} {s.total_gpus:<8} {s.allocated_gpus:<12} {s.available_gpus:<12} {status:<10}")
-    print(f"\nFragmentation (count): {compute_fragmentation(server_states)}")
-    print(f"Fragmentation (weighted): {compute_fragmentation_weighted(server_states):.3f}")
-
-
-def simulate_fgd_vs_strided(
-    num_servers: int = 8,
-    gpus_per_server: int = 4,
-    job_sizes: List[int] = None
-) -> Tuple[int, int]:
-    """
-    Simulate FGD vs strided placement to compare fragmentation.
-    
-    Args:
-        num_servers: Number of servers in the cluster.
-        gpus_per_server: GPUs per server.
-        job_sizes: List of GPU requirements for jobs to place.
-        
-    Returns:
-        Tuple of (fgd_fragmentation, strided_fragmentation).
-    """
-    if job_sizes is None:
-        job_sizes = [2, 1, 2, 3, 1, 2, 1, 2]  # Example workload
-    
-    # Initialize server states
-    fgd_states = [
-        ServerState(i, gpus_per_server, 0, gpus_per_server)
-        for i in range(num_servers)
-    ]
-    strided_states = [
-        ServerState(i, gpus_per_server, 0, gpus_per_server)
-        for i in range(num_servers)
-    ]
-    
-    strided_ptr = 0  # Server pointer for strided allocation
-    
-    for job_gpus in job_sizes:
-        # FGD placement
-        server_id = fgd_select_server(fgd_states, job_gpus)
-        if server_id is not None:
-            s = fgd_states[server_id]
-            fgd_states[server_id] = ServerState(
-                s.server_id, s.total_gpus,
-                s.allocated_gpus + job_gpus,
-                s.available_gpus - job_gpus
-            )
-        
-        # Strided placement (Gavel default)
-        gpus_placed = 0
-        while gpus_placed < job_gpus and strided_ptr < num_servers:
-            s = strided_states[strided_ptr]
-            if s.available_gpus > 0:
-                gpus_to_place = min(s.available_gpus, job_gpus - gpus_placed)
-                strided_states[strided_ptr] = ServerState(
-                    s.server_id, s.total_gpus,
-                    s.allocated_gpus + gpus_to_place,
-                    s.available_gpus - gpus_to_place
-                )
-                gpus_placed += gpus_to_place
-            if strided_states[strided_ptr].available_gpus == 0:
-                strided_ptr += 1
-    
-    fgd_frag = compute_fragmentation(fgd_states)
-    strided_frag = compute_fragmentation(strided_states)
-    
-    return fgd_frag, strided_frag
-
-
-if __name__ == "__main__":
-    # Test FGD placement algorithm
-    print("Testing FGD Placement Algorithm")
-    print("=" * 50)
-    
-    # Compare FGD vs strided
-    fgd_frag, strided_frag = simulate_fgd_vs_strided()
-    print(f"\nJob sizes: [2, 1, 2, 3, 1, 2, 1, 2]")
-    print(f"FGD fragmentation: {fgd_frag}")
-    print(f"Strided fragmentation: {strided_frag}")
-    print(f"Improvement: {strided_frag - fgd_frag} fewer fragmented servers")
-    
-    # More detailed test
-    print("\n" + "=" * 50)
-    print("Detailed FGD simulation")
-    
-    server_states = [ServerState(i, 4, 0, 4) for i in range(4)]
-    
-    print("\nInitial state:")
-    print_cluster_state(server_states)
-    
-    # Place jobs one by one
-    jobs = [(0, 2), (1, 2), (2, 1), (3, 2), (4, 1)]
-    
-    for job_id, gpus in jobs:
-        server_id = fgd_select_server(server_states, gpus)
-        if server_id is not None:
-            s = server_states[server_id]
-            server_states[server_id] = ServerState(
-                s.server_id, s.total_gpus,
-                s.allocated_gpus + gpus,
-                s.available_gpus - gpus
-            )
-            print(f"\nPlaced job {job_id} ({gpus} GPUs) on server {server_id}")
-            print_cluster_state(server_states)

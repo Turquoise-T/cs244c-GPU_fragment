@@ -520,6 +520,319 @@ def parse_trace(trace_file):
             arrival_times.append(float(arrival_time))
     return jobs, arrival_times
 
+
+def parse_trace_msr(trace_file):
+    """
+    Parse MSR/Philly-style trace file (used by Gavel experiments).
+    
+    Format: job_type<TAB>command<TAB>num_steps_arg<TAB>scale_factor<TAB>total_steps<TAB>arrival_time<TAB>priority_weight
+    
+    Example line:
+        Transformer (batch size 128)<TAB>cd %s/... && python3 train.py...<TAB>-step<TAB>1<TAB>95121<TAB>0.000000<TAB>1
+    
+    Args:
+        trace_file: Path to the MSR-format trace file.
+        
+    Returns:
+        Tuple of (jobs, arrival_times) where jobs is a list of Job objects.
+    """
+    jobs = []
+    arrival_times = []
+    
+    with open(trace_file, 'r') as f:
+        for line in f:
+            parts = line.strip().split('\t')
+            if len(parts) < 6:
+                continue
+            
+            job_type = parts[0]
+            command = parts[1]
+            num_steps_arg = parts[2]
+            scale_factor = int(parts[3])
+            total_steps = int(parts[4])
+            arrival_time = float(parts[5])
+            priority_weight = float(parts[6]) if len(parts) > 6 else 1.0
+            
+            jobs.append(Job(
+                job_id=None,
+                job_type=job_type,
+                command=command,
+                working_directory='.',
+                needs_data_dir=False,
+                num_steps_arg=num_steps_arg,
+                total_steps=total_steps,
+                duration=None,
+                scale_factor=scale_factor,
+                priority_weight=priority_weight,
+                SLO=None
+            ))
+            arrival_times.append(arrival_time)
+    
+    return jobs, arrival_times
+
+
+def parse_trace_alibaba_fgd(trace_file, throughput_per_gpu=100, 
+                            gpu_only=True, normalize_time=True,
+                            map_to_gavel_types=True, seed=42):
+    """
+    Parse Alibaba FGD trace file (CSV format from cluster-trace-gpu-v2023).
+    
+    This converts the Alibaba production cluster trace format to Gavel's Job format.
+    FGD traces support GPU sharing (gpu_milli) and multi-GPU jobs.
+    
+    CSV Format:
+        name,cpu_milli,memory_mib,num_gpu,gpu_milli,gpu_spec,qos,pod_phase,
+        creation_time,deletion_time,scheduled_time
+    
+    Args:
+        trace_file: Path to the Alibaba FGD CSV trace file.
+        throughput_per_gpu: Assumed throughput (steps/second) per GPU for
+                           converting job duration to total_steps.
+        gpu_only: If True, only include jobs that request GPUs (num_gpu > 0 or gpu_milli > 0).
+        normalize_time: If True, normalize arrival times to start from 0.
+        map_to_gavel_types: If True, map job types to known Gavel job types
+                           (required for simulation with throughput oracle).
+        seed: Random seed for job type mapping.
+        
+    Returns:
+        Tuple of (jobs, arrival_times) where jobs is a list of Job objects.
+    """
+    import csv
+    import random
+    
+    # Set random seed for reproducibility
+    rng = random.Random(seed)
+    
+    jobs = []
+    arrival_times = []
+    min_creation_time = float('inf')
+    
+    # Known Gavel job types (from job_table.py) - these have throughput data
+    # Format: (job_type, scale_factors_supported)
+    GAVEL_JOB_TYPES = [
+        # ResNet-18 variants
+        ('ResNet-18 (batch size 16)', [1, 2, 4]),
+        ('ResNet-18 (batch size 32)', [1, 2, 4]),
+        ('ResNet-18 (batch size 64)', [1, 2, 4]),
+        ('ResNet-18 (batch size 128)', [1, 2, 4]),
+        # ResNet-50 variants
+        ('ResNet-50 (batch size 16)', [1, 2, 4]),
+        ('ResNet-50 (batch size 32)', [1, 2, 4]),
+        ('ResNet-50 (batch size 64)', [1, 2, 4]),
+        ('ResNet-50 (batch size 128)', [1, 2, 4]),
+        # Transformer variants
+        ('Transformer (batch size 16)', [1, 2, 4]),
+        ('Transformer (batch size 32)', [1, 2, 4]),
+        ('Transformer (batch size 64)', [1, 2, 4]),
+        ('Transformer (batch size 128)', [1, 2, 4]),
+        ('Transformer (batch size 256)', [1, 2, 4]),
+        # LM variants
+        ('LM (batch size 5)', [1]),
+        ('LM (batch size 10)', [1]),
+        ('LM (batch size 20)', [1]),
+        ('LM (batch size 40)', [1]),
+        ('LM (batch size 80)', [1]),
+        # Recommendation variants
+        ('Recommendation (batch size 512)', [1]),
+        ('Recommendation (batch size 1024)', [1]),
+        ('Recommendation (batch size 2048)', [1]),
+        ('Recommendation (batch size 4096)', [1]),
+        ('Recommendation (batch size 8192)', [1]),
+        # Other
+        ('CycleGAN', [1]),
+    ]
+    
+    # QoS to priority mapping (higher = more important)
+    qos_priority = {
+        'LS': 2.0,         # Latency Sensitive - highest priority
+        'Burstable': 1.5,  # Burstable
+        'BE': 1.0,         # Best Effort - lowest priority
+        'Guaranteed': 2.5, # Guaranteed - highest
+    }
+    
+    # First pass: find minimum creation time for normalization
+    if normalize_time:
+        with open(trace_file, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                creation_time = float(row['creation_time'])
+                if creation_time < min_creation_time:
+                    min_creation_time = creation_time
+    else:
+        min_creation_time = 0
+    
+    # Second pass: parse jobs
+    with open(trace_file, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Parse fields
+            name = row['name']
+            num_gpu = int(row['num_gpu'])
+            gpu_milli = int(row['gpu_milli']) if row['gpu_milli'] else 0
+            gpu_spec = row.get('gpu_spec', '')
+            qos = row.get('qos', 'BE')
+            pod_phase = row.get('pod_phase', '')
+            creation_time = float(row['creation_time'])
+            deletion_time = float(row['deletion_time'])
+            
+            # Skip non-GPU jobs if gpu_only is True
+            if gpu_only and num_gpu == 0 and gpu_milli == 0:
+                continue
+            
+            # Skip failed or pending jobs
+            if pod_phase in ['Failed', 'Pending']:
+                continue
+            
+            # Calculate scale_factor (number of GPUs)
+            # For GPU sharing (num_gpu=1 with gpu_milli<1000), still use scale_factor=1
+            # Gavel doesn't support fractional GPUs natively
+            if num_gpu > 0:
+                scale_factor = num_gpu
+            elif gpu_milli > 0:
+                # GPU sharing job - treat as 1 GPU
+                scale_factor = 1
+            else:
+                scale_factor = 1
+            
+            # Calculate job duration and convert to steps
+            duration = max(deletion_time - creation_time, 1)  # minimum 1 second
+            # Estimate total_steps based on duration and assumed throughput
+            total_steps = int(duration * throughput_per_gpu * scale_factor)
+            
+            # Determine job type
+            if map_to_gavel_types:
+                # Map to a known Gavel job type based on scale_factor
+                # Filter job types that support this scale_factor
+                compatible_types = [
+                    jt for jt, sfs in GAVEL_JOB_TYPES 
+                    if scale_factor in sfs or scale_factor == 1
+                ]
+                if not compatible_types:
+                    # Fallback: use single-GPU jobs and adjust scale_factor
+                    compatible_types = [jt for jt, _ in GAVEL_JOB_TYPES]
+                    scale_factor = 1
+                
+                job_type = rng.choice(compatible_types)
+            else:
+                # Use descriptive job type (won't work with Gavel simulation)
+                if gpu_spec and gpu_spec != 'nan' and gpu_spec.strip():
+                    job_type = f"GPU-{scale_factor}x-{gpu_spec}"
+                elif num_gpu > 1:
+                    job_type = f"MultiGPU-{num_gpu}"
+                elif gpu_milli > 0 and gpu_milli < 1000:
+                    job_type = f"GPUShare-{gpu_milli}m"
+                elif num_gpu == 1:
+                    job_type = "SingleGPU"
+                else:
+                    job_type = "CPUOnly"
+            
+            # Get priority from QoS
+            priority_weight = qos_priority.get(qos, 1.0)
+            
+            # Normalize arrival time
+            arrival_time = creation_time - min_creation_time
+            
+            # Store gpu_milli for GPU sharing support
+            # If gpu_milli is not specified, assume full GPU (1000)
+            job_gpu_milli = gpu_milli if gpu_milli > 0 else 1000
+            
+            jobs.append(Job(
+                job_id=None,
+                job_type=job_type,
+                command=f"# Alibaba FGD trace: {name}",
+                working_directory='.',
+                needs_data_dir=False,
+                num_steps_arg='--steps',
+                total_steps=total_steps,
+                duration=duration,
+                scale_factor=scale_factor,
+                priority_weight=priority_weight,
+                SLO=None,
+                gpu_milli=job_gpu_milli  # FGD: preserve fractional GPU request
+            ))
+            arrival_times.append(arrival_time)
+    
+    # Sort by arrival time
+    if jobs:
+        sorted_pairs = sorted(zip(arrival_times, jobs), key=lambda x: x[0])
+        arrival_times, jobs = zip(*sorted_pairs)
+        arrival_times = list(arrival_times)
+        jobs = list(jobs)
+    
+    return jobs, arrival_times
+
+
+def get_alibaba_fgd_trace_stats(trace_file):
+    """
+    Get statistics about an Alibaba FGD trace file.
+    
+    Args:
+        trace_file: Path to the Alibaba FGD CSV trace file.
+        
+    Returns:
+        Dictionary with trace statistics.
+    """
+    import csv
+    from collections import Counter
+    
+    stats = {
+        'total_pods': 0,
+        'gpu_pods': 0,
+        'cpu_only_pods': 0,
+        'multi_gpu_pods': 0,
+        'gpu_share_pods': 0,
+        'gpu_spec_distribution': Counter(),
+        'num_gpu_distribution': Counter(),
+        'qos_distribution': Counter(),
+        'pod_phase_distribution': Counter(),
+        'min_creation_time': float('inf'),
+        'max_deletion_time': 0,
+        'total_duration_seconds': 0,
+    }
+    
+    with open(trace_file, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            stats['total_pods'] += 1
+            
+            num_gpu = int(row['num_gpu'])
+            gpu_milli = int(row['gpu_milli']) if row['gpu_milli'] else 0
+            gpu_spec = row.get('gpu_spec', '')
+            qos = row.get('qos', 'Unknown')
+            pod_phase = row.get('pod_phase', 'Unknown')
+            creation_time = float(row['creation_time'])
+            deletion_time = float(row['deletion_time'])
+            
+            # Update time stats
+            if creation_time < stats['min_creation_time']:
+                stats['min_creation_time'] = creation_time
+            if deletion_time > stats['max_deletion_time']:
+                stats['max_deletion_time'] = deletion_time
+            
+            # Categorize pods
+            if num_gpu > 0 or gpu_milli > 0:
+                stats['gpu_pods'] += 1
+                if num_gpu > 1:
+                    stats['multi_gpu_pods'] += 1
+                if gpu_milli > 0 and gpu_milli < 1000:
+                    stats['gpu_share_pods'] += 1
+            else:
+                stats['cpu_only_pods'] += 1
+            
+            # Update distributions
+            stats['num_gpu_distribution'][num_gpu] += 1
+            stats['qos_distribution'][qos] += 1
+            stats['pod_phase_distribution'][pod_phase] += 1
+            if gpu_spec and gpu_spec != 'nan':
+                stats['gpu_spec_distribution'][gpu_spec] += 1
+    
+    # Calculate total duration
+    if stats['total_pods'] > 0:
+        stats['total_duration_seconds'] = stats['max_deletion_time'] - stats['min_creation_time']
+        stats['total_duration_hours'] = stats['total_duration_seconds'] / 3600
+    
+    return stats
+
 def print_allocation(allocation, current_time=None):
     """Prints the allocation.
 

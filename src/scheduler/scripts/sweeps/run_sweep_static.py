@@ -26,7 +26,8 @@ def simulate_with_timeout(experiment_id, policy_name,
                           num_total_jobs, solver,
                           log_dir, timeout, verbose,
                           num_gpus_per_server,
-                          ideal):
+                          ideal,
+                          placement_strategy='strided'):
     # Add some random delay to prevent outputs from overlapping.
     # TODO: Replace this with postprocessing in the log parsing script.
     time.sleep(random.uniform(0, 5))
@@ -56,7 +57,8 @@ def simulate_with_timeout(experiment_id, policy_name,
                     available_clouds = available_clouds,
                     assign_SLOs=assign_SLOs,
                     enable_global_queue=enable_global_queue,
-                    simulate=True)
+                    simulate=True,
+                    placement_strategy=placement_strategy)
 
             cluster_spec_str = 'v100:%d|p100:%d|k80:%d' % (cluster_spec['v100'],
                                                            cluster_spec['p100'],
@@ -188,7 +190,8 @@ def main(args):
                                           raw_logs_seed_subdir,
                                           args.timeout, args.verbose,
                                           num_gpus_per_server,
-                                          args.ideal))
+                                          args.ideal,
+                                          args.placement_strategy))
                     experiment_id += 1
     if len(all_args_list) > 0:
         current_time = datetime.datetime.now()
@@ -260,6 +263,9 @@ if __name__=='__main__':
                               'worker type'))
     parser.add_argument('--ideal', action='store_true', default=False,
                         help='Run allocations 100%% ideally')
+    parser.add_argument('--placement-strategy', type=str,
+                        choices=['strided', 'fgd'], default='strided',
+                        help='Worker placement strategy: strided (default) or fgd')
     fixed_range.add_argument('-a', '--num-total-jobs-lower-bound', type=int,
                              default=None,
                              help='Lower bound for num_total_jobs to sweep')

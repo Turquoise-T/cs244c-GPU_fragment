@@ -2,10 +2,12 @@
 # PAPER[§3.1|def] "scale_factor: number of workers job needs for data parallelism"
 # PAPER[§4.1] "priority_weight w_m: weight for weighted max-min fairness"
 # PAPER[§4.2] "SLO: deadline constraint for finish-time fairness policies"
+# FGD Extension: gpu_milli for fractional GPU requests (0-1000 = 0.0-1.0 GPU)
 class Job:
     def __init__(self, job_id, job_type, command, working_directory,
                  num_steps_arg, total_steps, duration, scale_factor=1,
-                 priority_weight=1, SLO=None, needs_data_dir=False):
+                 priority_weight=1, SLO=None, needs_data_dir=False,
+                 gpu_milli=None):
         self._job_id = job_id
         self._job_type = job_type
         self._command = command
@@ -20,6 +22,12 @@ class Job:
             self._SLO = None
         else:
             self._SLO = SLO
+        # FGD: gpu_milli represents fractional GPU request (0-1000)
+        # If None, use scale_factor * 1000 (whole GPU per worker)
+        if gpu_milli is not None:
+            self._gpu_milli = gpu_milli
+        else:
+            self._gpu_milli = scale_factor * 1000  # Default: whole GPUs
 
     def __str__(self):
         SLO = -1 if self._SLO is None else self._SLO
@@ -85,3 +93,18 @@ class Job:
     @property
     def SLO(self):
         return self._SLO
+
+    @property
+    def gpu_milli(self):
+        """GPU request in milli-units (0-1000 per GPU)."""
+        return self._gpu_milli
+    
+    @property
+    def gpu_fraction(self):
+        """GPU request as a fraction (0.0-1.0 per GPU for single-GPU jobs)."""
+        return self._gpu_milli / 1000.0
+    
+    @property
+    def is_gpu_sharing(self):
+        """Returns True if this job uses fractional GPU (< 1.0 GPU)."""
+        return self._gpu_milli < 1000

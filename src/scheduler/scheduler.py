@@ -29,6 +29,8 @@ import set_queue
 from custom_logging import SchedulerAdapter
 from throughput_estimator import ThroughputEstimator
 import utils
+from policies.fgd import (fgd_assign_workers_to_job, build_server_states_from_gavel,
+                          GPUSharingCluster)
 
 """ Constants """
 # Port for scheduler server.
@@ -68,10 +70,17 @@ class Scheduler:
                  enable_global_queue=False,
                  expected_num_workers=None,
                  minimum_time_between_allocation_resets=1920,
-                 max_rounds=None):
+                 max_rounds=None,
+                 placement_strategy='strided',
+                 gpu_sharing_mode=False):
 
         # Flag to control whether scheduler runs in simulation mode.
         self._simulate = simulate
+        
+        # GPU sharing mode: allows multiple jobs to share the same GPU
+        # When enabled, jobs can request fractional GPUs via gpu_milli
+        self._gpu_sharing_mode = gpu_sharing_mode
+        self._gpu_sharing_cluster = None  # Initialized when workers register
 
         # Initial timestamp.
         if self._simulate:
@@ -105,11 +114,15 @@ class Scheduler:
             'policy={policy}, seed={seed}, '
             'time_per_iteration={time_per_iteration}, '
             'profiling_percentage={profiling_percentage}, '
-            'num_reference_models={num_reference_models}'.format(
+            'num_reference_models={num_reference_models}, '
+            'placement_strategy={placement_strategy}, '
+            'gpu_sharing_mode={gpu_sharing_mode}'.format(
                 loc=loc, policy=policy.name, seed=seed,
                 time_per_iteration=time_per_iteration,
                 profiling_percentage=profiling_percentage,
-                num_reference_models=num_reference_models))
+                num_reference_models=num_reference_models,
+                placement_strategy=placement_strategy,
+                gpu_sharing_mode=gpu_sharing_mode))
 
         # Initialize seeds.
         self._initialize_seeds(seed)
@@ -122,6 +135,12 @@ class Scheduler:
         self._expected_num_workers = expected_num_workers
         self._minimum_time_between_allocation_resets = \
             minimum_time_between_allocation_resets
+        
+        # Placement strategy: 'strided' (default) or 'fgd' (Fragmentation Gradient Descent)
+        self._placement_strategy = placement_strategy
+        if placement_strategy not in ('strided', 'fgd'):
+            raise ValueError(f"Unknown placement_strategy: {placement_strategy}. "
+                           f"Must be 'strided' or 'fgd'.")
 
         # Start and last processed timestamp for each job_id.
         self._per_job_start_timestamps = {}
@@ -786,8 +805,9 @@ class Scheduler:
                                worker_state, worker_assignments):
         """Assign workers to jobs.
 
-        Assigns workers in a strided fashion to minimize the number
-        of servers used.
+        Assigns workers using either strided (default) or FGD placement strategy.
+        - Strided: Assigns workers in a strided fashion to minimize servers used.
+        - FGD: Uses Fragmentation Gradient Descent to minimize fragmentation.
 
         Args:
           job_id: The job (combination) ID to schedule.
@@ -799,6 +819,26 @@ class Scheduler:
             server_id_ptr: The server to assign workers from.
           worker_assignments: A map from job_id to assigned worker_ids tuple.
         """
+        # Use FGD placement if enabled
+        if self._placement_strategy == 'fgd':
+            self._assign_workers_to_job_fgd(job_id, scale_factor, worker_type,
+                                            worker_state, worker_assignments)
+        else:
+            self._assign_workers_to_job_strided(job_id, scale_factor, worker_type,
+                                                worker_state, worker_assignments)
+
+        # Update job timestamps for simulation
+        for single_job_id in job_id.singletons():
+            if self._simulate:
+                # This will be done on initialization when running on a
+                # physical cluster.
+                self._per_job_latest_timestamps[single_job_id] = \
+                    self.get_current_timestamp()
+                self._running_jobs.add(single_job_id)
+
+    def _assign_workers_to_job_strided(self, job_id, scale_factor, worker_type,
+                                       worker_state, worker_assignments):
+        """Strided worker assignment (original Gavel approach)."""
         worker_ids = worker_state['worker_ids']
         assigned_worker_ids = worker_state['assigned_worker_ids']
         server_id_ptr = worker_state['server_id_ptr']
@@ -825,13 +865,34 @@ class Scheduler:
         worker_assignments[job_id] = tuple(worker_ids_for_job)
         worker_state['server_id_ptr'] = server_id_ptr
 
-        for single_job_id in job_id.singletons():
-            if self._simulate:
-                # This will be done on initialization when running on a
-                # physical cluster.
-                self._per_job_latest_timestamps[single_job_id] = \
-                    self.get_current_timestamp()
-                self._running_jobs.add(single_job_id)
+    def _assign_workers_to_job_fgd(self, job_id, scale_factor, worker_type,
+                                   worker_state, worker_assignments):
+        """FGD (Fragmentation Gradient Descent) worker assignment.
+        
+        Selects workers to minimize fragmentation increment.
+        """
+        worker_ids = worker_state['worker_ids']
+        assigned_worker_ids = worker_state['assigned_worker_ids']
+        
+        # Determine GPUs per server from worker_ids structure
+        # Find the first non-empty server to determine gpus_per_server
+        gpus_per_server = 0
+        for server_workers in self._worker_type_to_worker_id_mapping.get(worker_type, []):
+            if len(server_workers) > 0:
+                gpus_per_server = len(server_workers)
+                break
+        
+        if gpus_per_server == 0:
+            # Fallback: assume 4 GPUs per server if we can't determine
+            gpus_per_server = 4
+        
+        # Use FGD placement algorithm
+        fgd_assign_workers_to_job(
+            job_id, scale_factor, worker_type,
+            worker_state, worker_assignments,
+            gpus_per_server=gpus_per_server,
+            use_weighted=False
+        )
 
     # @preconditions(lambda self: self._simulate or self._scheduler_lock.locked())
     # PAPER[§5|alg] Algorithm 1: SCHEDULE_JOBS
@@ -1297,6 +1358,23 @@ class Scheduler:
             for i in range(cluster_spec[worker_type] // num_gpus):
                 self._register_worker_callback(worker_type,
                                                num_gpus=num_gpus)
+
+        # Initialize GPU sharing cluster if enabled
+        if self._gpu_sharing_mode:
+            # Calculate total servers and GPUs per server
+            total_gpus = sum(cluster_spec.values())
+            # Assume first worker type for GPU per server calculation
+            first_worker_type = worker_types[0]
+            gpus_per_server = 1
+            if num_gpus_per_server is not None:
+                gpus_per_server = num_gpus_per_server[first_worker_type]
+            num_servers = total_gpus // gpus_per_server
+            
+            self._gpu_sharing_cluster = GPUSharingCluster(
+                num_servers=num_servers,
+                gpus_per_server=gpus_per_server
+            )
+            self._logger.info(f'GPU sharing mode enabled: {num_servers} servers x {gpus_per_server} GPUs')
 
         if checkpoint_file is not None and checkpoint_threshold is None:
             (last_job_arrival_time,
