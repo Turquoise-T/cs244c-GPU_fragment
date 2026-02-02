@@ -143,11 +143,48 @@ def parse_node_list(csv_path: str) -> List[Node]:
     return nodes
 
 
-def derive_workload_distribution(trace_tasks: List[TraceTask]):
+def count_non_gpu_tasks(csv_path: str) -> dict:
+    """Count non-GPU tasks in the trace for workload distribution.
+
+    Returns:
+        dict with 'count', 'avg_cpu', 'avg_mem' for non-GPU tasks.
+    """
+    import csv as csv_mod
+    count = 0
+    cpu_sum = 0.0
+    mem_sum = 0.0
+    with open(csv_path, 'r') as f:
+        reader = csv_mod.DictReader(f)
+        for row in reader:
+            try:
+                num_gpu = int(row['num_gpu'])
+                if num_gpu != 0:
+                    continue
+                phase = row.get('pod_phase', '')
+                if phase == 'Pending':
+                    continue
+                cpu_sum += int(row['cpu_milli']) / 1000.0
+                mem_sum += float(row['memory_mib'])
+                count += 1
+            except (ValueError, KeyError):
+                continue
+    if count > 0:
+        return {'count': count, 'avg_cpu': cpu_sum / count, 'avg_mem': mem_sum / count}
+    return {'count': 0, 'avg_cpu': 0, 'avg_mem': 0}
+
+
+def derive_workload_distribution(trace_tasks: List[TraceTask],
+                                  non_gpu_stats: Optional[dict] = None):
     """Derive a workload distribution from trace tasks for FGD's Workload model.
 
     Groups tasks by GPU request size and computes popularity fractions.
     Includes memory_request and gpu_type in the distribution tuples.
+
+    Args:
+        trace_tasks: List of GPU trace tasks (gpu_request > 0).
+        non_gpu_stats: If provided, dict with 'count', 'avg_cpu', 'avg_mem'
+                       for non-GPU tasks to include in the distribution.
+                       Use count_non_gpu_tasks() to obtain this.
 
     Returns:
         List of (gpu_request, cpu_request, memory_request, gpu_type, popularity) tuples.
@@ -182,8 +219,22 @@ def derive_workload_distribution(trace_tasks: List[TraceTask]):
         mem_by_bucket[bucket].append(tt.task.memory_request)
         type_by_bucket[bucket].append(tt.task.gpu_type)
 
-    total = sum(gpu_buckets.values())
+    # Total includes non-GPU tasks if provided
+    non_gpu_count = non_gpu_stats['count'] if non_gpu_stats else 0
+    total = sum(gpu_buckets.values()) + non_gpu_count
+
     distribution = []
+
+    # Add non-GPU task type (gpu_request=0) if present
+    if non_gpu_count > 0:
+        distribution.append((
+            0.0,
+            non_gpu_stats['avg_cpu'],
+            non_gpu_stats['avg_mem'],
+            None,
+            non_gpu_count / total,
+        ))
+
     for bucket in sorted(gpu_buckets.keys()):
         avg_cpu = sum(cpu_by_bucket[bucket]) / len(cpu_by_bucket[bucket])
         avg_mem = sum(mem_by_bucket[bucket]) / len(mem_by_bucket[bucket])

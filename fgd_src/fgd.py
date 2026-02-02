@@ -123,14 +123,23 @@ class FragmentationCalculator:
     def compute_node_fragmentation(node: Node, task: Task) -> float:
         # Compute F_n(m): fragmentation of node n measured by task m and return the amount of GPU resources that cannot be allocated to task m.
         available_cpu = node.available_cpu
+        available_memory = node.available_memory
         available_gpu_scalar = node.get_gpu_scalar()
-        
+
         # Case 1: Task cannot run (Q-I, Q-II, Q-IV, or x-axis)
         # All unallocated GPUs are fragmented
-        if (task.cpu_request > available_cpu or 
+        # Check CPU, memory, GPU type, and GPU scalar constraints
+        if (task.cpu_request > available_cpu or
+            task.memory_request > available_memory or
             task.gpu_request > available_gpu_scalar or
             task.gpu_request == 0):
             return sum(node.gpus)
+
+        # GPU type constraint: if task requires specific type, check match
+        if task.gpu_type is not None:
+            acceptable = set(task.gpu_type.split('|'))
+            if node.gpu_type not in acceptable:
+                return sum(node.gpus)
         
         # Case 2: Task can run and requests GPU (Q-III)
         # Check each GPU individually

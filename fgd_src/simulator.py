@@ -360,6 +360,67 @@ class FGDSimulator:
 
         return results
 
+    def _compute_occupied_nodes(self) -> int:
+        """Count nodes with at least one GPU partially or fully allocated."""
+        count = 0
+        for n in self.nodes:
+            if any(g < 1.0 for g in n.gpus) or n.allocated_cpu > 0:
+                count += 1
+        return count
+
+    def _compute_frag_breakdown(self) -> Tuple[float, float, float]:
+        """Classify fragmented GPUs into non_gpu, stranded, deficient.
+
+        For each node with free GPU capacity:
+        - non_gpu: insufficient CPU or memory for ANY workload task
+        - stranded: enough CPU/mem but GPU scalar too low for any task
+        - deficient: individual GPU slots too small (normal fragmentation)
+
+        Returns:
+            (non_gpu_gpus, stranded_gpus, deficient_gpus) as raw GPU counts.
+        """
+        non_gpu = 0.0
+        stranded = 0.0
+        deficient = 0.0
+
+        for node in self.nodes:
+            free_gpu_capacity = sum(node.gpus)
+            if free_gpu_capacity < 0.001:
+                continue  # No free GPUs on this node
+
+            # Check if node can fit ANY workload task type
+            can_fit_any = False
+            can_fit_cpu_mem_any = False
+            for task_id, task in self.workload.tasks.items():
+                has_cpu_mem = (node.available_cpu >= task.cpu_request and
+                              node.available_memory >= task.memory_request)
+                if has_cpu_mem:
+                    can_fit_cpu_mem_any = True
+                    # Check GPU type constraint
+                    if task.gpu_type is not None:
+                        acceptable = set(task.gpu_type.split('|'))
+                        if node.gpu_type not in acceptable:
+                            continue
+                    if node.get_gpu_scalar() >= task.gpu_request:
+                        can_fit_any = True
+                        break
+
+            if not can_fit_cpu_mem_any:
+                # No task can run due to CPU/memory shortage
+                non_gpu += free_gpu_capacity
+            elif not can_fit_any:
+                # Has CPU/mem for some task but GPU scalar too low
+                stranded += free_gpu_capacity
+            else:
+                # Node CAN fit at least one task, but individual GPU slots
+                # may still be fragmented (too small for some tasks)
+                node_frag = FragmentationCalculator.compute_node_fragmentation_for_workload(
+                    node, self.workload
+                )
+                deficient += node_frag
+
+        return non_gpu, stranded, deficient
+
     def run_inflation_from_tasks(self, tasks: List[Task],
                                  target_demand_fraction: float = 1.3,
                                  record_interval: int = 1):
@@ -376,12 +437,19 @@ class FGDSimulator:
             record_interval: Record metrics every N tasks (default 1).
 
         Returns:
-            List of curve points: [{demand_fraction, frag_ratio, alloc_ratio,
-                                    allocated_gpus, rejected}, ...]
+            List of curve points with all metrics for Figures 7a/7b/9a-9d.
         """
         curve = []
         total_demand = 0.0
         rejected = 0
+
+        # Pending GPU-equivalents by size bucket (cumulative)
+        pending_by_gpu_size = {
+            'lt1_gpu': 0.0,
+            '1_gpu': 0.0,
+            '2_gpu': 0.0,
+            '8_gpu': 0.0,
+        }
 
         for i, task in enumerate(tasks):
             total_demand += task.gpu_request
@@ -393,6 +461,16 @@ class FGDSimulator:
                 self.running_tasks[task.id] = (node, gpu_indices, task)
             else:
                 rejected += 1
+                # Track rejected GPU-equivalents by size bucket
+                gpu_req = task.gpu_request
+                if gpu_req < 1:
+                    pending_by_gpu_size['lt1_gpu'] += gpu_req
+                elif gpu_req == 1:
+                    pending_by_gpu_size['1_gpu'] += gpu_req
+                elif gpu_req == 2:
+                    pending_by_gpu_size['2_gpu'] += gpu_req
+                else:  # 4 or 8
+                    pending_by_gpu_size['8_gpu'] += gpu_req
 
             if (i + 1) % record_interval == 0 or demand_fraction >= target_demand_fraction:
                 allocated = self._allocated_gpus()
@@ -401,10 +479,23 @@ class FGDSimulator:
                     self.nodes, self.workload
                 )
 
-                # frag_ratio = fragmented / (fragmented + unallocated_non_fragmented)
-                # but simpler: frag_ratio = fragmented_gpus / total_gpus
                 frag_ratio = frag / self.total_gpus if self.total_gpus > 0 else 0
                 alloc_ratio = allocated / self.total_gpus if self.total_gpus > 0 else 0
+
+                # Occupied nodes (for Fig 9b)
+                occupied_nodes = self._compute_occupied_nodes()
+
+                # Fragmentation breakdown (for Fig 9d)
+                frag_non_gpu, frag_stranded, frag_deficient = self._compute_frag_breakdown()
+                total_frag_breakdown = frag_non_gpu + frag_stranded + frag_deficient
+                if total_frag_breakdown > 0:
+                    frag_non_gpu_pct = frag_non_gpu / total_frag_breakdown * 100
+                    frag_stranded_pct = frag_stranded / total_frag_breakdown * 100
+                    frag_deficient_pct = frag_deficient / total_frag_breakdown * 100
+                else:
+                    frag_non_gpu_pct = 0.0
+                    frag_stranded_pct = 0.0
+                    frag_deficient_pct = 0.0
 
                 curve.append({
                     'demand_fraction': demand_fraction,
@@ -415,6 +506,11 @@ class FGDSimulator:
                     'fragmentation': frag,
                     'tasks_submitted': i + 1,
                     'rejected': rejected,
+                    'occupied_nodes': occupied_nodes,
+                    'pending_by_gpu_size': dict(pending_by_gpu_size),
+                    'frag_non_gpu_pct': frag_non_gpu_pct,
+                    'frag_stranded_pct': frag_stranded_pct,
+                    'frag_deficient_pct': frag_deficient_pct,
                 })
 
             if demand_fraction >= target_demand_fraction:

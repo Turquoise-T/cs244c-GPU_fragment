@@ -1,0 +1,3752 @@
+[
+  {
+    "policy": "random",
+    "seed": 42,
+    "total_gpus": 6212,
+    "num_tasks": 6203,
+    "demand_target": 1.3,
+    "elapsed_seconds": 8.9,
+    "curve": [
+      {
+        "demand_fraction": 0.006659690920798454,
+        "frag_ratio": 0.006769321005487307,
+        "alloc_ratio": 0.006659690920798454,
+        "allocated_gpus": 41.37,
+        "unallocated_gpus": 6170.63,
+        "fragmentation": 42.05102208608715,
+        "tasks_submitted": 50,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.014241790083708948,
+        "frag_ratio": 0.00831301328034463,
+        "alloc_ratio": 0.01424179008370895,
+        "allocated_gpus": 88.47,
+        "unallocated_gpus": 6123.53,
+        "fragmentation": 51.640438497500845,
+        "tasks_submitted": 100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.020920798454603987,
+        "frag_ratio": 0.009753814103824995,
+        "alloc_ratio": 0.020920798454603987,
+        "allocated_gpus": 129.95999999999998,
+        "unallocated_gpus": 6082.04,
+        "fragmentation": 60.59069321296087,
+        "tasks_submitted": 150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.028853831294269154,
+        "frag_ratio": 0.011194570290282781,
+        "alloc_ratio": 0.028853831294269154,
+        "allocated_gpus": 179.23999999999998,
+        "unallocated_gpus": 6032.76,
+        "fragmentation": 69.54067064323664,
+        "tasks_submitted": 200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.03529137153895685,
+        "frag_ratio": 0.012767028271532966,
+        "alloc_ratio": 0.03529137153895686,
+        "allocated_gpus": 219.23000000000002,
+        "unallocated_gpus": 5992.77,
+        "fragmentation": 79.30877962276278,
+        "tasks_submitted": 250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.04272054088860271,
+        "frag_ratio": 0.014766904429746925,
+        "alloc_ratio": 0.04272054088860271,
+        "allocated_gpus": 265.38,
+        "unallocated_gpus": 5946.62,
+        "fragmentation": 91.73201031758789,
+        "tasks_submitted": 300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.04982775273663876,
+        "frag_ratio": 0.015657945042274846,
+        "alloc_ratio": 0.04982775273663877,
+        "allocated_gpus": 309.53000000000003,
+        "unallocated_gpus": 5902.47,
+        "fragmentation": 97.26715460261136,
+        "tasks_submitted": 350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.05611397295556987,
+        "frag_ratio": 0.017105415986427834,
+        "alloc_ratio": 0.05611397295556985,
+        "allocated_gpus": 348.5799999999999,
+        "unallocated_gpus": 5863.42,
+        "fragmentation": 106.2588441076897,
+        "tasks_submitted": 400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.06282839665164199,
+        "frag_ratio": 0.018273232610064798,
+        "alloc_ratio": 0.06282839665164197,
+        "allocated_gpus": 390.28999999999996,
+        "unallocated_gpus": 5821.71,
+        "fragmentation": 113.51332097372253,
+        "tasks_submitted": 450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.0705521571152608,
+        "frag_ratio": 0.019816546248782548,
+        "alloc_ratio": 0.0705521571152608,
+        "allocated_gpus": 438.2700000000001,
+        "unallocated_gpus": 5773.73,
+        "fragmentation": 123.10038529743719,
+        "tasks_submitted": 500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.07933515775917582,
+        "frag_ratio": 0.02132043423726081,
+        "alloc_ratio": 0.0793351577591758,
+        "allocated_gpus": 492.83000000000004,
+        "unallocated_gpus": 5719.17,
+        "fragmentation": 132.44253748186415,
+        "tasks_submitted": 550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.0866983258209917,
+        "frag_ratio": 0.022644999734773144,
+        "alloc_ratio": 0.08669832582099161,
+        "allocated_gpus": 538.5699999999999,
+        "unallocated_gpus": 5673.43,
+        "fragmentation": 140.67073835241078,
+        "tasks_submitted": 600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.09549420476497109,
+        "frag_ratio": 0.02420058518098615,
+        "alloc_ratio": 0.09549420476497102,
+        "allocated_gpus": 593.2099999999999,
+        "unallocated_gpus": 5618.79,
+        "fragmentation": 150.33403514428596,
+        "tasks_submitted": 650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.10213940759819704,
+        "frag_ratio": 0.025827133891033298,
+        "alloc_ratio": 0.10213940759819695,
+        "allocated_gpus": 634.4899999999994,
+        "unallocated_gpus": 5577.51,
+        "fragmentation": 160.43815573109885,
+        "tasks_submitted": 700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.10981004507405019,
+        "frag_ratio": 0.02724448392802495,
+        "alloc_ratio": 0.10981004507405011,
+        "allocated_gpus": 682.1399999999993,
+        "unallocated_gpus": 5529.860000000001,
+        "fragmentation": 169.242734160891,
+        "tasks_submitted": 750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.11764166130070823,
+        "frag_ratio": 0.02825284854274154,
+        "alloc_ratio": 0.11764166130070815,
+        "allocated_gpus": 730.789999999999,
+        "unallocated_gpus": 5481.210000000001,
+        "fragmentation": 175.50669514751044,
+        "tasks_submitted": 800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.12429330328396633,
+        "frag_ratio": 0.029898966953966648,
+        "alloc_ratio": 0.12429330328396632,
+        "allocated_gpus": 772.1099999999988,
+        "unallocated_gpus": 5439.890000000001,
+        "fragmentation": 185.7323827180408,
+        "tasks_submitted": 850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1326915647134576,
+        "frag_ratio": 0.03126175186403707,
+        "alloc_ratio": 0.1326915647134576,
+        "allocated_gpus": 824.2799999999987,
+        "unallocated_gpus": 5387.720000000001,
+        "fragmentation": 194.19800257939826,
+        "tasks_submitted": 900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1395669671603346,
+        "frag_ratio": 0.03240311196864963,
+        "alloc_ratio": 0.13956696716033457,
+        "allocated_gpus": 866.9899999999983,
+        "unallocated_gpus": 5345.010000000002,
+        "fragmentation": 201.28813154925152,
+        "tasks_submitted": 950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1466242755956211,
+        "frag_ratio": 0.03306363557753423,
+        "alloc_ratio": 0.1466242755956211,
+        "allocated_gpus": 910.8299999999983,
+        "unallocated_gpus": 5301.170000000002,
+        "fragmentation": 205.39130420764263,
+        "tasks_submitted": 1000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.15297005795234997,
+        "frag_ratio": 0.03432069432577302,
+        "alloc_ratio": 0.1529700579523499,
+        "allocated_gpus": 950.2499999999977,
+        "unallocated_gpus": 5261.750000000002,
+        "fragmentation": 213.20015315170198,
+        "tasks_submitted": 1050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.16188828074694106,
+        "frag_ratio": 0.03570800650122684,
+        "alloc_ratio": 0.16188828074694095,
+        "allocated_gpus": 1005.6499999999972,
+        "unallocated_gpus": 5206.350000000003,
+        "fragmentation": 221.8181363856211,
+        "tasks_submitted": 1100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.16820669671603314,
+        "frag_ratio": 0.036875751238495916,
+        "alloc_ratio": 0.16820669671603303,
+        "allocated_gpus": 1044.8999999999971,
+        "unallocated_gpus": 5167.100000000003,
+        "fragmentation": 229.07216669353662,
+        "tasks_submitted": 1150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.17482614294913024,
+        "frag_ratio": 0.03807338824794412,
+        "alloc_ratio": 0.17482614294913015,
+        "allocated_gpus": 1086.0199999999966,
+        "unallocated_gpus": 5125.980000000003,
+        "fragmentation": 236.51188779622888,
+        "tasks_submitted": 1200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1812620734063099,
+        "frag_ratio": 0.03910491636319567,
+        "alloc_ratio": 0.18126207340630973,
+        "allocated_gpus": 1125.9999999999961,
+        "unallocated_gpus": 5086.000000000004,
+        "fragmentation": 242.91974044817152,
+        "tasks_submitted": 1250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.18913071474565296,
+        "frag_ratio": 0.03964369067622929,
+        "alloc_ratio": 0.18913071474565296,
+        "allocated_gpus": 1174.8799999999962,
+        "unallocated_gpus": 5037.1200000000035,
+        "fragmentation": 246.26660648073636,
+        "tasks_submitted": 1300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.19696716033483516,
+        "frag_ratio": 0.0402540321504905,
+        "alloc_ratio": 0.19696716033483516,
+        "allocated_gpus": 1223.559999999996,
+        "unallocated_gpus": 4988.440000000004,
+        "fragmentation": 250.05804771884695,
+        "tasks_submitted": 1350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.20386509980682482,
+        "frag_ratio": 0.04093165978408781,
+        "alloc_ratio": 0.20386509980682488,
+        "allocated_gpus": 1266.4099999999962,
+        "unallocated_gpus": 4945.590000000004,
+        "fragmentation": 254.26747057875346,
+        "tasks_submitted": 1400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.21175466838377255,
+        "frag_ratio": 0.04156801685701609,
+        "alloc_ratio": 0.21175466838377263,
+        "allocated_gpus": 1315.4199999999955,
+        "unallocated_gpus": 4896.5800000000045,
+        "fragmentation": 258.22052071578395,
+        "tasks_submitted": 1450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.219993560849967,
+        "frag_ratio": 0.04230162009554624,
+        "alloc_ratio": 0.219993560849967,
+        "allocated_gpus": 1366.599999999995,
+        "unallocated_gpus": 4845.400000000005,
+        "fragmentation": 262.77766403353326,
+        "tasks_submitted": 1500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.22661139729555607,
+        "frag_ratio": 0.04341617203482241,
+        "alloc_ratio": 0.22661139729555604,
+        "allocated_gpus": 1407.7099999999941,
+        "unallocated_gpus": 4804.290000000006,
+        "fragmentation": 269.7012606803168,
+        "tasks_submitted": 1550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.23328557630392693,
+        "frag_ratio": 0.043995829708305484,
+        "alloc_ratio": 0.23328557630392688,
+        "allocated_gpus": 1449.1699999999937,
+        "unallocated_gpus": 4762.830000000006,
+        "fragmentation": 273.30209414799367,
+        "tasks_submitted": 1600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.24056986477784822,
+        "frag_ratio": 0.04453688492129209,
+        "alloc_ratio": 0.24056986477784828,
+        "allocated_gpus": 1494.4199999999935,
+        "unallocated_gpus": 4717.580000000006,
+        "fragmentation": 276.66312913106646,
+        "tasks_submitted": 1650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.2472472633612352,
+        "frag_ratio": 0.04551536764453249,
+        "alloc_ratio": 0.24724726336123515,
+        "allocated_gpus": 1535.8999999999928,
+        "unallocated_gpus": 4676.100000000008,
+        "fragmentation": 282.7414638078358,
+        "tasks_submitted": 1700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.25375885383129315,
+        "frag_ratio": 0.04629298091123692,
+        "alloc_ratio": 0.2537588538312931,
+        "allocated_gpus": 1576.3499999999926,
+        "unallocated_gpus": 4635.650000000007,
+        "fragmentation": 287.57199742060374,
+        "tasks_submitted": 1750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.261553444945266,
+        "frag_ratio": 0.04726213216108912,
+        "alloc_ratio": 0.2615534449452659,
+        "allocated_gpus": 1624.7699999999918,
+        "unallocated_gpus": 4587.230000000009,
+        "fragmentation": 293.5923649846856,
+        "tasks_submitted": 1800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.2680730843528641,
+        "frag_ratio": 0.04832677964954552,
+        "alloc_ratio": 0.26807308435286403,
+        "allocated_gpus": 1665.2699999999913,
+        "unallocated_gpus": 4546.730000000009,
+        "fragmentation": 300.20595518297677,
+        "tasks_submitted": 1850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.274781068898904,
+        "frag_ratio": 0.04924569348753117,
+        "alloc_ratio": 0.27478106889890397,
+        "allocated_gpus": 1706.9399999999914,
+        "unallocated_gpus": 4505.060000000009,
+        "fragmentation": 305.9142479445436,
+        "tasks_submitted": 1900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.2811976819059871,
+        "frag_ratio": 0.04984581022891641,
+        "alloc_ratio": 0.281197681905987,
+        "allocated_gpus": 1746.799999999991,
+        "unallocated_gpus": 4465.200000000009,
+        "fragmentation": 309.64217314202875,
+        "tasks_submitted": 1950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.28747102382485373,
+        "frag_ratio": 0.05067533194114275,
+        "alloc_ratio": 0.2874710238248536,
+        "allocated_gpus": 1785.7699999999907,
+        "unallocated_gpus": 4426.23000000001,
+        "fragmentation": 314.7951620183788,
+        "tasks_submitted": 2000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.29412427559561993,
+        "frag_ratio": 0.05120613127914455,
+        "alloc_ratio": 0.2941242755956199,
+        "allocated_gpus": 1827.0999999999906,
+        "unallocated_gpus": 4384.90000000001,
+        "fragmentation": 318.0924875060459,
+        "tasks_submitted": 2050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3007759175788781,
+        "frag_ratio": 0.05228005366615811,
+        "alloc_ratio": 0.3007759175788781,
+        "allocated_gpus": 1868.4199999999908,
+        "unallocated_gpus": 4343.580000000009,
+        "fragmentation": 324.7636933741742,
+        "tasks_submitted": 2100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3090856406954267,
+        "frag_ratio": 0.05288923717300661,
+        "alloc_ratio": 0.3090856406954267,
+        "allocated_gpus": 1920.0399999999909,
+        "unallocated_gpus": 4291.960000000009,
+        "fragmentation": 328.54794131871705,
+        "tasks_submitted": 2150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.31562459755312144,
+        "frag_ratio": 0.05424354364395272,
+        "alloc_ratio": 0.31562459755312144,
+        "allocated_gpus": 1960.6599999999905,
+        "unallocated_gpus": 4251.340000000009,
+        "fragmentation": 336.96089311623433,
+        "tasks_submitted": 2200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3217836445589166,
+        "frag_ratio": 0.05536779764771198,
+        "alloc_ratio": 0.3217836445589166,
+        "allocated_gpus": 1998.9199999999898,
+        "unallocated_gpus": 4213.08000000001,
+        "fragmentation": 343.9447589875868,
+        "tasks_submitted": 2250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3288329040566628,
+        "frag_ratio": 0.05558237923427578,
+        "alloc_ratio": 0.3288329040566629,
+        "allocated_gpus": 2042.7099999999898,
+        "unallocated_gpus": 4169.29000000001,
+        "fragmentation": 345.27773980332114,
+        "tasks_submitted": 2300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.33648583386992714,
+        "frag_ratio": 0.05644128196906157,
+        "alloc_ratio": 0.3364858338699274,
+        "allocated_gpus": 2090.249999999989,
+        "unallocated_gpus": 4121.750000000011,
+        "fragmentation": 350.6132435918105,
+        "tasks_submitted": 2350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3444977462974866,
+        "frag_ratio": 0.05738720509850301,
+        "alloc_ratio": 0.34449774629748703,
+        "allocated_gpus": 2140.0199999999895,
+        "unallocated_gpus": 4071.9800000000105,
+        "fragmentation": 356.4893180719007,
+        "tasks_submitted": 2400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.35217643271088006,
+        "frag_ratio": 0.05823250963147568,
+        "alloc_ratio": 0.3521764327108805,
+        "allocated_gpus": 2187.71999999999,
+        "unallocated_gpus": 4024.28000000001,
+        "fragmentation": 361.7403498307269,
+        "tasks_submitted": 2450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.35875724404378406,
+        "frag_ratio": 0.05909673325506969,
+        "alloc_ratio": 0.3587572440437845,
+        "allocated_gpus": 2228.5999999999894,
+        "unallocated_gpus": 3983.4000000000106,
+        "fragmentation": 367.1089069804929,
+        "tasks_submitted": 2500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3656551835157737,
+        "frag_ratio": 0.05914435213462022,
+        "alloc_ratio": 0.3656551835157741,
+        "allocated_gpus": 2271.4499999999884,
+        "unallocated_gpus": 3940.5500000000116,
+        "fragmentation": 367.40471546026083,
+        "tasks_submitted": 2550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3724404378621998,
+        "frag_ratio": 0.05940071008160367,
+        "alloc_ratio": 0.3724404378622003,
+        "allocated_gpus": 2313.5999999999885,
+        "unallocated_gpus": 3898.4000000000115,
+        "fragmentation": 368.997211026922,
+        "tasks_submitted": 2600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3797215067611051,
+        "frag_ratio": 0.06033628416925149,
+        "alloc_ratio": 0.3797215067611056,
+        "allocated_gpus": 2358.829999999988,
+        "unallocated_gpus": 3853.170000000012,
+        "fragmentation": 374.80899725939025,
+        "tasks_submitted": 2650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.38689954925949527,
+        "frag_ratio": 0.06053885528251653,
+        "alloc_ratio": 0.38689954925949566,
+        "allocated_gpus": 2403.419999999987,
+        "unallocated_gpus": 3808.580000000013,
+        "fragmentation": 376.06736901499266,
+        "tasks_submitted": 2700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3933499678042471,
+        "frag_ratio": 0.06067051347835662,
+        "alloc_ratio": 0.3933499678042475,
+        "allocated_gpus": 2443.4899999999857,
+        "unallocated_gpus": 3768.5100000000143,
+        "fragmentation": 376.88522972755135,
+        "tasks_submitted": 2750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.40050386349001643,
+        "frag_ratio": 0.060805754054780455,
+        "alloc_ratio": 0.4005038634900167,
+        "allocated_gpus": 2487.929999999984,
+        "unallocated_gpus": 3724.070000000016,
+        "fragmentation": 377.72534418829616,
+        "tasks_submitted": 2800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4064343206696686,
+        "frag_ratio": 0.06212990821693886,
+        "alloc_ratio": 0.40643432066966884,
+        "allocated_gpus": 2524.7699999999827,
+        "unallocated_gpus": 3687.2300000000173,
+        "fragmentation": 385.9509898436242,
+        "tasks_submitted": 2850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.41286703155183196,
+        "frag_ratio": 0.06284739956643956,
+        "alloc_ratio": 0.41286703155183235,
+        "allocated_gpus": 2564.7299999999827,
+        "unallocated_gpus": 3647.2700000000173,
+        "fragmentation": 390.40804610672257,
+        "tasks_submitted": 2900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.41916291049581106,
+        "frag_ratio": 0.06401909857297515,
+        "alloc_ratio": 0.4191629104958118,
+        "allocated_gpus": 2603.839999999983,
+        "unallocated_gpus": 3608.160000000017,
+        "fragmentation": 397.68664033532167,
+        "tasks_submitted": 2950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.42691081777205064,
+        "frag_ratio": 0.06421121709693473,
+        "alloc_ratio": 0.42691081777205125,
+        "allocated_gpus": 2651.9699999999825,
+        "unallocated_gpus": 3560.0300000000175,
+        "fragmentation": 398.8800806061585,
+        "tasks_submitted": 3000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.43335157759175436,
+        "frag_ratio": 0.06422644610717934,
+        "alloc_ratio": 0.433351577591755,
+        "allocated_gpus": 2691.9799999999823,
+        "unallocated_gpus": 3520.0200000000177,
+        "fragmentation": 398.97468321779803,
+        "tasks_submitted": 3050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.44254507405022186,
+        "frag_ratio": 0.06428057809927049,
+        "alloc_ratio": 0.44125724404378325,
+        "allocated_gpus": 2741.0899999999815,
+        "unallocated_gpus": 3470.9100000000185,
+        "fragmentation": 399.3109511526682,
+        "tasks_submitted": 3100,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.4494430135222115,
+        "frag_ratio": 0.06501808552017545,
+        "alloc_ratio": 0.44815518351577277,
+        "allocated_gpus": 2783.9399999999805,
+        "unallocated_gpus": 3428.0600000000195,
+        "fragmentation": 403.8923472513299,
+        "tasks_submitted": 3150,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.4570734063103634,
+        "frag_ratio": 0.06525326034522687,
+        "alloc_ratio": 0.4557855763039247,
+        "allocated_gpus": 2831.33999999998,
+        "unallocated_gpus": 3380.66000000002,
+        "fragmentation": 405.3532532645493,
+        "tasks_submitted": 3200,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.4650193174500929,
+        "frag_ratio": 0.06563386933746926,
+        "alloc_ratio": 0.4637314874436541,
+        "allocated_gpus": 2880.6999999999794,
+        "unallocated_gpus": 3331.3000000000206,
+        "fragmentation": 407.717596324359,
+        "tasks_submitted": 3250,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.470917578879584,
+        "frag_ratio": 0.06624536099361596,
+        "alloc_ratio": 0.46962974887314524,
+        "allocated_gpus": 2917.3399999999783,
+        "unallocated_gpus": 3294.6600000000217,
+        "fragmentation": 411.51618249234235,
+        "tasks_submitted": 3300,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.47948325820991244,
+        "frag_ratio": 0.06651620962334759,
+        "alloc_ratio": 0.47819542820347344,
+        "allocated_gpus": 2970.549999999977,
+        "unallocated_gpus": 3241.450000000023,
+        "fragmentation": 413.1986941802352,
+        "tasks_submitted": 3350,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.4861316806181545,
+        "frag_ratio": 0.06737341044188673,
+        "alloc_ratio": 0.48484385061171553,
+        "allocated_gpus": 3011.8499999999767,
+        "unallocated_gpus": 3200.1500000000233,
+        "fragmentation": 418.5236256650004,
+        "tasks_submitted": 3400,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.4934723116548575,
+        "frag_ratio": 0.06771888412841379,
+        "alloc_ratio": 0.49218448164841855,
+        "allocated_gpus": 3057.449999999976,
+        "unallocated_gpus": 3154.550000000024,
+        "fragmentation": 420.6697082057064,
+        "tasks_submitted": 3450,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.49999356084996366,
+        "frag_ratio": 0.06847384332757989,
+        "alloc_ratio": 0.49870573084352476,
+        "allocated_gpus": 3097.959999999976,
+        "unallocated_gpus": 3114.040000000024,
+        "fragmentation": 425.3595147509263,
+        "tasks_submitted": 3500,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.507604636188019,
+        "frag_ratio": 0.06887937483047006,
+        "alloc_ratio": 0.50631680618158,
+        "allocated_gpus": 3145.239999999975,
+        "unallocated_gpus": 3066.760000000025,
+        "fragmentation": 427.87867644688,
+        "tasks_submitted": 3550,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.5147118480360549,
+        "frag_ratio": 0.06927290208848315,
+        "alloc_ratio": 0.5134240180296159,
+        "allocated_gpus": 3189.389999999974,
+        "unallocated_gpus": 3022.610000000026,
+        "fragmentation": 430.3232677736573,
+        "tasks_submitted": 3600,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.5225128783000601,
+        "frag_ratio": 0.06950744810245411,
+        "alloc_ratio": 0.521225048293621,
+        "allocated_gpus": 3237.849999999974,
+        "unallocated_gpus": 2974.150000000026,
+        "fragmentation": 431.78026761244496,
+        "tasks_submitted": 3650,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.5296490663232408,
+        "frag_ratio": 0.0702413809283026,
+        "alloc_ratio": 0.5283612363168019,
+        "allocated_gpus": 3282.179999999973,
+        "unallocated_gpus": 2929.820000000027,
+        "fragmentation": 436.33945832661567,
+        "tasks_submitted": 3700,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.5364922730199567,
+        "frag_ratio": 0.07073404441840493,
+        "alloc_ratio": 0.535204443013518,
+        "allocated_gpus": 3324.6899999999737,
+        "unallocated_gpus": 2887.3100000000263,
+        "fragmentation": 439.39988392713144,
+        "tasks_submitted": 3750,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.5428895685769433,
+        "frag_ratio": 0.07150706110984857,
+        "alloc_ratio": 0.5416017385705043,
+        "allocated_gpus": 3364.429999999973,
+        "unallocated_gpus": 2847.570000000027,
+        "fragmentation": 444.20186361437936,
+        "tasks_submitted": 3800,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.549595943335475,
+        "frag_ratio": 0.07140391766690782,
+        "alloc_ratio": 0.5483081133290362,
+        "allocated_gpus": 3406.089999999973,
+        "unallocated_gpus": 2805.910000000027,
+        "fragmentation": 443.56113654683134,
+        "tasks_submitted": 3850,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.5563876368319335,
+        "frag_ratio": 0.07167739676676382,
+        "alloc_ratio": 0.5550998068254946,
+        "allocated_gpus": 3448.2799999999725,
+        "unallocated_gpus": 2763.7200000000275,
+        "fragmentation": 445.25998871513684,
+        "tasks_submitted": 3900,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.5630457179652238,
+        "frag_ratio": 0.07220345238304071,
+        "alloc_ratio": 0.5617578879587851,
+        "allocated_gpus": 3489.639999999973,
+        "unallocated_gpus": 2722.360000000027,
+        "fragmentation": 448.52784620344886,
+        "tasks_submitted": 3950,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.5711010946555005,
+        "frag_ratio": 0.07218960919663821,
+        "alloc_ratio": 0.5698132646490618,
+        "allocated_gpus": 3539.679999999972,
+        "unallocated_gpus": 2672.320000000028,
+        "fragmentation": 448.4418523295165,
+        "tasks_submitted": 4000,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.5789343206696667,
+        "frag_ratio": 0.07239970606001538,
+        "alloc_ratio": 0.5776464906632278,
+        "allocated_gpus": 3588.339999999971,
+        "unallocated_gpus": 2623.660000000029,
+        "fragmentation": 449.7469740448155,
+        "tasks_submitted": 4050,
+        "rejected": 1
+      },
+      {
+        "demand_fraction": 0.5871377978106839,
+        "frag_ratio": 0.07267410229497592,
+        "alloc_ratio": 0.5845621377978059,
+        "allocated_gpus": 3631.2999999999697,
+        "unallocated_gpus": 2580.7000000000303,
+        "fragmentation": 451.4515234563904,
+        "tasks_submitted": 4100,
+        "rejected": 2
+      },
+      {
+        "demand_fraction": 0.5939697359948435,
+        "frag_ratio": 0.07375064554996363,
+        "alloc_ratio": 0.5913940759819655,
+        "allocated_gpus": 3673.7399999999698,
+        "unallocated_gpus": 2538.2600000000302,
+        "fragmentation": 458.13901015637407,
+        "tasks_submitted": 4150,
+        "rejected": 2
+      },
+      {
+        "demand_fraction": 0.6027575660012825,
+        "frag_ratio": 0.07402538460763873,
+        "alloc_ratio": 0.5988940759819654,
+        "allocated_gpus": 3720.3299999999695,
+        "unallocated_gpus": 2491.6700000000305,
+        "fragmentation": 459.84568918265177,
+        "tasks_submitted": 4200,
+        "rejected": 3
+      },
+      {
+        "demand_fraction": 0.6095573084352813,
+        "frag_ratio": 0.07390470582177817,
+        "alloc_ratio": 0.605693818415964,
+        "allocated_gpus": 3762.569999999969,
+        "unallocated_gpus": 2449.430000000031,
+        "fragmentation": 459.09603256488606,
+        "tasks_submitted": 4250,
+        "rejected": 3
+      },
+      {
+        "demand_fraction": 0.616585640695423,
+        "frag_ratio": 0.0738612890507768,
+        "alloc_ratio": 0.6127221506761056,
+        "allocated_gpus": 3806.2299999999677,
+        "unallocated_gpus": 2405.7700000000323,
+        "fragmentation": 458.8263275834255,
+        "tasks_submitted": 4300,
+        "rejected": 3
+      },
+      {
+        "demand_fraction": 0.6242192530585908,
+        "frag_ratio": 0.07452499849739291,
+        "alloc_ratio": 0.6190679330328344,
+        "allocated_gpus": 3845.6499999999673,
+        "unallocated_gpus": 2366.3500000000327,
+        "fragmentation": 462.94929066580477,
+        "tasks_submitted": 4350,
+        "rejected": 4
+      },
+      {
+        "demand_fraction": 0.6311928525434588,
+        "frag_ratio": 0.0749164804974097,
+        "alloc_ratio": 0.6260415325177023,
+        "allocated_gpus": 3888.969999999967,
+        "unallocated_gpus": 2323.030000000033,
+        "fragmentation": 465.3811768499091,
+        "tasks_submitted": 4400,
+        "rejected": 4
+      },
+      {
+        "demand_fraction": 0.6379056664520228,
+        "frag_ratio": 0.0755838182592201,
+        "alloc_ratio": 0.6327543464262663,
+        "allocated_gpus": 3930.669999999966,
+        "unallocated_gpus": 2281.330000000034,
+        "fragmentation": 469.5266790262753,
+        "tasks_submitted": 4450,
+        "rejected": 4
+      },
+      {
+        "demand_fraction": 0.6454732775273608,
+        "frag_ratio": 0.07625478848850596,
+        "alloc_ratio": 0.6390341274951651,
+        "allocated_gpus": 3969.6799999999657,
+        "unallocated_gpus": 2242.3200000000343,
+        "fragmentation": 473.69474609059904,
+        "tasks_submitted": 4500,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.6523857050869228,
+        "frag_ratio": 0.07684365150983657,
+        "alloc_ratio": 0.6459465550547273,
+        "allocated_gpus": 4012.619999999966,
+        "unallocated_gpus": 2199.380000000034,
+        "fragmentation": 477.35276317910484,
+        "tasks_submitted": 4550,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.6591645202833166,
+        "frag_ratio": 0.07717095299731865,
+        "alloc_ratio": 0.6527253702511212,
+        "allocated_gpus": 4054.729999999965,
+        "unallocated_gpus": 2157.270000000035,
+        "fragmentation": 479.38596001934343,
+        "tasks_submitted": 4600,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.6661300708306448,
+        "frag_ratio": 0.077609663302938,
+        "alloc_ratio": 0.659690920798449,
+        "allocated_gpus": 4097.999999999965,
+        "unallocated_gpus": 2114.0000000000346,
+        "fragmentation": 482.1112284378509,
+        "tasks_submitted": 4650,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.6725096587250432,
+        "frag_ratio": 0.07777609218230272,
+        "alloc_ratio": 0.6660705086928471,
+        "allocated_gpus": 4137.6299999999665,
+        "unallocated_gpus": 2074.3700000000335,
+        "fragmentation": 483.1450846364645,
+        "tasks_submitted": 4700,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.6788715389568531,
+        "frag_ratio": 0.07833673941497858,
+        "alloc_ratio": 0.672432388924657,
+        "allocated_gpus": 4177.149999999969,
+        "unallocated_gpus": 2034.8500000000313,
+        "fragmentation": 486.62782524584696,
+        "tasks_submitted": 4750,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.6857034771410133,
+        "frag_ratio": 0.07864762667545816,
+        "alloc_ratio": 0.6792643271088168,
+        "allocated_gpus": 4219.58999999997,
+        "unallocated_gpus": 1992.4100000000299,
+        "fragmentation": 488.55905690794606,
+        "tasks_submitted": 4800,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.6919752092723721,
+        "frag_ratio": 0.0789357163551813,
+        "alloc_ratio": 0.6855360592401764,
+        "allocated_gpus": 4258.549999999976,
+        "unallocated_gpus": 1953.4500000000244,
+        "fragmentation": 490.34866999838624,
+        "tasks_submitted": 4850,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.6988570508692816,
+        "frag_ratio": 0.07939309920972716,
+        "alloc_ratio": 0.6924179008370862,
+        "allocated_gpus": 4301.299999999979,
+        "unallocated_gpus": 1910.7000000000207,
+        "fragmentation": 493.18993229082514,
+        "tasks_submitted": 4900,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.7059787508048907,
+        "frag_ratio": 0.07980077873957268,
+        "alloc_ratio": 0.6995396007726954,
+        "allocated_gpus": 4345.539999999984,
+        "unallocated_gpus": 1866.4600000000164,
+        "fragmentation": 495.72243753022553,
+        "tasks_submitted": 4950,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.71251448808757,
+        "frag_ratio": 0.0802270726864083,
+        "alloc_ratio": 0.7060753380553743,
+        "allocated_gpus": 4386.139999999985,
+        "unallocated_gpus": 1825.8600000000151,
+        "fragmentation": 498.37057552796836,
+        "tasks_submitted": 5000,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.7191435930457158,
+        "frag_ratio": 0.08042854292612674,
+        "alloc_ratio": 0.7127044430135204,
+        "allocated_gpus": 4427.319999999989,
+        "unallocated_gpus": 1784.6800000000112,
+        "fragmentation": 499.6221086570993,
+        "tasks_submitted": 5050,
+        "rejected": 5
+      },
+      {
+        "demand_fraction": 0.7267353509336753,
+        "frag_ratio": 0.08098774023411977,
+        "alloc_ratio": 0.7190083708950402,
+        "allocated_gpus": 4466.47999999999,
+        "unallocated_gpus": 1745.5200000000104,
+        "fragmentation": 503.095842334352,
+        "tasks_submitted": 5100,
+        "rejected": 6
+      },
+      {
+        "demand_fraction": 0.7339793947198961,
+        "frag_ratio": 0.08110875846896634,
+        "alloc_ratio": 0.726252414681261,
+        "allocated_gpus": 4511.479999999993,
+        "unallocated_gpus": 1700.5200000000068,
+        "fragmentation": 503.84760760921887,
+        "tasks_submitted": 5150,
+        "rejected": 6
+      },
+      {
+        "demand_fraction": 0.741258853831294,
+        "frag_ratio": 0.08122153027339926,
+        "alloc_ratio": 0.7335318737926589,
+        "allocated_gpus": 4556.699999999997,
+        "unallocated_gpus": 1655.300000000003,
+        "fragmentation": 504.5481460583562,
+        "tasks_submitted": 5200,
+        "rejected": 6
+      },
+      {
+        "demand_fraction": 0.7488747585318738,
+        "frag_ratio": 0.0816222674486377,
+        "alloc_ratio": 0.7398599484867996,
+        "allocated_gpus": 4596.009999999999,
+        "unallocated_gpus": 1615.9900000000007,
+        "fragmentation": 507.03752539093733,
+        "tasks_submitted": 5250,
+        "rejected": 7
+      },
+      {
+        "demand_fraction": 0.7563248551191246,
+        "frag_ratio": 0.08187295649374692,
+        "alloc_ratio": 0.7473100450740506,
+        "allocated_gpus": 4642.290000000003,
+        "unallocated_gpus": 1569.7099999999973,
+        "fragmentation": 508.59480573915585,
+        "tasks_submitted": 5300,
+        "rejected": 7
+      },
+      {
+        "demand_fraction": 0.7625643915003227,
+        "frag_ratio": 0.08305710455828039,
+        "alloc_ratio": 0.753549581455249,
+        "allocated_gpus": 4681.050000000007,
+        "unallocated_gpus": 1530.9499999999935,
+        "fragmentation": 515.9507335160378,
+        "tasks_submitted": 5350,
+        "rejected": 7
+      },
+      {
+        "demand_fraction": 0.7686703155183524,
+        "frag_ratio": 0.08313437747287764,
+        "alloc_ratio": 0.7596555054732789,
+        "allocated_gpus": 4718.980000000009,
+        "unallocated_gpus": 1493.0199999999913,
+        "fragmentation": 516.4307528615159,
+        "tasks_submitted": 5400,
+        "rejected": 7
+      },
+      {
+        "demand_fraction": 0.7760769478428863,
+        "frag_ratio": 0.08351580524306423,
+        "alloc_ratio": 0.7670621377978127,
+        "allocated_gpus": 4764.9900000000125,
+        "unallocated_gpus": 1447.0099999999875,
+        "fragmentation": 518.800182169915,
+        "tasks_submitted": 5450,
+        "rejected": 7
+      },
+      {
+        "demand_fraction": 0.7823873148744382,
+        "frag_ratio": 0.08396874126398925,
+        "alloc_ratio": 0.7733725048293653,
+        "allocated_gpus": 4804.190000000017,
+        "unallocated_gpus": 1407.8099999999831,
+        "fragmentation": 521.6138207319012,
+        "tasks_submitted": 5500,
+        "rejected": 7
+      },
+      {
+        "demand_fraction": 0.7904185447520949,
+        "frag_ratio": 0.08398673958626002,
+        "alloc_ratio": 0.7801159047005826,
+        "allocated_gpus": 4846.080000000019,
+        "unallocated_gpus": 1365.919999999981,
+        "fragmentation": 521.7256263098473,
+        "tasks_submitted": 5550,
+        "rejected": 8
+      },
+      {
+        "demand_fraction": 0.7973599484868024,
+        "frag_ratio": 0.08429975515035935,
+        "alloc_ratio": 0.7870573084352902,
+        "allocated_gpus": 4889.200000000023,
+        "unallocated_gpus": 1322.7999999999774,
+        "fragmentation": 523.6700789940323,
+        "tasks_submitted": 5600,
+        "rejected": 8
+      },
+      {
+        "demand_fraction": 0.8055972311654895,
+        "frag_ratio": 0.08488440646099062,
+        "alloc_ratio": 0.7940067611075378,
+        "allocated_gpus": 4932.370000000024,
+        "unallocated_gpus": 1279.6299999999756,
+        "fragmentation": 527.3019329356737,
+        "tasks_submitted": 5650,
+        "rejected": 9
+      },
+      {
+        "demand_fraction": 0.8120090148100493,
+        "frag_ratio": 0.08549774925598869,
+        "alloc_ratio": 0.8004185447520974,
+        "allocated_gpus": 4972.200000000029,
+        "unallocated_gpus": 1239.799999999971,
+        "fragmentation": 531.1120183782017,
+        "tasks_submitted": 5700,
+        "rejected": 9
+      },
+      {
+        "demand_fraction": 0.8190792015454008,
+        "frag_ratio": 0.08543480819938466,
+        "alloc_ratio": 0.8074887314874485,
+        "allocated_gpus": 5016.12000000003,
+        "unallocated_gpus": 1195.87999999997,
+        "fragmentation": 530.7210285345775,
+        "tasks_submitted": 5750,
+        "rejected": 9
+      },
+      {
+        "demand_fraction": 0.8256471345782409,
+        "frag_ratio": 0.08551691177409389,
+        "alloc_ratio": 0.8140566645202886,
+        "allocated_gpus": 5056.920000000033,
+        "unallocated_gpus": 1155.0799999999672,
+        "fragmentation": 531.2310559406712,
+        "tasks_submitted": 5800,
+        "rejected": 9
+      },
+      {
+        "demand_fraction": 0.8341130070830703,
+        "frag_ratio": 0.08590842595428985,
+        "alloc_ratio": 0.821234707018679,
+        "allocated_gpus": 5101.510000000034,
+        "unallocated_gpus": 1110.4899999999661,
+        "fragmentation": 533.6631420280486,
+        "tasks_submitted": 5850,
+        "rejected": 10
+      },
+      {
+        "demand_fraction": 0.8404716677398643,
+        "frag_ratio": 0.08556378921193714,
+        "alloc_ratio": 0.8275933676754728,
+        "allocated_gpus": 5141.010000000037,
+        "unallocated_gpus": 1070.9899999999634,
+        "fragmentation": 531.5222585845535,
+        "tasks_submitted": 5900,
+        "rejected": 10
+      },
+      {
+        "demand_fraction": 0.8476593689633033,
+        "frag_ratio": 0.08551572785492388,
+        "alloc_ratio": 0.8347810688989109,
+        "allocated_gpus": 5185.660000000034,
+        "unallocated_gpus": 1026.3399999999656,
+        "fragmentation": 531.2237014347871,
+        "tasks_submitted": 5950,
+        "rejected": 10
+      },
+      {
+        "demand_fraction": 0.8551481004507473,
+        "frag_ratio": 0.08612243556412175,
+        "alloc_ratio": 0.8409819703799156,
+        "allocated_gpus": 5224.180000000036,
+        "unallocated_gpus": 987.8199999999642,
+        "fragmentation": 534.9925697243243,
+        "tasks_submitted": 6000,
+        "rejected": 11
+      },
+      {
+        "demand_fraction": 0.8613650998068321,
+        "frag_ratio": 0.08576990014490381,
+        "alloc_ratio": 0.8471989697360008,
+        "allocated_gpus": 5262.8000000000375,
+        "unallocated_gpus": 949.1999999999625,
+        "fragmentation": 532.8026197001425,
+        "tasks_submitted": 6050,
+        "rejected": 11
+      },
+      {
+        "demand_fraction": 0.867955569864785,
+        "frag_ratio": 0.08572185513749772,
+        "alloc_ratio": 0.8537894397939537,
+        "allocated_gpus": 5303.740000000041,
+        "unallocated_gpus": 908.2599999999593,
+        "fragmentation": 532.5041641141358,
+        "tasks_submitted": 6100,
+        "rejected": 11
+      },
+      {
+        "demand_fraction": 0.8748309723116624,
+        "frag_ratio": 0.08552983341359306,
+        "alloc_ratio": 0.8606648422408314,
+        "allocated_gpus": 5346.450000000044,
+        "unallocated_gpus": 865.5499999999556,
+        "fragmentation": 531.3113251652401,
+        "tasks_submitted": 6150,
+        "rejected": 11
+      },
+      {
+        "demand_fraction": 0.882669027688353,
+        "frag_ratio": 0.08594869036532662,
+        "alloc_ratio": 0.8672150676110829,
+        "allocated_gpus": 5387.140000000047,
+        "unallocated_gpus": 824.8599999999533,
+        "fragmentation": 533.913264549409,
+        "tasks_submitted": 6200,
+        "rejected": 12
+      }
+    ]
+  },
+  {
+    "policy": "bestfit",
+    "seed": 42,
+    "total_gpus": 6212,
+    "num_tasks": 6203,
+    "demand_target": 1.3,
+    "elapsed_seconds": 8.1,
+    "curve": [
+      {
+        "demand_fraction": 0.006659690920798454,
+        "frag_ratio": 0.005244499550982695,
+        "alloc_ratio": 0.006659690920798454,
+        "allocated_gpus": 41.37,
+        "unallocated_gpus": 6170.63,
+        "fragmentation": 32.5788312107045,
+        "tasks_submitted": 50,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.014241790083708948,
+        "frag_ratio": 0.006008320756246639,
+        "alloc_ratio": 0.01424179008370895,
+        "allocated_gpus": 88.47,
+        "unallocated_gpus": 6123.53,
+        "fragmentation": 37.323688537804124,
+        "tasks_submitted": 100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.020920798454603987,
+        "frag_ratio": 0.006033640069264175,
+        "alloc_ratio": 0.020920798454603994,
+        "allocated_gpus": 129.96,
+        "unallocated_gpus": 6082.04,
+        "fragmentation": 37.48097211026906,
+        "tasks_submitted": 150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.028853831294269154,
+        "frag_ratio": 0.006336861959177021,
+        "alloc_ratio": 0.028853831294269158,
+        "allocated_gpus": 179.24,
+        "unallocated_gpus": 6032.76,
+        "fragmentation": 39.36458649040765,
+        "tasks_submitted": 200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.03529137153895685,
+        "frag_ratio": 0.005744094755471627,
+        "alloc_ratio": 0.03529137153895687,
+        "allocated_gpus": 219.23000000000005,
+        "unallocated_gpus": 5992.7699999999995,
+        "fragmentation": 35.682316620989745,
+        "tasks_submitted": 250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.04272054088860271,
+        "frag_ratio": 0.005838962702030512,
+        "alloc_ratio": 0.04272054088860272,
+        "allocated_gpus": 265.3800000000001,
+        "unallocated_gpus": 5946.62,
+        "fragmentation": 36.271636305013544,
+        "tasks_submitted": 300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.04982775273663876,
+        "frag_ratio": 0.005170353304110282,
+        "alloc_ratio": 0.04982775273663878,
+        "allocated_gpus": 309.5300000000001,
+        "unallocated_gpus": 5902.47,
+        "fragmentation": 32.11823472513307,
+        "tasks_submitted": 350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.05611397295556987,
+        "frag_ratio": 0.005896514616704445,
+        "alloc_ratio": 0.05611397295556989,
+        "allocated_gpus": 348.58000000000015,
+        "unallocated_gpus": 5863.42,
+        "fragmentation": 36.62914879896801,
+        "tasks_submitted": 400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.06282839665164199,
+        "frag_ratio": 0.0060697794484711395,
+        "alloc_ratio": 0.062828396651642,
+        "allocated_gpus": 390.29000000000013,
+        "unallocated_gpus": 5821.71,
+        "fragmentation": 37.70546993390272,
+        "tasks_submitted": 450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.0705521571152608,
+        "frag_ratio": 0.006189495164616622,
+        "alloc_ratio": 0.07055215711526082,
+        "allocated_gpus": 438.2700000000002,
+        "unallocated_gpus": 5773.73,
+        "fragmentation": 38.449143962598455,
+        "tasks_submitted": 500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.07933515775917582,
+        "frag_ratio": 0.006704208565346255,
+        "alloc_ratio": 0.07933515775917581,
+        "allocated_gpus": 492.83000000000015,
+        "unallocated_gpus": 5719.17,
+        "fragmentation": 41.64654360793094,
+        "tasks_submitted": 550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.0866983258209917,
+        "frag_ratio": 0.006716134176398545,
+        "alloc_ratio": 0.08669832582099166,
+        "allocated_gpus": 538.5700000000002,
+        "unallocated_gpus": 5673.43,
+        "fragmentation": 41.720625503787765,
+        "tasks_submitted": 600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.09549420476497109,
+        "frag_ratio": 0.007372832496250605,
+        "alloc_ratio": 0.09549420476497107,
+        "allocated_gpus": 593.2100000000003,
+        "unallocated_gpus": 5618.79,
+        "fragmentation": 45.800035466708756,
+        "tasks_submitted": 650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.10213940759819704,
+        "frag_ratio": 0.007919036797411825,
+        "alloc_ratio": 0.10213940759819708,
+        "allocated_gpus": 634.4900000000002,
+        "unallocated_gpus": 5577.51,
+        "fragmentation": 49.19305658552226,
+        "tasks_submitted": 700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.10981004507405019,
+        "frag_ratio": 0.008991595679094551,
+        "alloc_ratio": 0.10981004507405027,
+        "allocated_gpus": 682.1400000000003,
+        "unallocated_gpus": 5529.86,
+        "fragmentation": 55.85579235853535,
+        "tasks_submitted": 750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.11764166130070823,
+        "frag_ratio": 0.008716216391565798,
+        "alloc_ratio": 0.11764166130070836,
+        "allocated_gpus": 730.7900000000003,
+        "unallocated_gpus": 5481.21,
+        "fragmentation": 54.145136224406734,
+        "tasks_submitted": 800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.12429330328396633,
+        "frag_ratio": 0.009436108797655995,
+        "alloc_ratio": 0.12429330328396654,
+        "allocated_gpus": 772.1100000000001,
+        "unallocated_gpus": 5439.889999999999,
+        "fragmentation": 58.617107851039044,
+        "tasks_submitted": 850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1326915647134576,
+        "frag_ratio": 0.010114866370768071,
+        "alloc_ratio": 0.13269156471345786,
+        "allocated_gpus": 824.2800000000002,
+        "unallocated_gpus": 5387.719999999999,
+        "fragmentation": 62.833549895211256,
+        "tasks_submitted": 900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1395669671603346,
+        "frag_ratio": 0.009811354599725694,
+        "alloc_ratio": 0.1395669671603349,
+        "allocated_gpus": 866.9900000000005,
+        "unallocated_gpus": 5345.009999999999,
+        "fragmentation": 60.948134773496015,
+        "tasks_submitted": 950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1466242755956211,
+        "frag_ratio": 0.0099490411292792,
+        "alloc_ratio": 0.14662427559562144,
+        "allocated_gpus": 910.8300000000004,
+        "unallocated_gpus": 5301.17,
+        "fragmentation": 61.8034434950824,
+        "tasks_submitted": 1000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.15297005795234997,
+        "frag_ratio": 0.010155357340646515,
+        "alloc_ratio": 0.15297005795235036,
+        "allocated_gpus": 950.2500000000005,
+        "unallocated_gpus": 5261.75,
+        "fragmentation": 63.085079800096146,
+        "tasks_submitted": 1050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.16188828074694106,
+        "frag_ratio": 0.010210417886615442,
+        "alloc_ratio": 0.16188828074694153,
+        "allocated_gpus": 1005.6500000000008,
+        "unallocated_gpus": 5206.349999999999,
+        "fragmentation": 63.42711591165513,
+        "tasks_submitted": 1100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.16820669671603314,
+        "frag_ratio": 0.010290349299235,
+        "alloc_ratio": 0.1682066967160336,
+        "allocated_gpus": 1044.9000000000008,
+        "unallocated_gpus": 5167.099999999999,
+        "fragmentation": 63.92364984684782,
+        "tasks_submitted": 1150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.17482614294913024,
+        "frag_ratio": 0.010404544557558319,
+        "alloc_ratio": 0.17482614294913085,
+        "allocated_gpus": 1086.020000000001,
+        "unallocated_gpus": 5125.98,
+        "fragmentation": 64.63303079155227,
+        "tasks_submitted": 1200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1812620734063099,
+        "frag_ratio": 0.010834930058456852,
+        "alloc_ratio": 0.1812620734063105,
+        "allocated_gpus": 1126.000000000001,
+        "unallocated_gpus": 5085.999999999999,
+        "fragmentation": 67.30658552313396,
+        "tasks_submitted": 1250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.18913071474565296,
+        "frag_ratio": 0.01157430107505675,
+        "alloc_ratio": 0.18913071474565374,
+        "allocated_gpus": 1174.880000000001,
+        "unallocated_gpus": 5037.119999999999,
+        "fragmentation": 71.89955827825253,
+        "tasks_submitted": 1300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.19696716033483516,
+        "frag_ratio": 0.012390201228888375,
+        "alloc_ratio": 0.19696716033483597,
+        "allocated_gpus": 1223.560000000001,
+        "unallocated_gpus": 4988.439999999999,
+        "fragmentation": 76.96793003385459,
+        "tasks_submitted": 1350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.20386509980682482,
+        "frag_ratio": 0.01330970313369546,
+        "alloc_ratio": 0.20386509980682568,
+        "allocated_gpus": 1266.4100000000012,
+        "unallocated_gpus": 4945.589999999998,
+        "fragmentation": 82.6798758665162,
+        "tasks_submitted": 1400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.21175466838377255,
+        "frag_ratio": 0.013811576902479207,
+        "alloc_ratio": 0.21175466838377344,
+        "allocated_gpus": 1315.4200000000005,
+        "unallocated_gpus": 4896.58,
+        "fragmentation": 85.79751571820083,
+        "tasks_submitted": 1450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.219993560849967,
+        "frag_ratio": 0.01487168179533012,
+        "alloc_ratio": 0.2199935608499678,
+        "allocated_gpus": 1366.6,
+        "unallocated_gpus": 4845.4,
+        "fragmentation": 92.38288731259071,
+        "tasks_submitted": 1500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.22661139729555607,
+        "frag_ratio": 0.014630708569135327,
+        "alloc_ratio": 0.22661139729555688,
+        "allocated_gpus": 1407.7099999999994,
+        "unallocated_gpus": 4804.290000000001,
+        "fragmentation": 90.88596163146865,
+        "tasks_submitted": 1550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.23328557630392693,
+        "frag_ratio": 0.014377247357306592,
+        "alloc_ratio": 0.23328557630392774,
+        "allocated_gpus": 1449.1699999999992,
+        "unallocated_gpus": 4762.830000000001,
+        "fragmentation": 89.31146058358854,
+        "tasks_submitted": 1600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.24056986477784822,
+        "frag_ratio": 0.014935509883000131,
+        "alloc_ratio": 0.2405698647778491,
+        "allocated_gpus": 1494.4199999999987,
+        "unallocated_gpus": 4717.580000000002,
+        "fragmentation": 92.77938739319681,
+        "tasks_submitted": 1650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.2472472633612352,
+        "frag_ratio": 0.014834596734085517,
+        "alloc_ratio": 0.24724726336123595,
+        "allocated_gpus": 1535.8999999999978,
+        "unallocated_gpus": 4676.100000000002,
+        "fragmentation": 92.15251491213922,
+        "tasks_submitted": 1700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.25375885383129315,
+        "frag_ratio": 0.015048864823420589,
+        "alloc_ratio": 0.2537588538312939,
+        "allocated_gpus": 1576.3499999999976,
+        "unallocated_gpus": 4635.650000000002,
+        "fragmentation": 93.4835482830887,
+        "tasks_submitted": 1750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.261553444945266,
+        "frag_ratio": 0.015428428478877163,
+        "alloc_ratio": 0.2615534449452667,
+        "allocated_gpus": 1624.769999999997,
+        "unallocated_gpus": 4587.230000000003,
+        "fragmentation": 95.84139771078493,
+        "tasks_submitted": 1800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.2680730843528641,
+        "frag_ratio": 0.017033936542140075,
+        "alloc_ratio": 0.26807308435286487,
+        "allocated_gpus": 1665.2699999999966,
+        "unallocated_gpus": 4546.730000000003,
+        "fragmentation": 105.81481379977416,
+        "tasks_submitted": 1850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.274781068898904,
+        "frag_ratio": 0.01806946460175106,
+        "alloc_ratio": 0.27478106889890475,
+        "allocated_gpus": 1706.9399999999962,
+        "unallocated_gpus": 4505.060000000004,
+        "fragmentation": 112.24751410607757,
+        "tasks_submitted": 1900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.2811976819059871,
+        "frag_ratio": 0.018642616169668006,
+        "alloc_ratio": 0.28119768190598776,
+        "allocated_gpus": 1746.7999999999959,
+        "unallocated_gpus": 4465.200000000004,
+        "fragmentation": 115.80793164597766,
+        "tasks_submitted": 1950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.28747102382485373,
+        "frag_ratio": 0.019567642944096065,
+        "alloc_ratio": 0.28747102382485434,
+        "allocated_gpus": 1785.7699999999952,
+        "unallocated_gpus": 4426.230000000005,
+        "fragmentation": 121.55419796872476,
+        "tasks_submitted": 2000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.29412427559561993,
+        "frag_ratio": 0.020518697254999572,
+        "alloc_ratio": 0.29412427559562054,
+        "allocated_gpus": 1827.099999999995,
+        "unallocated_gpus": 4384.900000000005,
+        "fragmentation": 127.46214734805734,
+        "tasks_submitted": 2050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3007759175788781,
+        "frag_ratio": 0.020599284987562354,
+        "alloc_ratio": 0.3007759175788787,
+        "allocated_gpus": 1868.4199999999946,
+        "unallocated_gpus": 4343.580000000005,
+        "fragmentation": 127.96275834273735,
+        "tasks_submitted": 2100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3090856406954267,
+        "frag_ratio": 0.020599602637072247,
+        "alloc_ratio": 0.30908564069542727,
+        "allocated_gpus": 1920.0399999999943,
+        "unallocated_gpus": 4291.9600000000055,
+        "fragmentation": 127.9647315814928,
+        "tasks_submitted": 2150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.31562459755312144,
+        "frag_ratio": 0.020839702846149985,
+        "alloc_ratio": 0.315624597553122,
+        "allocated_gpus": 1960.659999999994,
+        "unallocated_gpus": 4251.340000000006,
+        "fragmentation": 129.4562340802837,
+        "tasks_submitted": 2200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3217836445589166,
+        "frag_ratio": 0.02143946015569601,
+        "alloc_ratio": 0.3217836445589171,
+        "allocated_gpus": 1998.919999999993,
+        "unallocated_gpus": 4213.080000000007,
+        "fragmentation": 133.1819264871836,
+        "tasks_submitted": 2250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3288329040566628,
+        "frag_ratio": 0.02179187541827745,
+        "alloc_ratio": 0.32883290405666327,
+        "allocated_gpus": 2042.7099999999923,
+        "unallocated_gpus": 4169.290000000008,
+        "fragmentation": 135.3711300983395,
+        "tasks_submitted": 2300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.33648583386992714,
+        "frag_ratio": 0.022172068144332046,
+        "alloc_ratio": 0.3364858338699279,
+        "allocated_gpus": 2090.2499999999923,
+        "unallocated_gpus": 4121.750000000007,
+        "fragmentation": 137.73288731259066,
+        "tasks_submitted": 2350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3444977462974866,
+        "frag_ratio": 0.022505419505486145,
+        "alloc_ratio": 0.3444977462974874,
+        "allocated_gpus": 2140.019999999992,
+        "unallocated_gpus": 4071.980000000008,
+        "fragmentation": 139.80366596807994,
+        "tasks_submitted": 2400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.35217643271088006,
+        "frag_ratio": 0.022894461002242333,
+        "alloc_ratio": 0.3521764327108809,
+        "allocated_gpus": 2187.719999999992,
+        "unallocated_gpus": 4024.280000000008,
+        "fragmentation": 142.22039174592936,
+        "tasks_submitted": 2450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.35875724404378406,
+        "frag_ratio": 0.023831091326414037,
+        "alloc_ratio": 0.35875724404378484,
+        "allocated_gpus": 2228.5999999999913,
+        "unallocated_gpus": 3983.4000000000087,
+        "fragmentation": 148.038739319684,
+        "tasks_submitted": 2500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3656551835157737,
+        "frag_ratio": 0.024334242700211842,
+        "alloc_ratio": 0.3656551835157745,
+        "allocated_gpus": 2271.449999999991,
+        "unallocated_gpus": 3940.550000000009,
+        "fragmentation": 151.16431565371596,
+        "tasks_submitted": 2550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3724404378621998,
+        "frag_ratio": 0.024642022756784596,
+        "alloc_ratio": 0.37244043786220077,
+        "allocated_gpus": 2313.5999999999913,
+        "unallocated_gpus": 3898.4000000000087,
+        "fragmentation": 153.07624536514592,
+        "tasks_submitted": 2600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3797215067611051,
+        "frag_ratio": 0.024932515309720214,
+        "alloc_ratio": 0.37972150676110605,
+        "allocated_gpus": 2358.829999999991,
+        "unallocated_gpus": 3853.170000000009,
+        "fragmentation": 154.88078510398196,
+        "tasks_submitted": 2650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.38689954925949527,
+        "frag_ratio": 0.025000125606505552,
+        "alloc_ratio": 0.38689954925949627,
+        "allocated_gpus": 2403.419999999991,
+        "unallocated_gpus": 3808.580000000009,
+        "fragmentation": 155.30078026761248,
+        "tasks_submitted": 2700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3933499678042471,
+        "frag_ratio": 0.025446712270478775,
+        "alloc_ratio": 0.39334996780424836,
+        "allocated_gpus": 2443.4899999999907,
+        "unallocated_gpus": 3768.5100000000093,
+        "fragmentation": 158.07497662421414,
+        "tasks_submitted": 2750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.40050386349001643,
+        "frag_ratio": 0.02569652336763707,
+        "alloc_ratio": 0.40050386349001776,
+        "allocated_gpus": 2487.9299999999903,
+        "unallocated_gpus": 3724.0700000000097,
+        "fragmentation": 159.62680315976147,
+        "tasks_submitted": 2800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4064343206696686,
+        "frag_ratio": 0.02555873069539603,
+        "alloc_ratio": 0.40643432066967006,
+        "allocated_gpus": 2524.7699999999904,
+        "unallocated_gpus": 3687.2300000000096,
+        "fragmentation": 158.77083507980015,
+        "tasks_submitted": 2850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.41286703155183196,
+        "frag_ratio": 0.025752092568049934,
+        "alloc_ratio": 0.41286703155183363,
+        "allocated_gpus": 2564.7299999999905,
+        "unallocated_gpus": 3647.2700000000095,
+        "fragmentation": 159.9719990327262,
+        "tasks_submitted": 2900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.41916291049581106,
+        "frag_ratio": 0.026195232319612724,
+        "alloc_ratio": 0.41916291049581283,
+        "allocated_gpus": 2603.8399999999892,
+        "unallocated_gpus": 3608.1600000000108,
+        "fragmentation": 162.72478316943423,
+        "tasks_submitted": 2950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.42691081777205064,
+        "frag_ratio": 0.02651583410141886,
+        "alloc_ratio": 0.42691081777205236,
+        "allocated_gpus": 2651.9699999999893,
+        "unallocated_gpus": 3560.0300000000107,
+        "fragmentation": 164.71636143801396,
+        "tasks_submitted": 3000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.43335157759175436,
+        "frag_ratio": 0.026989186888881543,
+        "alloc_ratio": 0.4333515775917561,
+        "allocated_gpus": 2691.9799999999886,
+        "unallocated_gpus": 3520.0200000000114,
+        "fragmentation": 167.65682895373214,
+        "tasks_submitted": 3050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.44254507405022186,
+        "frag_ratio": 0.027317811915988158,
+        "alloc_ratio": 0.4425450740502235,
+        "allocated_gpus": 2749.0899999999883,
+        "unallocated_gpus": 3462.9100000000117,
+        "fragmentation": 169.69824762211843,
+        "tasks_submitted": 3100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4494430135222115,
+        "frag_ratio": 0.027645934257555026,
+        "alloc_ratio": 0.4494430135222131,
+        "allocated_gpus": 2791.939999999988,
+        "unallocated_gpus": 3420.060000000012,
+        "fragmentation": 171.73654360793182,
+        "tasks_submitted": 3150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4570734063103634,
+        "frag_ratio": 0.028067235086277682,
+        "alloc_ratio": 0.457073406310365,
+        "allocated_gpus": 2839.3399999999874,
+        "unallocated_gpus": 3372.6600000000126,
+        "fragmentation": 174.35366435595697,
+        "tasks_submitted": 3200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4650193174500929,
+        "frag_ratio": 0.028345408599519676,
+        "alloc_ratio": 0.4650193174500945,
+        "allocated_gpus": 2888.699999999987,
+        "unallocated_gpus": 3323.300000000013,
+        "fragmentation": 176.08167822021622,
+        "tasks_submitted": 3250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.470917578879584,
+        "frag_ratio": 0.02872758274224749,
+        "alloc_ratio": 0.47091757887958585,
+        "allocated_gpus": 2925.3399999999874,
+        "unallocated_gpus": 3286.6600000000126,
+        "fragmentation": 178.4557439948414,
+        "tasks_submitted": 3300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.47948325820991244,
+        "frag_ratio": 0.028838014476720734,
+        "alloc_ratio": 0.4794832582099142,
+        "allocated_gpus": 2978.549999999987,
+        "unallocated_gpus": 3233.450000000013,
+        "fragmentation": 179.1417459293892,
+        "tasks_submitted": 3350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4861316806181545,
+        "frag_ratio": 0.029127277954428536,
+        "alloc_ratio": 0.4861316806181561,
+        "allocated_gpus": 3019.849999999986,
+        "unallocated_gpus": 3192.150000000014,
+        "fragmentation": 180.93865065291007,
+        "tasks_submitted": 3400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4934723116548575,
+        "frag_ratio": 0.029654638425064703,
+        "alloc_ratio": 0.4934723116548591,
+        "allocated_gpus": 3065.449999999985,
+        "unallocated_gpus": 3146.550000000015,
+        "fragmentation": 184.21461389650193,
+        "tasks_submitted": 3450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.49999356084996366,
+        "frag_ratio": 0.030216883766957827,
+        "alloc_ratio": 0.4999935608499653,
+        "allocated_gpus": 3105.9599999999846,
+        "unallocated_gpus": 3106.0400000000154,
+        "fragmentation": 187.70728196034202,
+        "tasks_submitted": 3500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.507604636188019,
+        "frag_ratio": 0.03062411770512974,
+        "alloc_ratio": 0.5076046361880207,
+        "allocated_gpus": 3153.2399999999843,
+        "unallocated_gpus": 3058.7600000000157,
+        "fragmentation": 190.23701918426593,
+        "tasks_submitted": 3550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5147118480360549,
+        "frag_ratio": 0.030786866365785488,
+        "alloc_ratio": 0.5147118480360566,
+        "allocated_gpus": 3197.3899999999835,
+        "unallocated_gpus": 3014.6100000000165,
+        "fragmentation": 191.24801386425946,
+        "tasks_submitted": 3600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5225128783000601,
+        "frag_ratio": 0.03101239933443089,
+        "alloc_ratio": 0.5225128783000615,
+        "allocated_gpus": 3245.849999999982,
+        "unallocated_gpus": 2966.150000000018,
+        "fragmentation": 192.6490246654847,
+        "tasks_submitted": 3650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5296490663232408,
+        "frag_ratio": 0.03159427043329785,
+        "alloc_ratio": 0.5296490663232424,
+        "allocated_gpus": 3290.1799999999816,
+        "unallocated_gpus": 2921.8200000000184,
+        "fragmentation": 196.26360793164625,
+        "tasks_submitted": 3700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5364922730199567,
+        "frag_ratio": 0.03198356547872329,
+        "alloc_ratio": 0.5364922730199583,
+        "allocated_gpus": 3332.689999999981,
+        "unallocated_gpus": 2879.310000000019,
+        "fragmentation": 198.68190875382908,
+        "tasks_submitted": 3750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5428895685769433,
+        "frag_ratio": 0.03235500078426216,
+        "alloc_ratio": 0.5428895685769447,
+        "allocated_gpus": 3372.4299999999803,
+        "unallocated_gpus": 2839.5700000000197,
+        "fragmentation": 200.98926487183653,
+        "tasks_submitted": 3800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.549595943335475,
+        "frag_ratio": 0.032565307856873824,
+        "alloc_ratio": 0.5495959433354765,
+        "allocated_gpus": 3414.0899999999797,
+        "unallocated_gpus": 2797.9100000000203,
+        "fragmentation": 202.29569240690017,
+        "tasks_submitted": 3850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5563876368319335,
+        "frag_ratio": 0.03271131451983181,
+        "alloc_ratio": 0.5563876368319347,
+        "allocated_gpus": 3456.2799999999784,
+        "unallocated_gpus": 2755.7200000000216,
+        "fragmentation": 203.2026857971952,
+        "tasks_submitted": 3900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5630457179652238,
+        "frag_ratio": 0.032813285981410915,
+        "alloc_ratio": 0.5630457179652248,
+        "allocated_gpus": 3497.6399999999767,
+        "unallocated_gpus": 2714.3600000000233,
+        "fragmentation": 203.8361325165246,
+        "tasks_submitted": 3950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5711010946555005,
+        "frag_ratio": 0.033122498055953915,
+        "alloc_ratio": 0.5711010946555017,
+        "allocated_gpus": 3547.6799999999766,
+        "unallocated_gpus": 2664.3200000000234,
+        "fragmentation": 205.7569579235857,
+        "tasks_submitted": 4000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5789343206696667,
+        "frag_ratio": 0.033517040546714304,
+        "alloc_ratio": 0.5789343206696678,
+        "allocated_gpus": 3596.339999999976,
+        "unallocated_gpus": 2615.660000000024,
+        "fragmentation": 208.20785587618926,
+        "tasks_submitted": 4050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5871377978106839,
+        "frag_ratio": 0.033823775266501245,
+        "alloc_ratio": 0.5871377978106851,
+        "allocated_gpus": 3647.2999999999756,
+        "unallocated_gpus": 2564.7000000000244,
+        "fragmentation": 210.11329195550573,
+        "tasks_submitted": 4100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5939697359948435,
+        "frag_ratio": 0.0343921026622455,
+        "alloc_ratio": 0.5939697359948447,
+        "allocated_gpus": 3689.739999999975,
+        "unallocated_gpus": 2522.260000000025,
+        "fragmentation": 213.64374173786908,
+        "tasks_submitted": 4150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6027575660012825,
+        "frag_ratio": 0.0349295435739868,
+        "alloc_ratio": 0.6027575660012837,
+        "allocated_gpus": 3744.3299999999745,
+        "unallocated_gpus": 2467.6700000000255,
+        "fragmentation": 216.982324681606,
+        "tasks_submitted": 4200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6095573084352813,
+        "frag_ratio": 0.035216162048586096,
+        "alloc_ratio": 0.6095573084352823,
+        "allocated_gpus": 3786.569999999974,
+        "unallocated_gpus": 2425.430000000026,
+        "fragmentation": 218.76279864581684,
+        "tasks_submitted": 4250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.616585640695423,
+        "frag_ratio": 0.035433670733860737,
+        "alloc_ratio": 0.6165856406954238,
+        "allocated_gpus": 3830.2299999999727,
+        "unallocated_gpus": 2381.7700000000273,
+        "fragmentation": 220.1139625987429,
+        "tasks_submitted": 4300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6242192530585908,
+        "frag_ratio": 0.03610618431415583,
+        "alloc_ratio": 0.6242192530585917,
+        "allocated_gpus": 3877.649999999972,
+        "unallocated_gpus": 2334.350000000028,
+        "fragmentation": 224.29161695953601,
+        "tasks_submitted": 4350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6311928525434588,
+        "frag_ratio": 0.03626214503316069,
+        "alloc_ratio": 0.6311928525434595,
+        "allocated_gpus": 3920.9699999999702,
+        "unallocated_gpus": 2291.0300000000298,
+        "fragmentation": 225.2604449459942,
+        "tasks_submitted": 4400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6379056664520228,
+        "frag_ratio": 0.03633472042016107,
+        "alloc_ratio": 0.6379056664520234,
+        "allocated_gpus": 3962.669999999969,
+        "unallocated_gpus": 2249.330000000031,
+        "fragmentation": 225.71128325004057,
+        "tasks_submitted": 4450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6454732775273608,
+        "frag_ratio": 0.03648476232186848,
+        "alloc_ratio": 0.6454732775273612,
+        "allocated_gpus": 4009.6799999999675,
+        "unallocated_gpus": 2202.3200000000325,
+        "fragmentation": 226.643343543447,
+        "tasks_submitted": 4500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6523857050869228,
+        "frag_ratio": 0.036808054522358476,
+        "alloc_ratio": 0.6523857050869233,
+        "allocated_gpus": 4052.619999999967,
+        "unallocated_gpus": 2159.380000000033,
+        "fragmentation": 228.65163469289087,
+        "tasks_submitted": 4550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6591645202833166,
+        "frag_ratio": 0.037448085066538794,
+        "alloc_ratio": 0.6591645202833172,
+        "allocated_gpus": 4094.7299999999664,
+        "unallocated_gpus": 2117.2700000000336,
+        "fragmentation": 232.627504433339,
+        "tasks_submitted": 4600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6661300708306448,
+        "frag_ratio": 0.03787247519245569,
+        "alloc_ratio": 0.6661300708306448,
+        "allocated_gpus": 4137.999999999965,
+        "unallocated_gpus": 2074.0000000000346,
+        "fragmentation": 235.26381589553478,
+        "tasks_submitted": 4650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6725096587250432,
+        "frag_ratio": 0.03795510584735659,
+        "alloc_ratio": 0.6725096587250424,
+        "allocated_gpus": 4177.629999999964,
+        "unallocated_gpus": 2034.3700000000363,
+        "fragmentation": 235.77711752377914,
+        "tasks_submitted": 4700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6788715389568531,
+        "frag_ratio": 0.038182891947574606,
+        "alloc_ratio": 0.6788715389568518,
+        "allocated_gpus": 4217.149999999963,
+        "unallocated_gpus": 1994.8500000000367,
+        "fragmentation": 237.19212477833346,
+        "tasks_submitted": 4750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6857034771410133,
+        "frag_ratio": 0.03844620055372752,
+        "alloc_ratio": 0.6857034771410112,
+        "allocated_gpus": 4259.589999999962,
+        "unallocated_gpus": 1952.410000000038,
+        "fragmentation": 238.82779783975536,
+        "tasks_submitted": 4800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6919752092723721,
+        "frag_ratio": 0.0387459231086801,
+        "alloc_ratio": 0.6919752092723699,
+        "allocated_gpus": 4298.549999999962,
+        "unallocated_gpus": 1913.450000000038,
+        "fragmentation": 240.6896743511208,
+        "tasks_submitted": 4850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6988570508692816,
+        "frag_ratio": 0.03865876802440385,
+        "alloc_ratio": 0.698857050869279,
+        "allocated_gpus": 4341.299999999961,
+        "unallocated_gpus": 1870.700000000039,
+        "fragmentation": 240.14826696759673,
+        "tasks_submitted": 4900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7059787508048907,
+        "frag_ratio": 0.03893211866306103,
+        "alloc_ratio": 0.7059787508048875,
+        "allocated_gpus": 4385.539999999961,
+        "unallocated_gpus": 1826.4600000000391,
+        "fragmentation": 241.84632113493512,
+        "tasks_submitted": 4950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.71251448808757,
+        "frag_ratio": 0.03930850478534842,
+        "alloc_ratio": 0.7125144880875659,
+        "allocated_gpus": 4426.139999999959,
+        "unallocated_gpus": 1785.8600000000406,
+        "fragmentation": 244.18443172658436,
+        "tasks_submitted": 5000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7191435930457158,
+        "frag_ratio": 0.040228973652634135,
+        "alloc_ratio": 0.7191435930457112,
+        "allocated_gpus": 4467.319999999958,
+        "unallocated_gpus": 1744.6800000000421,
+        "fragmentation": 249.90238433016324,
+        "tasks_submitted": 5050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7267353509336753,
+        "frag_ratio": 0.040536571268352764,
+        "alloc_ratio": 0.7267353509336699,
+        "allocated_gpus": 4514.479999999958,
+        "unallocated_gpus": 1697.5200000000423,
+        "fragmentation": 251.8131807190074,
+        "tasks_submitted": 5100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7339793947198961,
+        "frag_ratio": 0.041000662652172094,
+        "alloc_ratio": 0.7339793947198909,
+        "allocated_gpus": 4559.479999999962,
+        "unallocated_gpus": 1652.5200000000377,
+        "fragmentation": 254.69611639529305,
+        "tasks_submitted": 5150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.741258853831294,
+        "frag_ratio": 0.041287420228190756,
+        "alloc_ratio": 0.7412588538312885,
+        "allocated_gpus": 4604.699999999964,
+        "unallocated_gpus": 1607.3000000000357,
+        "fragmentation": 256.477454457521,
+        "tasks_submitted": 5200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7488747585318738,
+        "frag_ratio": 0.041263633366444376,
+        "alloc_ratio": 0.7488747585318688,
+        "allocated_gpus": 4652.009999999969,
+        "unallocated_gpus": 1559.9900000000307,
+        "fragmentation": 256.32969047235247,
+        "tasks_submitted": 5250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7563248551191246,
+        "frag_ratio": 0.04152533763495829,
+        "alloc_ratio": 0.7563248551191197,
+        "allocated_gpus": 4698.289999999972,
+        "unallocated_gpus": 1513.7100000000282,
+        "fragmentation": 257.9553973883609,
+        "tasks_submitted": 5300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7625643915003227,
+        "frag_ratio": 0.0418792344833665,
+        "alloc_ratio": 0.7625643915003176,
+        "allocated_gpus": 4737.049999999973,
+        "unallocated_gpus": 1474.950000000027,
+        "fragmentation": 260.1538046106727,
+        "tasks_submitted": 5350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7686703155183524,
+        "frag_ratio": 0.04255305525367902,
+        "alloc_ratio": 0.7686703155183471,
+        "allocated_gpus": 4774.979999999972,
+        "unallocated_gpus": 1437.0200000000277,
+        "fragmentation": 264.3395792358541,
+        "tasks_submitted": 5400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7760769478428863,
+        "frag_ratio": 0.043031689223761216,
+        "alloc_ratio": 0.7760769478428806,
+        "allocated_gpus": 4820.989999999974,
+        "unallocated_gpus": 1391.0100000000257,
+        "fragmentation": 267.31285345800467,
+        "tasks_submitted": 5450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7823873148744382,
+        "frag_ratio": 0.0433000057405288,
+        "alloc_ratio": 0.7823873148744326,
+        "allocated_gpus": 4860.189999999975,
+        "unallocated_gpus": 1351.810000000025,
+        "fragmentation": 268.9796356601649,
+        "tasks_submitted": 5500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7904185447520949,
+        "frag_ratio": 0.04349887872837226,
+        "alloc_ratio": 0.7904185447520895,
+        "allocated_gpus": 4910.07999999998,
+        "unallocated_gpus": 1301.92000000002,
+        "fragmentation": 270.2150346606485,
+        "tasks_submitted": 5550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7973599484868024,
+        "frag_ratio": 0.043798547303669555,
+        "alloc_ratio": 0.7973599484867965,
+        "allocated_gpus": 4953.19999999998,
+        "unallocated_gpus": 1258.8000000000202,
+        "fragmentation": 272.0765758503953,
+        "tasks_submitted": 5600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8055972311654895,
+        "frag_ratio": 0.04440906862360914,
+        "alloc_ratio": 0.8055972311654838,
+        "allocated_gpus": 5004.369999999985,
+        "unallocated_gpus": 1207.6300000000147,
+        "fragmentation": 275.86913428985997,
+        "tasks_submitted": 5650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8120090148100493,
+        "frag_ratio": 0.04474293434859381,
+        "alloc_ratio": 0.8120090148100433,
+        "allocated_gpus": 5044.199999999989,
+        "unallocated_gpus": 1167.800000000011,
+        "fragmentation": 277.94310817346474,
+        "tasks_submitted": 5700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8190792015454008,
+        "frag_ratio": 0.04493857530457762,
+        "alloc_ratio": 0.8190792015453947,
+        "allocated_gpus": 5088.119999999992,
+        "unallocated_gpus": 1123.8800000000083,
+        "fragmentation": 279.1584297920362,
+        "tasks_submitted": 5750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8256471345782409,
+        "frag_ratio": 0.04544602558697946,
+        "alloc_ratio": 0.8256471345782348,
+        "allocated_gpus": 5128.919999999995,
+        "unallocated_gpus": 1083.0800000000054,
+        "fragmentation": 282.3107109463164,
+        "tasks_submitted": 5800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8341130070830703,
+        "frag_ratio": 0.04583619676373282,
+        "alloc_ratio": 0.8341130070830644,
+        "allocated_gpus": 5181.509999999996,
+        "unallocated_gpus": 1030.4900000000043,
+        "fragmentation": 284.7344542963083,
+        "tasks_submitted": 5850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8404716677398643,
+        "frag_ratio": 0.046085132508115884,
+        "alloc_ratio": 0.8404716677398583,
+        "allocated_gpus": 5221.009999999999,
+        "unallocated_gpus": 990.9900000000007,
+        "fragmentation": 286.28084314041587,
+        "tasks_submitted": 5900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8476593689633033,
+        "frag_ratio": 0.04645922189987835,
+        "alloc_ratio": 0.8476593689632971,
+        "allocated_gpus": 5265.660000000002,
+        "unallocated_gpus": 946.3399999999983,
+        "fragmentation": 288.6046864420443,
+        "tasks_submitted": 5950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8551481004507473,
+        "frag_ratio": 0.04683422583156957,
+        "alloc_ratio": 0.8551481004507413,
+        "allocated_gpus": 5312.180000000005,
+        "unallocated_gpus": 899.8199999999952,
+        "fragmentation": 290.93421086571016,
+        "tasks_submitted": 6000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8613650998068321,
+        "frag_ratio": 0.04690757561900911,
+        "alloc_ratio": 0.8613650998068265,
+        "allocated_gpus": 5350.800000000007,
+        "unallocated_gpus": 861.1999999999935,
+        "fragmentation": 291.3898597452846,
+        "tasks_submitted": 6050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.867955569864785,
+        "frag_ratio": 0.0473875969700389,
+        "alloc_ratio": 0.8679555698647793,
+        "allocated_gpus": 5391.740000000009,
+        "unallocated_gpus": 820.2599999999911,
+        "fragmentation": 294.37175237788165,
+        "tasks_submitted": 6100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8748309723116624,
+        "frag_ratio": 0.04741748612800714,
+        "alloc_ratio": 0.8748309723116569,
+        "allocated_gpus": 5434.450000000013,
+        "unallocated_gpus": 777.5499999999874,
+        "fragmentation": 294.55742382718034,
+        "tasks_submitted": 6150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.882669027688353,
+        "frag_ratio": 0.047496102565082084,
+        "alloc_ratio": 0.8826690276883479,
+        "allocated_gpus": 5483.140000000017,
+        "unallocated_gpus": 728.8599999999833,
+        "fragmentation": 295.0457891342899,
+        "tasks_submitted": 6200,
+        "rejected": 0
+      }
+    ]
+  },
+  {
+    "policy": "fgd",
+    "seed": 42,
+    "total_gpus": 6212,
+    "num_tasks": 6203,
+    "demand_target": 1.3,
+    "elapsed_seconds": 219.5,
+    "curve": [
+      {
+        "demand_fraction": 0.006659690920798454,
+        "frag_ratio": 0.003252264887718699,
+        "alloc_ratio": 0.006659690920798454,
+        "allocated_gpus": 41.37,
+        "unallocated_gpus": 6170.63,
+        "fragmentation": 20.203069482508557,
+        "tasks_submitted": 50,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.014241790083708948,
+        "frag_ratio": 0.0032603190156104116,
+        "alloc_ratio": 0.014241790083708952,
+        "allocated_gpus": 88.47000000000001,
+        "unallocated_gpus": 6123.53,
+        "fragmentation": 20.253101724971877,
+        "tasks_submitted": 100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.020920798454603987,
+        "frag_ratio": 0.003414651002324357,
+        "alloc_ratio": 0.020920798454604,
+        "allocated_gpus": 129.96000000000006,
+        "unallocated_gpus": 6082.04,
+        "fragmentation": 21.211812026438906,
+        "tasks_submitted": 150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.028853831294269154,
+        "frag_ratio": 0.0036315910845955805,
+        "alloc_ratio": 0.02885383129426916,
+        "allocated_gpus": 179.24000000000004,
+        "unallocated_gpus": 6032.76,
+        "fragmentation": 22.559443817507745,
+        "tasks_submitted": 200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.03529137153895685,
+        "frag_ratio": 0.003986870123599928,
+        "alloc_ratio": 0.03529137153895687,
+        "allocated_gpus": 219.23000000000008,
+        "unallocated_gpus": 5992.7699999999995,
+        "fragmentation": 24.766437207802753,
+        "tasks_submitted": 250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.04272054088860271,
+        "frag_ratio": 0.004234558886042625,
+        "alloc_ratio": 0.04272054088860271,
+        "allocated_gpus": 265.38,
+        "unallocated_gpus": 5946.62,
+        "fragmentation": 26.305079800096784,
+        "tasks_submitted": 300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.04982775273663876,
+        "frag_ratio": 0.004615925150564319,
+        "alloc_ratio": 0.04982775273663878,
+        "allocated_gpus": 309.5300000000001,
+        "unallocated_gpus": 5902.47,
+        "fragmentation": 28.67412703530555,
+        "tasks_submitted": 350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.05611397295556987,
+        "frag_ratio": 0.004715211383811034,
+        "alloc_ratio": 0.05611397295556989,
+        "allocated_gpus": 348.58000000000015,
+        "unallocated_gpus": 5863.42,
+        "fragmentation": 29.29089311623414,
+        "tasks_submitted": 400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.06282839665164199,
+        "frag_ratio": 0.005257665915553595,
+        "alloc_ratio": 0.06282839665164199,
+        "allocated_gpus": 390.29,
+        "unallocated_gpus": 5821.71,
+        "fragmentation": 32.66062066741893,
+        "tasks_submitted": 450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.0705521571152608,
+        "frag_ratio": 0.005665959983012992,
+        "alloc_ratio": 0.07055215711526082,
+        "allocated_gpus": 438.2700000000002,
+        "unallocated_gpus": 5773.73,
+        "fragmentation": 35.196943414476706,
+        "tasks_submitted": 500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.07933515775917582,
+        "frag_ratio": 0.005719397765595189,
+        "alloc_ratio": 0.07933515775917585,
+        "allocated_gpus": 492.8300000000004,
+        "unallocated_gpus": 5719.17,
+        "fragmentation": 35.528898919877314,
+        "tasks_submitted": 550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.0866983258209917,
+        "frag_ratio": 0.006159472874133215,
+        "alloc_ratio": 0.08669832582099161,
+        "allocated_gpus": 538.5699999999999,
+        "unallocated_gpus": 5673.43,
+        "fragmentation": 38.26264549411553,
+        "tasks_submitted": 600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.09549420476497109,
+        "frag_ratio": 0.006475937167265984,
+        "alloc_ratio": 0.09549420476497085,
+        "allocated_gpus": 593.2099999999989,
+        "unallocated_gpus": 5618.790000000001,
+        "fragmentation": 40.22852168305629,
+        "tasks_submitted": 650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.10213940759819704,
+        "frag_ratio": 0.006861140658628564,
+        "alloc_ratio": 0.10213940759819667,
+        "allocated_gpus": 634.4899999999977,
+        "unallocated_gpus": 5577.510000000002,
+        "fragmentation": 42.62140577140064,
+        "tasks_submitted": 700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.10981004507405019,
+        "frag_ratio": 0.007024339582274228,
+        "alloc_ratio": 0.10981004507404973,
+        "allocated_gpus": 682.1399999999969,
+        "unallocated_gpus": 5529.860000000003,
+        "fragmentation": 43.6351974850875,
+        "tasks_submitted": 750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.11764166130070823,
+        "frag_ratio": 0.007467503468971327,
+        "alloc_ratio": 0.11764166130070772,
+        "allocated_gpus": 730.7899999999963,
+        "unallocated_gpus": 5481.210000000004,
+        "fragmentation": 46.388131549249884,
+        "tasks_submitted": 800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.12429330328396633,
+        "frag_ratio": 0.008153762397543625,
+        "alloc_ratio": 0.1242933032839658,
+        "allocated_gpus": 772.1099999999956,
+        "unallocated_gpus": 5439.890000000005,
+        "fragmentation": 50.651172013541,
+        "tasks_submitted": 850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1326915647134576,
+        "frag_ratio": 0.008511100968010806,
+        "alloc_ratio": 0.13269156471345703,
+        "allocated_gpus": 824.2799999999951,
+        "unallocated_gpus": 5387.720000000005,
+        "fragmentation": 52.87095921328313,
+        "tasks_submitted": 900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1395669671603346,
+        "frag_ratio": 0.008513054356786107,
+        "alloc_ratio": 0.13956696716033404,
+        "allocated_gpus": 866.989999999995,
+        "unallocated_gpus": 5345.010000000005,
+        "fragmentation": 52.88309366435529,
+        "tasks_submitted": 950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1466242755956211,
+        "frag_ratio": 0.008627275307349162,
+        "alloc_ratio": 0.14662427559562052,
+        "allocated_gpus": 910.8299999999947,
+        "unallocated_gpus": 5301.1700000000055,
+        "fragmentation": 53.59263420925299,
+        "tasks_submitted": 1000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.15297005795234997,
+        "frag_ratio": 0.00881763767588925,
+        "alloc_ratio": 0.15297005795234944,
+        "allocated_gpus": 950.2499999999947,
+        "unallocated_gpus": 5261.7500000000055,
+        "fragmentation": 54.77516524262402,
+        "tasks_submitted": 1050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.16188828074694106,
+        "frag_ratio": 0.008724060829258234,
+        "alloc_ratio": 0.16188828074694048,
+        "allocated_gpus": 1005.6499999999942,
+        "unallocated_gpus": 5206.350000000006,
+        "fragmentation": 54.193865871352145,
+        "tasks_submitted": 1100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.16820669671603314,
+        "frag_ratio": 0.008774805597980856,
+        "alloc_ratio": 0.16820669671603258,
+        "allocated_gpus": 1044.8999999999944,
+        "unallocated_gpus": 5167.100000000006,
+        "fragmentation": 54.50909237465708,
+        "tasks_submitted": 1150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.17482614294913024,
+        "frag_ratio": 0.008879778899331947,
+        "alloc_ratio": 0.1748261429491298,
+        "allocated_gpus": 1086.0199999999943,
+        "unallocated_gpus": 5125.980000000006,
+        "fragmentation": 55.161186522650056,
+        "tasks_submitted": 1200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.1812620734063099,
+        "frag_ratio": 0.009141039392795283,
+        "alloc_ratio": 0.18126207340630943,
+        "allocated_gpus": 1125.999999999994,
+        "unallocated_gpus": 5086.0000000000055,
+        "fragmentation": 56.784136708044294,
+        "tasks_submitted": 1250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.18913071474565296,
+        "frag_ratio": 0.009415157684434709,
+        "alloc_ratio": 0.1891307147456526,
+        "allocated_gpus": 1174.879999999994,
+        "unallocated_gpus": 5037.120000000006,
+        "fragmentation": 58.486959535708415,
+        "tasks_submitted": 1300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.19696716033483516,
+        "frag_ratio": 0.009714056011574062,
+        "alloc_ratio": 0.1969671603348348,
+        "allocated_gpus": 1223.5599999999938,
+        "unallocated_gpus": 4988.440000000006,
+        "fragmentation": 60.343715943898076,
+        "tasks_submitted": 1350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.20386509980682482,
+        "frag_ratio": 0.009830819455804107,
+        "alloc_ratio": 0.20386509980682446,
+        "allocated_gpus": 1266.4099999999935,
+        "unallocated_gpus": 4945.5900000000065,
+        "fragmentation": 61.06905045945512,
+        "tasks_submitted": 1400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.21175466838377255,
+        "frag_ratio": 0.010254260525954928,
+        "alloc_ratio": 0.21175466838377222,
+        "allocated_gpus": 1315.419999999993,
+        "unallocated_gpus": 4896.580000000007,
+        "fragmentation": 63.699466387232015,
+        "tasks_submitted": 1450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.219993560849967,
+        "frag_ratio": 0.010481042812198868,
+        "alloc_ratio": 0.21999356084996657,
+        "allocated_gpus": 1366.5999999999924,
+        "unallocated_gpus": 4845.400000000008,
+        "fragmentation": 65.10823794937937,
+        "tasks_submitted": 1500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.22661139729555607,
+        "frag_ratio": 0.010780871769356564,
+        "alloc_ratio": 0.22661139729555568,
+        "allocated_gpus": 1407.7099999999919,
+        "unallocated_gpus": 4804.290000000008,
+        "fragmentation": 66.97077543124297,
+        "tasks_submitted": 1550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.23328557630392693,
+        "frag_ratio": 0.011171542257921236,
+        "alloc_ratio": 0.23328557630392655,
+        "allocated_gpus": 1449.1699999999917,
+        "unallocated_gpus": 4762.830000000008,
+        "fragmentation": 69.39762050620672,
+        "tasks_submitted": 1600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.24056986477784822,
+        "frag_ratio": 0.011615633919943403,
+        "alloc_ratio": 0.24056986477784795,
+        "allocated_gpus": 1494.4199999999914,
+        "unallocated_gpus": 4717.580000000009,
+        "fragmentation": 72.15631791068841,
+        "tasks_submitted": 1650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.2472472633612352,
+        "frag_ratio": 0.011875722691562651,
+        "alloc_ratio": 0.24724726336123487,
+        "allocated_gpus": 1535.899999999991,
+        "unallocated_gpus": 4676.1000000000095,
+        "fragmentation": 73.77198935998719,
+        "tasks_submitted": 1700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.25375885383129315,
+        "frag_ratio": 0.012281840444651197,
+        "alloc_ratio": 0.2537588538312928,
+        "allocated_gpus": 1576.349999999991,
+        "unallocated_gpus": 4635.650000000009,
+        "fragmentation": 76.29479284217324,
+        "tasks_submitted": 1750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.261553444945266,
+        "frag_ratio": 0.012698949805045222,
+        "alloc_ratio": 0.2615534449452657,
+        "allocated_gpus": 1624.7699999999907,
+        "unallocated_gpus": 4587.23000000001,
+        "fragmentation": 78.88587618894093,
+        "tasks_submitted": 1800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.2680730843528641,
+        "frag_ratio": 0.01307664130072701,
+        "alloc_ratio": 0.268073084352864,
+        "allocated_gpus": 1665.2699999999911,
+        "unallocated_gpus": 4546.730000000009,
+        "fragmentation": 81.23209576011618,
+        "tasks_submitted": 1850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.274781068898904,
+        "frag_ratio": 0.0134648961997181,
+        "alloc_ratio": 0.2747810688989038,
+        "allocated_gpus": 1706.9399999999903,
+        "unallocated_gpus": 4505.0600000000095,
+        "fragmentation": 83.64393519264884,
+        "tasks_submitted": 1900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.2811976819059871,
+        "frag_ratio": 0.013790357707604478,
+        "alloc_ratio": 0.2811976819059869,
+        "allocated_gpus": 1746.7999999999904,
+        "unallocated_gpus": 4465.20000000001,
+        "fragmentation": 85.66570207963902,
+        "tasks_submitted": 1950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.28747102382485373,
+        "frag_ratio": 0.014120498836375126,
+        "alloc_ratio": 0.2874710238248535,
+        "allocated_gpus": 1785.76999999999,
+        "unallocated_gpus": 4426.2300000000105,
+        "fragmentation": 87.71653877156228,
+        "tasks_submitted": 2000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.29412427559561993,
+        "frag_ratio": 0.014224223079645241,
+        "alloc_ratio": 0.2941242755956197,
+        "allocated_gpus": 1827.0999999999897,
+        "unallocated_gpus": 4384.900000000011,
+        "fragmentation": 88.36087377075624,
+        "tasks_submitted": 2050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3007759175788781,
+        "frag_ratio": 0.014519564199405439,
+        "alloc_ratio": 0.30077591757887784,
+        "allocated_gpus": 1868.4199999999892,
+        "unallocated_gpus": 4343.580000000011,
+        "fragmentation": 90.19553280670658,
+        "tasks_submitted": 2100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3090856406954267,
+        "frag_ratio": 0.014733773637768923,
+        "alloc_ratio": 0.3090856406954265,
+        "allocated_gpus": 1920.0399999999895,
+        "unallocated_gpus": 4291.96000000001,
+        "fragmentation": 91.52620183782055,
+        "tasks_submitted": 2150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.31562459755312144,
+        "frag_ratio": 0.015104182810822412,
+        "alloc_ratio": 0.3156245975531213,
+        "allocated_gpus": 1960.6599999999894,
+        "unallocated_gpus": 4251.340000000011,
+        "fragmentation": 93.82718362082882,
+        "tasks_submitted": 2200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3217836445589166,
+        "frag_ratio": 0.015544875311667662,
+        "alloc_ratio": 0.32178364455891645,
+        "allocated_gpus": 1998.919999999989,
+        "unallocated_gpus": 4213.080000000011,
+        "fragmentation": 96.56476543607951,
+        "tasks_submitted": 2250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3288329040566628,
+        "frag_ratio": 0.016053234684129256,
+        "alloc_ratio": 0.32883290405666266,
+        "allocated_gpus": 2042.7099999999884,
+        "unallocated_gpus": 4169.290000000012,
+        "fragmentation": 99.72269385781094,
+        "tasks_submitted": 2300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.33648583386992714,
+        "frag_ratio": 0.016431811913289195,
+        "alloc_ratio": 0.3364858338699272,
+        "allocated_gpus": 2090.2499999999877,
+        "unallocated_gpus": 4121.750000000013,
+        "fragmentation": 102.07441560535247,
+        "tasks_submitted": 2350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3444977462974866,
+        "frag_ratio": 0.01662350949974462,
+        "alloc_ratio": 0.34449774629748653,
+        "allocated_gpus": 2140.0199999999863,
+        "unallocated_gpus": 4071.9800000000137,
+        "fragmentation": 103.26524101241357,
+        "tasks_submitted": 2400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.35217643271088006,
+        "frag_ratio": 0.01714784140029873,
+        "alloc_ratio": 0.35217643271087984,
+        "allocated_gpus": 2187.7199999999857,
+        "unallocated_gpus": 4024.2800000000143,
+        "fragmentation": 106.5223907786557,
+        "tasks_submitted": 2450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.35875724404378406,
+        "frag_ratio": 0.017484524188543082,
+        "alloc_ratio": 0.35875724404378373,
+        "allocated_gpus": 2228.5999999999844,
+        "unallocated_gpus": 3983.4000000000156,
+        "fragmentation": 108.61386425922963,
+        "tasks_submitted": 2500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3656551835157737,
+        "frag_ratio": 0.017524408146817227,
+        "alloc_ratio": 0.3656551835157733,
+        "allocated_gpus": 2271.449999999984,
+        "unallocated_gpus": 3940.550000000016,
+        "fragmentation": 108.8616234080286,
+        "tasks_submitted": 2550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3724404378621998,
+        "frag_ratio": 0.01796594745350461,
+        "alloc_ratio": 0.37244043786219955,
+        "allocated_gpus": 2313.5999999999835,
+        "unallocated_gpus": 3898.4000000000165,
+        "fragmentation": 111.60446558117063,
+        "tasks_submitted": 2600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3797215067611051,
+        "frag_ratio": 0.018094781319592915,
+        "alloc_ratio": 0.37972150676110467,
+        "allocated_gpus": 2358.829999999982,
+        "unallocated_gpus": 3853.170000000018,
+        "fragmentation": 112.4047815573112,
+        "tasks_submitted": 2650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.38689954925949527,
+        "frag_ratio": 0.018160321963730065,
+        "alloc_ratio": 0.38689954925949477,
+        "allocated_gpus": 2403.4199999999814,
+        "unallocated_gpus": 3808.5800000000186,
+        "fragmentation": 112.81192003869117,
+        "tasks_submitted": 2700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.3933499678042471,
+        "frag_ratio": 0.018482712600169926,
+        "alloc_ratio": 0.39334996780424675,
+        "allocated_gpus": 2443.4899999999807,
+        "unallocated_gpus": 3768.5100000000193,
+        "fragmentation": 114.81461067225558,
+        "tasks_submitted": 2750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.40050386349001643,
+        "frag_ratio": 0.018732210978652224,
+        "alloc_ratio": 0.40050386349001604,
+        "allocated_gpus": 2487.92999999998,
+        "unallocated_gpus": 3724.07000000002,
+        "fragmentation": 116.36449459938763,
+        "tasks_submitted": 2800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4064343206696686,
+        "frag_ratio": 0.018772647190322643,
+        "alloc_ratio": 0.4064343206696682,
+        "allocated_gpus": 2524.769999999979,
+        "unallocated_gpus": 3687.230000000021,
+        "fragmentation": 116.61568434628427,
+        "tasks_submitted": 2850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.41286703155183196,
+        "frag_ratio": 0.01893623850453936,
+        "alloc_ratio": 0.41286703155183174,
+        "allocated_gpus": 2564.7299999999786,
+        "unallocated_gpus": 3647.2700000000214,
+        "fragmentation": 117.6319135901985,
+        "tasks_submitted": 2900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.41916291049581106,
+        "frag_ratio": 0.019399571318491522,
+        "alloc_ratio": 0.41916291049581084,
+        "allocated_gpus": 2603.839999999977,
+        "unallocated_gpus": 3608.160000000023,
+        "fragmentation": 120.51013703046934,
+        "tasks_submitted": 2950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.42691081777205064,
+        "frag_ratio": 0.019710974499907077,
+        "alloc_ratio": 0.4269108177720503,
+        "allocated_gpus": 2651.9699999999766,
+        "unallocated_gpus": 3560.0300000000234,
+        "fragmentation": 122.44457359342276,
+        "tasks_submitted": 3000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.43335157759175436,
+        "frag_ratio": 0.02018040208407148,
+        "alloc_ratio": 0.43335157759175386,
+        "allocated_gpus": 2691.979999999975,
+        "unallocated_gpus": 3520.020000000025,
+        "fragmentation": 125.36065774625203,
+        "tasks_submitted": 3050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.44254507405022186,
+        "frag_ratio": 0.020644865097055973,
+        "alloc_ratio": 0.4425450740502212,
+        "allocated_gpus": 2749.089999999974,
+        "unallocated_gpus": 3462.910000000026,
+        "fragmentation": 128.2459019829117,
+        "tasks_submitted": 3100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4494430135222115,
+        "frag_ratio": 0.020849952752230616,
+        "alloc_ratio": 0.44944301352221067,
+        "allocated_gpus": 2791.9399999999728,
+        "unallocated_gpus": 3420.0600000000272,
+        "fragmentation": 129.51990649685658,
+        "tasks_submitted": 3150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4570734063103634,
+        "frag_ratio": 0.021261380234871747,
+        "alloc_ratio": 0.4570734063103626,
+        "allocated_gpus": 2839.3399999999724,
+        "unallocated_gpus": 3372.6600000000276,
+        "fragmentation": 132.0756940190233,
+        "tasks_submitted": 3200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4650193174500929,
+        "frag_ratio": 0.02138512651845034,
+        "alloc_ratio": 0.4650193174500921,
+        "allocated_gpus": 2888.699999999972,
+        "unallocated_gpus": 3323.300000000028,
+        "fragmentation": 132.8444059326135,
+        "tasks_submitted": 3250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.470917578879584,
+        "frag_ratio": 0.021755326520339627,
+        "alloc_ratio": 0.47091757887958324,
+        "allocated_gpus": 2925.339999999971,
+        "unallocated_gpus": 3286.660000000029,
+        "fragmentation": 135.14408834434977,
+        "tasks_submitted": 3300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.47948325820991244,
+        "frag_ratio": 0.021896835484232328,
+        "alloc_ratio": 0.4794832582099116,
+        "allocated_gpus": 2978.549999999971,
+        "unallocated_gpus": 3233.450000000029,
+        "fragmentation": 136.0231420280512,
+        "tasks_submitted": 3350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4861316806181545,
+        "frag_ratio": 0.02216091926937711,
+        "alloc_ratio": 0.48613168061815354,
+        "allocated_gpus": 3019.84999999997,
+        "unallocated_gpus": 3192.15000000003,
+        "fragmentation": 137.6636305013706,
+        "tasks_submitted": 3400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.4934723116548575,
+        "frag_ratio": 0.022548500979782695,
+        "alloc_ratio": 0.49347231165485655,
+        "allocated_gpus": 3065.449999999969,
+        "unallocated_gpus": 3146.550000000031,
+        "fragmentation": 140.0712880864101,
+        "tasks_submitted": 3450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.49999356084996366,
+        "frag_ratio": 0.022940872606041263,
+        "alloc_ratio": 0.49999356084996266,
+        "allocated_gpus": 3105.959999999968,
+        "unallocated_gpus": 3106.040000000032,
+        "fragmentation": 142.50870062872832,
+        "tasks_submitted": 3500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.507604636188019,
+        "frag_ratio": 0.023240446976459415,
+        "alloc_ratio": 0.507604636188018,
+        "allocated_gpus": 3153.239999999968,
+        "unallocated_gpus": 3058.760000000032,
+        "fragmentation": 144.36965661776588,
+        "tasks_submitted": 3550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5147118480360549,
+        "frag_ratio": 0.023514526080945237,
+        "alloc_ratio": 0.514711848036054,
+        "allocated_gpus": 3197.389999999967,
+        "unallocated_gpus": 3014.610000000033,
+        "fragmentation": 146.07223601483182,
+        "tasks_submitted": 3600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5225128783000601,
+        "frag_ratio": 0.023618367366640972,
+        "alloc_ratio": 0.5225128783000589,
+        "allocated_gpus": 3245.849999999966,
+        "unallocated_gpus": 2966.150000000034,
+        "fragmentation": 146.71729808157372,
+        "tasks_submitted": 3650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5296490663232408,
+        "frag_ratio": 0.024195904522031474,
+        "alloc_ratio": 0.5296490663232398,
+        "allocated_gpus": 3290.1799999999657,
+        "unallocated_gpus": 2921.8200000000343,
+        "fragmentation": 150.30495889085952,
+        "tasks_submitted": 3700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5364922730199567,
+        "frag_ratio": 0.024582431812536176,
+        "alloc_ratio": 0.5364922730199556,
+        "allocated_gpus": 3332.6899999999646,
+        "unallocated_gpus": 2879.3100000000354,
+        "fragmentation": 152.70606641947472,
+        "tasks_submitted": 3750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5428895685769433,
+        "frag_ratio": 0.02494416116082838,
+        "alloc_ratio": 0.5428895685769419,
+        "allocated_gpus": 3372.429999999963,
+        "unallocated_gpus": 2839.570000000037,
+        "fragmentation": 154.9531291310659,
+        "tasks_submitted": 3800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.549595943335475,
+        "frag_ratio": 0.025319690096570688,
+        "alloc_ratio": 0.5495959433354736,
+        "allocated_gpus": 3414.089999999962,
+        "unallocated_gpus": 2797.910000000038,
+        "fragmentation": 157.28591487989712,
+        "tasks_submitted": 3850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5563876368319335,
+        "frag_ratio": 0.025453605835782107,
+        "alloc_ratio": 0.5563876368319318,
+        "allocated_gpus": 3456.2799999999606,
+        "unallocated_gpus": 2755.7200000000394,
+        "fragmentation": 158.11779945187845,
+        "tasks_submitted": 3900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5630457179652238,
+        "frag_ratio": 0.02573293290463804,
+        "alloc_ratio": 0.5630457179652221,
+        "allocated_gpus": 3497.6399999999594,
+        "unallocated_gpus": 2714.3600000000406,
+        "fragmentation": 159.8529792036115,
+        "tasks_submitted": 3950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5711010946555005,
+        "frag_ratio": 0.026040441246311403,
+        "alloc_ratio": 0.5711010946554989,
+        "allocated_gpus": 3547.679999999959,
+        "unallocated_gpus": 2664.320000000041,
+        "fragmentation": 161.76322102208644,
+        "tasks_submitted": 4000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5789343206696667,
+        "frag_ratio": 0.026556986841109596,
+        "alloc_ratio": 0.5789343206696649,
+        "allocated_gpus": 3596.3399999999583,
+        "unallocated_gpus": 2615.6600000000417,
+        "fragmentation": 164.97200225697281,
+        "tasks_submitted": 4050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5871377978106839,
+        "frag_ratio": 0.026737222314898893,
+        "alloc_ratio": 0.5871377978106822,
+        "allocated_gpus": 3647.299999999958,
+        "unallocated_gpus": 2564.700000000042,
+        "fragmentation": 166.09162502015192,
+        "tasks_submitted": 4100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.5939697359948435,
+        "frag_ratio": 0.02744230509114316,
+        "alloc_ratio": 0.5939697359948419,
+        "allocated_gpus": 3689.739999999958,
+        "unallocated_gpus": 2522.260000000042,
+        "fragmentation": 170.4715992261813,
+        "tasks_submitted": 4150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6027575660012825,
+        "frag_ratio": 0.027965053415464142,
+        "alloc_ratio": 0.6027575660012809,
+        "allocated_gpus": 3744.329999999957,
+        "unallocated_gpus": 2467.670000000043,
+        "fragmentation": 173.71891181686325,
+        "tasks_submitted": 4200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6095573084352813,
+        "frag_ratio": 0.028247013549620188,
+        "alloc_ratio": 0.6095573084352796,
+        "allocated_gpus": 3786.5699999999565,
+        "unallocated_gpus": 2425.4300000000435,
+        "fragmentation": 175.47044817024062,
+        "tasks_submitted": 4250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.616585640695423,
+        "frag_ratio": 0.028469466044668858,
+        "alloc_ratio": 0.616585640695421,
+        "allocated_gpus": 3830.2299999999555,
+        "unallocated_gpus": 2381.7700000000445,
+        "fragmentation": 176.85232306948294,
+        "tasks_submitted": 4300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6242192530585908,
+        "frag_ratio": 0.02888163029770099,
+        "alloc_ratio": 0.624219253058589,
+        "allocated_gpus": 3877.649999999955,
+        "unallocated_gpus": 2334.350000000045,
+        "fragmentation": 179.41268740931855,
+        "tasks_submitted": 4350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6311928525434588,
+        "frag_ratio": 0.029141047697357744,
+        "alloc_ratio": 0.6311928525434568,
+        "allocated_gpus": 3920.9699999999534,
+        "unallocated_gpus": 2291.0300000000466,
+        "fragmentation": 181.0241882959863,
+        "tasks_submitted": 4400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6379056664520228,
+        "frag_ratio": 0.029205286082311366,
+        "alloc_ratio": 0.6379056664520206,
+        "allocated_gpus": 3962.6699999999523,
+        "unallocated_gpus": 2249.3300000000477,
+        "fragmentation": 181.4232371433182,
+        "tasks_submitted": 4450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6454732775273608,
+        "frag_ratio": 0.02935650878897794,
+        "alloc_ratio": 0.6454732775273585,
+        "allocated_gpus": 4009.6799999999507,
+        "unallocated_gpus": 2202.3200000000493,
+        "fragmentation": 182.36263259713095,
+        "tasks_submitted": 4500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6523857050869228,
+        "frag_ratio": 0.02969054501700835,
+        "alloc_ratio": 0.6523857050869205,
+        "allocated_gpus": 4052.61999999995,
+        "unallocated_gpus": 2159.38000000005,
+        "fragmentation": 184.43766564565587,
+        "tasks_submitted": 4550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6591645202833166,
+        "frag_ratio": 0.03028728543476313,
+        "alloc_ratio": 0.6591645202833144,
+        "allocated_gpus": 4094.729999999949,
+        "unallocated_gpus": 2117.270000000051,
+        "fragmentation": 188.14461712074856,
+        "tasks_submitted": 4600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6661300708306448,
+        "frag_ratio": 0.030584521032809453,
+        "alloc_ratio": 0.6661300708306424,
+        "allocated_gpus": 4137.99999999995,
+        "unallocated_gpus": 2074.00000000005,
+        "fragmentation": 189.99104465581232,
+        "tasks_submitted": 4650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6725096587250432,
+        "frag_ratio": 0.030796883225085194,
+        "alloc_ratio": 0.6725096587250409,
+        "allocated_gpus": 4177.629999999954,
+        "unallocated_gpus": 2034.3700000000463,
+        "fragmentation": 191.31023859422922,
+        "tasks_submitted": 4700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6788715389568531,
+        "frag_ratio": 0.031051413908834074,
+        "alloc_ratio": 0.6788715389568509,
+        "allocated_gpus": 4217.149999999958,
+        "unallocated_gpus": 1994.8500000000422,
+        "fragmentation": 192.89138320167726,
+        "tasks_submitted": 4750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6857034771410133,
+        "frag_ratio": 0.03130997593856877,
+        "alloc_ratio": 0.6857034771410109,
+        "allocated_gpus": 4259.589999999959,
+        "unallocated_gpus": 1952.4100000000408,
+        "fragmentation": 194.49757053038917,
+        "tasks_submitted": 4800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6919752092723721,
+        "frag_ratio": 0.03162924405956499,
+        "alloc_ratio": 0.6919752092723699,
+        "allocated_gpus": 4298.549999999962,
+        "unallocated_gpus": 1913.450000000038,
+        "fragmentation": 196.48086409801772,
+        "tasks_submitted": 4850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.6988570508692816,
+        "frag_ratio": 0.031680162705061805,
+        "alloc_ratio": 0.6988570508692798,
+        "allocated_gpus": 4341.2999999999665,
+        "unallocated_gpus": 1870.7000000000335,
+        "fragmentation": 196.79717072384395,
+        "tasks_submitted": 4900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7059787508048907,
+        "frag_ratio": 0.031955524604913146,
+        "alloc_ratio": 0.7059787508048898,
+        "allocated_gpus": 4385.539999999975,
+        "unallocated_gpus": 1826.4600000000246,
+        "fragmentation": 198.50771884572046,
+        "tasks_submitted": 4950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.71251448808757,
+        "frag_ratio": 0.032212142069470054,
+        "alloc_ratio": 0.712514488087569,
+        "allocated_gpus": 4426.1399999999785,
+        "unallocated_gpus": 1785.8600000000215,
+        "fragmentation": 200.10182653554799,
+        "tasks_submitted": 5000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7191435930457158,
+        "frag_ratio": 0.03296351188107794,
+        "alloc_ratio": 0.7191435930457148,
+        "allocated_gpus": 4467.319999999981,
+        "unallocated_gpus": 1744.6800000000194,
+        "fragmentation": 204.76933580525616,
+        "tasks_submitted": 5050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7267353509336753,
+        "frag_ratio": 0.03326831319494276,
+        "alloc_ratio": 0.7267353509336748,
+        "allocated_gpus": 4514.479999999988,
+        "unallocated_gpus": 1697.5200000000123,
+        "fragmentation": 206.66276156698441,
+        "tasks_submitted": 5100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7339793947198961,
+        "frag_ratio": 0.03372974452363432,
+        "alloc_ratio": 0.7339793947198956,
+        "allocated_gpus": 4559.479999999991,
+        "unallocated_gpus": 1652.5200000000086,
+        "fragmentation": 209.5291729808164,
+        "tasks_submitted": 5150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.741258853831294,
+        "frag_ratio": 0.03386555370306156,
+        "alloc_ratio": 0.7412588538312932,
+        "allocated_gpus": 4604.699999999993,
+        "unallocated_gpus": 1607.3000000000065,
+        "fragmentation": 210.3728196034184,
+        "tasks_submitted": 5200,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7488747585318738,
+        "frag_ratio": 0.03384447231201831,
+        "alloc_ratio": 0.7488747585318732,
+        "allocated_gpus": 4652.009999999997,
+        "unallocated_gpus": 1559.9900000000034,
+        "fragmentation": 210.2418620022577,
+        "tasks_submitted": 5250,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7563248551191246,
+        "frag_ratio": 0.03424633812918361,
+        "alloc_ratio": 0.756324855119124,
+        "allocated_gpus": 4698.289999999998,
+        "unallocated_gpus": 1513.7100000000019,
+        "fragmentation": 212.73825245848857,
+        "tasks_submitted": 5300,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7625643915003227,
+        "frag_ratio": 0.03459984570123166,
+        "alloc_ratio": 0.7625643915003218,
+        "allocated_gpus": 4737.049999999999,
+        "unallocated_gpus": 1474.9500000000007,
+        "fragmentation": 214.93424149605107,
+        "tasks_submitted": 5350,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7686703155183524,
+        "frag_ratio": 0.035069407975016675,
+        "alloc_ratio": 0.7686703155183516,
+        "allocated_gpus": 4774.9800000000005,
+        "unallocated_gpus": 1437.0199999999995,
+        "fragmentation": 217.8511623408036,
+        "tasks_submitted": 5400,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7760769478428863,
+        "frag_ratio": 0.03540384489818048,
+        "alloc_ratio": 0.776076947842885,
+        "allocated_gpus": 4820.990000000002,
+        "unallocated_gpus": 1391.0099999999984,
+        "fragmentation": 219.9286845074971,
+        "tasks_submitted": 5450,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7823873148744382,
+        "frag_ratio": 0.035830298448323784,
+        "alloc_ratio": 0.7823873148744368,
+        "allocated_gpus": 4860.190000000001,
+        "unallocated_gpus": 1351.8099999999986,
+        "fragmentation": 222.57781396098736,
+        "tasks_submitted": 5500,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7904185447520949,
+        "frag_ratio": 0.036004583443671676,
+        "alloc_ratio": 0.7904185447520936,
+        "allocated_gpus": 4910.080000000005,
+        "unallocated_gpus": 1301.9199999999946,
+        "fragmentation": 223.66047235208845,
+        "tasks_submitted": 5550,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.7973599484868024,
+        "frag_ratio": 0.03631125250551253,
+        "alloc_ratio": 0.7973599484868007,
+        "allocated_gpus": 4953.200000000006,
+        "unallocated_gpus": 1258.7999999999938,
+        "fragmentation": 225.56550056424385,
+        "tasks_submitted": 5600,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8055972311654895,
+        "frag_ratio": 0.03692138454909197,
+        "alloc_ratio": 0.8055972311654881,
+        "allocated_gpus": 5004.370000000012,
+        "unallocated_gpus": 1207.6299999999883,
+        "fragmentation": 229.3556408189593,
+        "tasks_submitted": 5650,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8120090148100493,
+        "frag_ratio": 0.037102277640412365,
+        "alloc_ratio": 0.8120090148100477,
+        "allocated_gpus": 5044.200000000016,
+        "unallocated_gpus": 1167.7999999999838,
+        "fragmentation": 230.47934870224162,
+        "tasks_submitted": 5700,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8190792015454008,
+        "frag_ratio": 0.03743607537179278,
+        "alloc_ratio": 0.8190792015453993,
+        "allocated_gpus": 5088.12000000002,
+        "unallocated_gpus": 1123.87999999998,
+        "fragmentation": 232.5529002095768,
+        "tasks_submitted": 5750,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8256471345782409,
+        "frag_ratio": 0.03779756388777684,
+        "alloc_ratio": 0.825647134578239,
+        "allocated_gpus": 5128.920000000021,
+        "unallocated_gpus": 1083.079999999979,
+        "fragmentation": 234.79846687086973,
+        "tasks_submitted": 5800,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8341130070830703,
+        "frag_ratio": 0.03802697041572341,
+        "alloc_ratio": 0.8341130070830686,
+        "allocated_gpus": 5181.510000000022,
+        "unallocated_gpus": 1030.489999999978,
+        "fragmentation": 236.22354022247382,
+        "tasks_submitted": 5850,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8404716677398643,
+        "frag_ratio": 0.0382562243473368,
+        "alloc_ratio": 0.8404716677398626,
+        "allocated_gpus": 5221.010000000027,
+        "unallocated_gpus": 990.9899999999734,
+        "fragmentation": 237.64766564565616,
+        "tasks_submitted": 5900,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8476593689633033,
+        "frag_ratio": 0.03862997636625376,
+        "alloc_ratio": 0.8476593689633016,
+        "allocated_gpus": 5265.66000000003,
+        "unallocated_gpus": 946.3399999999701,
+        "fragmentation": 239.96941318716836,
+        "tasks_submitted": 5950,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8551481004507473,
+        "frag_ratio": 0.03871230027138286,
+        "alloc_ratio": 0.8551481004507452,
+        "allocated_gpus": 5312.180000000029,
+        "unallocated_gpus": 899.8199999999706,
+        "fragmentation": 240.4808092858303,
+        "tasks_submitted": 6000,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8613650998068321,
+        "frag_ratio": 0.03907029801648656,
+        "alloc_ratio": 0.8613650998068308,
+        "allocated_gpus": 5350.800000000033,
+        "unallocated_gpus": 861.1999999999671,
+        "fragmentation": 242.70469127841451,
+        "tasks_submitted": 6050,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.867955569864785,
+        "frag_ratio": 0.03955005336200359,
+        "alloc_ratio": 0.8679555698647835,
+        "allocated_gpus": 5391.740000000035,
+        "unallocated_gpus": 820.2599999999647,
+        "fragmentation": 245.68493148476628,
+        "tasks_submitted": 6100,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.8748309723116624,
+        "frag_ratio": 0.03963573101273426,
+        "alloc_ratio": 0.8748309723116608,
+        "allocated_gpus": 5434.450000000037,
+        "unallocated_gpus": 777.5499999999629,
+        "fragmentation": 246.2171610511052,
+        "tasks_submitted": 6150,
+        "rejected": 0
+      },
+      {
+        "demand_fraction": 0.882669027688353,
+        "frag_ratio": 0.0398543857276132,
+        "alloc_ratio": 0.8826690276883516,
+        "allocated_gpus": 5483.14000000004,
+        "unallocated_gpus": 728.8599999999597,
+        "fragmentation": 247.57544413993318,
+        "tasks_submitted": 6200,
+        "rejected": 0
+      }
+    ]
+  }
+]

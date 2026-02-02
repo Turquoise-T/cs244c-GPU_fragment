@@ -29,7 +29,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fgd import Node, Task, Workload
 from simulator import FGDSimulator
 from alibaba_trace_parser import (
-    parse_alibaba_trace, parse_node_list, derive_workload_distribution
+    parse_alibaba_trace, parse_node_list, derive_workload_distribution,
+    count_non_gpu_tasks,
 )
 
 
@@ -184,11 +185,12 @@ def main():
     print("Loading trace data...")
     base_nodes = parse_node_list(args.node_csv)
     trace_tasks = parse_alibaba_trace(args.pod_csv, max_tasks=args.max_tasks)
-    distribution = derive_workload_distribution(trace_tasks)
+    non_gpu_stats = count_non_gpu_tasks(args.pod_csv)
+    distribution = derive_workload_distribution(trace_tasks, non_gpu_stats)
 
     total_gpus = sum(n.num_gpus for n in base_nodes)
     print(f"  Nodes: {len(base_nodes)}, Total GPUs: {total_gpus}")
-    print(f"  Tasks: {len(trace_tasks)}")
+    print(f"  Tasks: {len(trace_tasks)} GPU + {non_gpu_stats['count']} non-GPU")
     print(f"  Distribution ({len(distribution)} buckets):")
     for entry in distribution:
         gpu, cpu, pop = entry[0], entry[1], entry[-1]
