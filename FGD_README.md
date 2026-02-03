@@ -42,6 +42,163 @@ For each candidate GPU:
 Select GPU with minimum Δfrag (prefer tight packing)
 ```
 
+## Gavel Architecture and FGD Integration
+
+### Input Data Structure
+
+Gavel requires two core inputs:
+
+#### 1. Throughput Oracle (`simulation_throughputs.json`)
+
+This is Gavel's **primary input**, recording throughput (steps/sec) for each job type on each GPU type:
+
+```json
+{
+  "ResNet-18 (batch size 32)": {
+    "1": {                          // scale_factor = 1 GPU
+      "v100": 1500.3,               // 1500.3 steps/sec on V100
+      "p100": 1100.2,               // 1100.2 steps/sec on P100
+      "k80": 600.1                  // 600.1 steps/sec on K80
+    },
+    "2": { ... },                   // scale_factor = 2 GPUs
+    "4": { ... }
+  },
+  "Transformer (batch size 128)": { ... }
+}
+```
+
+**Key**: Gavel uses this oracle to decide "how much faster this job runs on V100 vs P100" and performs heterogeneity-aware scheduling.
+
+#### 2. Job Trace File (MSR/Philly format)
+
+```
+job_type                        command              num_steps_arg  scale_factor  total_steps  arrival_time  priority
+Transformer (batch size 128)    cd ... && python     -step          1             95121        0.0           1
+ResNet-50 (batch size 64)       cd ... && python     --num_steps    2             50000        10.0          1
+A3C                             cd ... && python     --max-steps    0             1934260      100.0         4
+```
+
+| Column | Meaning |
+|--------|---------|
+| `job_type` | Must match a key in the throughput oracle |
+| `scale_factor` | Number of GPUs needed (integer) |
+| `total_steps` | Total steps to execute |
+| `arrival_time` | Arrival time (seconds) |
+
+#### 3. Cluster Configuration
+
+```python
+cluster_spec = {'v100': 64, 'p100': 0, 'k80': 0}  # 64 V100 GPUs
+num_gpus_per_server = {'v100': 4, 'p100': 4, 'k80': 4}  # 4 GPUs per server
+```
+
+---
+
+### Code Logic Structure
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           run_sweep_static.py                                │
+│                                                                              │
+│  1. Parse CLI args (cluster_spec, policy, placement_strategy, trace...)     │
+│  2. Load throughput oracle                                                   │
+│  3. Create Scheduler instance                                               │
+└─────────────────────────────────────────┬───────────────────────────────────┘
+                                          │
+                                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           scheduler.Scheduler                               │
+│                                                                              │
+│  __init__(policy, throughputs_file, placement_strategy='strided'|'fgd')      │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ simulate() main loop:                                                │   │
+│  │                                                                       │   │
+│  │   while jobs remain:                                                  │   │
+│  │     ┌─────────────────────────────────────────────────────────────┐  │   │
+│  │     │ 1. add_job(job)                                              │  │   │
+│  │     │    - Parse job_type, scale_factor                            │  │   │
+│  │     │    - Query throughput oracle: (job_type, scale_factor) → tp   │  │   │
+│  │     │    - If not found → KeyError!                                │  │   │
+│  │     └─────────────────────────────────────────────────────────────┘  │   │
+│  │                              │                                        │   │
+│  │                              ▼                                        │   │
+│  │     ┌─────────────────────────────────────────────────────────────┐  │   │
+│  │     │ 2. policy.get_allocation(throughputs, scale_factors, ...)   │  │   │
+│  │     │    - FIFO: allocate in arrival order                        │  │   │
+│  │     │    - MaxMinFairness: optimize fairness                      │  │   │
+│  │     │    - Output: {job_id: {worker_type: time_fraction}}          │  │   │
+│  │     └─────────────────────────────────────────────────────────────┘  │   │
+│  │                              │                                        │   │
+│  │                              ▼                                        │   │
+│  │     ┌─────────────────────────────────────────────────────────────┐  │   │
+│  │     │ 3. _assign_workers_to_job()  ← FGD integrated here!         │  │   │
+│  │     │                                                              │  │   │
+│  │     │    if placement_strategy == 'fgd':                           │  │   │
+│  │     │        _assign_workers_to_job_fgd()   # minimize fragmentation│  │   │
+│  │     │    else:                                                     │  │   │
+│  │     │        _assign_workers_to_job_strided()  # fill servers in order│  │   │
+│  │     │                                                              │  │   │
+│  │     │    Output: job → [worker_id_1, worker_id_2, ...]              │  │   │
+│  │     └─────────────────────────────────────────────────────────────┘  │   │
+│  │                              │                                        │   │
+│  │                              ▼                                        │   │
+│  │     ┌─────────────────────────────────────────────────────────────┐  │   │
+│  │     │ 4. Simulate execution                                       │  │   │
+│  │     │    - Compute steps completed from throughput                 │  │   │
+│  │     │    - Advance time by time_per_iteration (default 360s)       │  │   │
+│  │     │    - Check if job completed                                  │  │   │
+│  │     └─────────────────────────────────────────────────────────────┘  │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### FGD Integration Point
+
+FGD is integrated into Gavel's **Placement layer** (not the Allocation layer):
+
+```
+Gavel Scheduler
+     │
+     ├── Allocation Policy (how much resource per job)
+     │   ├── fifo              → first-come first-served
+     │   ├── max_min_fairness  → fairness allocation
+     │   └── ...
+     │
+     └── Placement Strategy (which physical GPU) ← FGD lives here
+         ├── strided (default) → fill servers in order
+         └── fgd               → minimize fragmentation increment
+```
+
+### Strided vs FGD Comparison
+
+```
+Assume: 3 servers, 4 GPUs each, some jobs already placed
+
+Server 0: [■■□□]  (2 used, 2 free)
+Server 1: [■□□□]  (1 used, 3 free)  
+Server 2: [□□□□]  (0 used, 4 free)
+
+New job needs 2 GPUs:
+
+Strided strategy (in order):
+  → Take 2 free GPUs from Server 0
+  → Server 0: [■■■■], Server 1: [■□□□], Server 2: [□□□□]
+  → Goal: minimize number of servers used
+
+FGD strategy (minimize fragmentation):
+  → Compute Δfrag for each candidate placement
+  → May choose Server 1 (becomes [■■■□])
+  → Or Server 2 (becomes [■■□□])
+  → Goal: keep remaining free space contiguous
+```
+
+**Note**: For whole-GPU workloads, both strategies behave similarly. FGD's main advantage is in **fractional GPU (GPU sharing)** scenarios.
+
+---
+
 ## Implementation
 
 ### Files Modified/Created
@@ -111,7 +268,46 @@ class Job:
 
 ## Usage
 
-### 1. GPU Sharing Simulator (Standalone)
+### 1. Gavel Simulation (Strided vs FGD Comparison)
+
+```bash
+cd src/scheduler
+mkdir -p /tmp/gavel_compare
+
+# Strided (Gavel default)
+python scripts/sweeps/run_sweep_static.py \
+    --cluster-spec 64:0:0 \
+    --num_gpus_per_server 4:4:4 \
+    --policies fifo \
+    --seeds 0 \
+    -a 100 -b 100 -n 1 \
+    --placement-strategy strided \
+    -l /tmp/gavel_compare/strided \
+    -v
+
+# FGD
+python scripts/sweeps/run_sweep_static.py \
+    --cluster-spec 64:0:0 \
+    --num_gpus_per_server 4:4:4 \
+    --policies fifo \
+    --seeds 0 \
+    -a 100 -b 100 -n 1 \
+    --placement-strategy fgd \
+    -l /tmp/gavel_compare/fgd \
+    -v
+```
+
+**Parameter reference:**
+
+| Parameter | Meaning |
+|-----------|---------|
+| `--cluster-spec 64:0:0` | 64 V100s, 0 P100s, 0 K80s |
+| `--num_gpus_per_server 4:4:4` | 4 GPUs per server |
+| `--policies fifo` | Use FIFO allocation policy |
+| `-a 100 -b 100 -n 1` | Generate 100 synthetic jobs |
+| `--placement-strategy` | `strided` or `fgd` |
+
+### 2. GPU Sharing Simulator (Fractional GPU, Standalone)
 
 ```bash
 cd src/scheduler
@@ -123,29 +319,18 @@ python scripts/simulate_gpu_sharing.py \
     --num-servers 4 \
     --gpus-per-server 4
 
-# Alibaba trace
+# Alibaba trace (real fractional GPU data)
 python scripts/simulate_gpu_sharing.py \
     --workload alibaba \
-    --trace traces/cluster-trace-gpu-v2023/csv/openb_pod_list_gpu0.csv \
+    --trace traces/cluster-trace-gpu-v2023/csv/openb_pod_list_gpuspec05.csv \
     --num-jobs 200
 ```
 
-### 2. FGD Placement Tests
+### 3. FGD Unit Tests
 
 ```bash
 cd src/scheduler
 python policies/fgd_test.py
-```
-
-### 3. Gavel Integration (Whole-GPU FGD)
-
-```bash
-cd src/scheduler/scripts/sweeps
-python run_sweep_static.py \
-    --trace ../traces/msr/seed=0/0e4a51.trace \
-    --policies fifo \
-    --placement-strategy fgd \
-    --cluster-spec v100:64
 ```
 
 ## Experimental Results
