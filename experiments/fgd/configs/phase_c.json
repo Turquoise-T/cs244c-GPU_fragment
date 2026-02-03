@@ -1,0 +1,27 @@
+{
+    "description": "Phase C: Validate Gavel baseline with FGD disabled. Results must match integration test golden values exactly.",
+    "experiments": [
+        {
+            "name": "gavel_baseline_agnostic",
+            "policy": "max_min_fairness",
+            "enable_fgd": false,
+            "cluster_spec": {"v100": 36, "p100": 36, "k80": 36},
+            "num_gpus_per_server": {"v100": 1, "p100": 1, "k80": 1},
+            "lam": 0.0,
+            "num_total_jobs": 50,
+            "seed": 0,
+            "expected_jct": 73063.45
+        },
+        {
+            "name": "gavel_baseline_perf",
+            "policy": "max_min_fairness_perf",
+            "enable_fgd": false,
+            "cluster_spec": {"v100": 36, "p100": 36, "k80": 36},
+            "num_gpus_per_server": {"v100": 1, "p100": 1, "k80": 1},
+            "lam": 0.0,
+            "num_total_jobs": 50,
+            "seed": 0,
+            "expected_jct": 57171.41
+        }
+    ]
+}

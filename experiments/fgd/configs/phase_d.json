@@ -1,0 +1,28 @@
+{
+    "description": "Phase D: Validate FGD alone with FIFO allocation. FIFO+FGD vs FIFO baseline.",
+    "experiments": [
+        {
+            "name": "fifo_strided_baseline",
+            "policy": "fifo",
+            "enable_fgd": false,
+            "cluster_spec": {"v100": 36, "p100": 36, "k80": 36},
+            "num_gpus_per_server": {"v100": 4, "p100": 4, "k80": 4},
+            "lam": 1.0,
+            "num_total_jobs": 100,
+            "generate_multi_gpu_jobs": true,
+            "seed": 0
+        },
+        {
+            "name": "fifo_fgd",
+            "policy": "fifo",
+            "enable_fgd": true,
+            "fgd_placement_mode": "fgd",
+            "cluster_spec": {"v100": 36, "p100": 36, "k80": 36},
+            "num_gpus_per_server": {"v100": 4, "p100": 4, "k80": 4},
+            "lam": 1.0,
+            "num_total_jobs": 100,
+            "generate_multi_gpu_jobs": true,
+            "seed": 0
+        }
+    ]
+}

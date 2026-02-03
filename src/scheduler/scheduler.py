@@ -68,10 +68,22 @@ class Scheduler:
                  enable_global_queue=False,
                  expected_num_workers=None,
                  minimum_time_between_allocation_resets=1920,
-                 max_rounds=None):
+                 max_rounds=None,
+                 enable_fgd=False,
+                 fgd_placement_mode='fgd'):
 
         # Flag to control whether scheduler runs in simulation mode.
         self._simulate = simulate
+
+        # FGD placement: when enabled, replaces strided placement with
+        # fragmentation-aware placement from FGD (ATC'23).
+        self._enable_fgd = enable_fgd
+        self._fgd_placement = None
+        self._fgd_fragmentation_history = []
+        if enable_fgd:
+            from fgd_placement import GavelFGDPlacement
+            self._fgd_placement = GavelFGDPlacement(
+                placement_mode=fgd_placement_mode)
 
         # Initial timestamp.
         if self._simulate:
@@ -984,10 +996,10 @@ class Scheduler:
             scale_factors = set([x[1] for x in scheduled_jobs[worker_type]])
             scale_factors = sorted(scale_factors, reverse=True)
 
-            # Assign workers in order of decreasing scale factor to prioritize
-            # locality for multi-GPU jobs.
+            # Phase 1: Lease extensions -- jobs continuing from previous round
+            # keep their worker assignments. This runs before FGD/strided
+            # placement to respect existing placements.
             for current_scale_factor in scale_factors:
-                # Try to keep jobs on current workers if possible.
                 for (job_id, scale_factor) in scheduled_jobs[worker_type]:
                     if scale_factor != current_scale_factor:
                         continue
@@ -1006,16 +1018,45 @@ class Scheduler:
                             for prev_worker_id in prev_worker_ids:
                                 assigned_worker_ids.add(prev_worker_id)
 
-                # Assign workers for remaining jobs.
-                for (job_id, scale_factor) in scheduled_jobs[worker_type]:
-                    if scale_factor != current_scale_factor:
-                        continue
-                    elif job_id not in self._allocation:
-                        continue
-                    self._assign_workers_to_job(job_id, scale_factor,
-                                                worker_type,
-                                                per_worker_state,
-                                                new_worker_assignments)
+            # Phase 2: Place remaining jobs (new or preempted).
+            if self._enable_fgd:
+                # FGD placement: use fragmentation-aware assignment.
+                # Filter to jobs that still need placement and have allocation.
+                jobs_needing_placement = [
+                    (job_id, sf) for (job_id, sf) in scheduled_jobs[worker_type]
+                    if job_id not in new_worker_assignments
+                    and job_id in self._allocation
+                ]
+                if jobs_needing_placement:
+                    frag = self._fgd_placement.assign_workers_for_round(
+                        scheduled_jobs_for_type=jobs_needing_placement,
+                        worker_ids_by_server=per_worker_state['worker_ids'],
+                        assigned_worker_ids=assigned_worker_ids,
+                        worker_assignments=new_worker_assignments,
+                        jobs_dict=self._jobs,
+                    )
+                    self._fgd_fragmentation_history.append(
+                        (self.get_current_timestamp(), worker_type, frag))
+                # Update running job state for FGD-placed jobs
+                for (job_id, scale_factor) in jobs_needing_placement:
+                    if job_id in new_worker_assignments:
+                        for single_job_id in job_id.singletons():
+                            if self._simulate:
+                                self._per_job_latest_timestamps[single_job_id] = \
+                                    self.get_current_timestamp()
+                                self._running_jobs.add(single_job_id)
+            else:
+                # Original strided placement.
+                for current_scale_factor in scale_factors:
+                    for (job_id, scale_factor) in scheduled_jobs[worker_type]:
+                        if scale_factor != current_scale_factor:
+                            continue
+                        elif job_id not in self._allocation:
+                            continue
+                        self._assign_workers_to_job(job_id, scale_factor,
+                                                    worker_type,
+                                                    per_worker_state,
+                                                    new_worker_assignments)
 
         # Verify the assignment.
         num_assignments = {}

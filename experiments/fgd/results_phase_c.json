@@ -1,0 +1,15 @@
+[
+  {
+    "name": "gavel_baseline_perf",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": false,
+    "fgd_placement_mode": "fgd",
+    "seed": 0,
+    "lam": 0.0,
+    "avg_jct": 57171.40861748106,
+    "wall_time_seconds": 0.7537920475006104,
+    "num_completed_jobs": 50,
+    "fragmentation_samples": 0,
+    "expected_jct": 57171.41,
+    "relative_error": 2.418199840304872e-08,
+    "pass": 

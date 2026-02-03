@@ -42,7 +42,8 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
                  scale_factor_generator_func=_generate_scale_factor,
                  duration_generator_func=_generate_duration,
                  scale_factor_rng=None, duration_rng=None, SLO_rng=None,
-                 always_generate_scale_factor=True):
+                 always_generate_scale_factor=True,
+                 gpu_request=None):
     """Generates a new job.
 
        Args:
@@ -150,7 +151,8 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
               scale_factor=scale_factor,
               priority_weight=priority_weight,
               SLO=SLO,
-              needs_data_dir=job_template.needs_data_dir)
+              needs_data_dir=job_template.needs_data_dir,
+              gpu_request=gpu_request)
 
     return job
 
