@@ -98,7 +98,8 @@ class Figure7aExperiment:
         self,
         scheduler: Scheduler,
         max_workload_pct: float = 120.0,
-        sample_interval_pct: float = 5.0
+        sample_interval_pct: float = 5.0,
+        show_progress: bool = True
     ) -> ExperimentResult:
         """
         Run a single experiment with one scheduler.
@@ -107,10 +108,13 @@ class Figure7aExperiment:
             scheduler: The scheduling policy to use
             max_workload_pct: Stop when arrived workload reaches this % of GPU capacity
             sample_interval_pct: Record fragmentation every N% of arrived workload
+            show_progress: Whether to show progress bar
 
         Returns:
             ExperimentResult with fragmentation curve
         """
+        from tqdm import tqdm
+
         cluster = self.create_fresh_cluster()
         result = ExperimentResult(scheduler_name=scheduler.name)
 
@@ -122,6 +126,19 @@ class Figure7aExperiment:
         task_id = 0
         next_sample_pct = sample_interval_pct
 
+        # Estimate total tasks needed (based on average GPU demand)
+        avg_gpu_demand = sum(t.gpu_demand for t in self.loader.tasks) / len(self.loader.tasks)
+        estimated_tasks = int((max_workload_pct / 100) * self.total_gpu_capacity / max(avg_gpu_demand, 0.1))
+
+        pbar = tqdm(
+            total=int(max_workload_pct),
+            desc=f"{scheduler.name:12}",
+            unit="%",
+            disable=not show_progress,
+            ncols=80
+        )
+
+        last_pct = 0
         while True:
             # Sample a task
             task = self.sample_task(task_id)
@@ -130,6 +147,11 @@ class Figure7aExperiment:
 
             # Calculate arrived workload percentage
             arrived_pct = (cumulative_gpu_demand / self.total_gpu_capacity) * 100
+
+            # Update progress bar
+            if int(arrived_pct) > last_pct:
+                pbar.update(int(arrived_pct) - last_pct)
+                last_pct = int(arrived_pct)
 
             # Try to schedule
             if scheduler.schedule(task, cluster):
@@ -147,6 +169,8 @@ class Figure7aExperiment:
             if arrived_pct >= max_workload_pct:
                 break
 
+        pbar.close()
+
         # Record final metrics
         result.final_frag_rate = cluster.compute_fragmentation_rate()
         result.final_gpu_alloc_rate = cluster.gpu_allocation_rate
@@ -158,7 +182,8 @@ class Figure7aExperiment:
         schedulers: List[Scheduler] = None,
         num_runs: int = 10,
         max_workload_pct: float = 120.0,
-        sample_interval_pct: float = 5.0
+        sample_interval_pct: float = 5.0,
+        show_progress: bool = True
     ) -> Dict[str, List[ExperimentResult]]:
         """
         Run experiments for multiple schedulers with multiple runs.
@@ -168,6 +193,7 @@ class Figure7aExperiment:
             num_runs: Number of runs per scheduler for averaging
             max_workload_pct: Stop when arrived workload reaches this %
             sample_interval_pct: Record fragmentation every N%
+            show_progress: Whether to show progress bar
 
         Returns:
             Dict mapping scheduler name to list of results
@@ -194,7 +220,8 @@ class Figure7aExperiment:
                 result = self.run_single_experiment(
                     scheduler,
                     max_workload_pct=max_workload_pct,
-                    sample_interval_pct=sample_interval_pct
+                    sample_interval_pct=sample_interval_pct,
+                    show_progress=show_progress
                 )
                 results[scheduler.name].append(result)
 
