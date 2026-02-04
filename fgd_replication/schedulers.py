@@ -255,46 +255,105 @@ class FGDScheduler(Scheduler):
     Algorithm 1 from the paper.
     """
 
-    def __init__(self):
+    def __init__(self, num_workers: int = None):
         super().__init__("FGD")
+        self.num_workers = num_workers
+        self._pool = None
+
+    @staticmethod
+    def _compute_frag_delta_for_node(args: Tuple) -> Tuple[int, float]:
+        """
+        Worker function to compute fragmentation delta for a single node.
+        Used for parallel evaluation.
+
+        Args:
+            args: (node_id, remaining_cpu, gpu_remaining, num_gpus, total_cpu,
+                   task_cpu, task_gpu, task_types)
+
+        Returns:
+            (node_id, fragmentation_delta)
+        """
+        (node_id, remaining_cpu, gpu_remaining, num_gpus, total_cpu,
+         task_cpu, task_gpu, task_types) = args
+
+        # Reconstruct node state
+        node = Node(
+            node_id=node_id,
+            total_cpu=total_cpu,
+            num_gpus=num_gpus,
+            allocated_cpu=total_cpu - remaining_cpu,
+            gpu_remaining=list(gpu_remaining)
+        )
+
+        task = Task(task_id=-1, cpu_demand=task_cpu, gpu_demand=task_gpu)
+
+        # Compute fragmentation before (only for this node)
+        frag_before = 0.0
+        for (cpu, gpu), popularity in task_types:
+            dummy = Task(task_id=-1, cpu_demand=cpu, gpu_demand=gpu)
+            frag_before += popularity * node.get_fragmentation_for_task(dummy)
+
+        # Hypothetically allocate
+        node.allocate_task(task)
+
+        # Compute fragmentation after
+        frag_after = 0.0
+        for (cpu, gpu), popularity in task_types:
+            dummy = Task(task_id=-1, cpu_demand=cpu, gpu_demand=gpu)
+            frag_after += popularity * node.get_fragmentation_for_task(dummy)
+
+        return (node_id, frag_after - frag_before)
+
+    def _get_pool(self):
+        """Lazy initialization of process pool"""
+        if self._pool is None:
+            from multiprocessing import Pool, cpu_count
+            workers = self.num_workers or cpu_count()
+            self._pool = Pool(workers)
+        return self._pool
 
     def select_node(self, task: Task, cluster: Cluster) -> Optional[int]:
         eligible = cluster.get_eligible_nodes(task)
         if not eligible:
             return None
 
-        if cluster.task_distribution is None:
-            # Fall back to best-fit if no distribution available
-            return BestFitScheduler().select_node(task, cluster)
+        task_types = cluster.task_distribution.get_task_types()
 
-        best_node = None
+        # Prepare arguments for parallel workers
+        args_list = [
+            (
+                node.node_id,
+                node.remaining_cpu,
+                tuple(node.gpu_remaining),
+                node.num_gpus,
+                node.total_cpu,
+                task.cpu_demand,
+                task.gpu_demand,
+                task_types
+            )
+            for node in eligible
+        ]
+
+        # Parallel execution
+        pool = self._get_pool()
+        results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
+
+        # Find best node
+        best_node_id = None
         best_delta = float('inf')
-
-        # Current fragmentation
-        current_frag = cluster.compute_cluster_fragmentation()
-
-        for node in eligible:
-            # Hypothetically assign task to this node
-            # Create a copy of the node state
-            original_cpu = node.allocated_cpu
-            original_gpus = node.gpu_remaining.copy()
-
-            # Perform hypothetical allocation
-            node.allocate_task(task)
-
-            # Compute new fragmentation
-            new_frag = cluster.compute_cluster_fragmentation()
-            delta = new_frag - current_frag
-
-            # Restore node state
-            node.allocated_cpu = original_cpu
-            node.gpu_remaining = original_gpus
-
+        for node_id, delta in results:
             if delta < best_delta:
                 best_delta = delta
-                best_node = node
+                best_node_id = node_id
 
-        return best_node.node_id if best_node else None
+        return best_node_id
+
+    def cleanup(self):
+        """Clean up the process pool"""
+        if self._pool is not None:
+            self._pool.close()
+            self._pool.join()
+            self._pool = None
 
 
 def get_scheduler(name: str) -> Scheduler:
