@@ -1,0 +1,3 @@
+[submodule "alibaba_traces"]
+	path = alibaba_traces
+	url = https://github.com/alibaba/clusterdata.git
