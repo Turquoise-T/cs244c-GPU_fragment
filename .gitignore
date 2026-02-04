@@ -1,7 +1,7 @@
-data/
+__pycache__/
+*.pyc
 .venv/
 venv/
 .DS_Store
 **/logs/
-.claude/phone-a-friend/
 experiments/replication/results/results_full/*/simulation.log
