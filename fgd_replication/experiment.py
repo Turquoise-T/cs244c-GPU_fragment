@@ -313,6 +313,60 @@ def plot_figure7a(results: Dict[str, List[ExperimentResult]], output_path: str =
     plt.show()
 
 
+def save_results_to_csv(results: Dict[str, List[ExperimentResult]], output_path: str):
+    """
+    Save experiment results to CSV file.
+
+    CSV format: scheduler,arrived_workload_pct,frag_rate,run
+    """
+    import csv
+
+    with open(output_path, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['scheduler', 'arrived_workload_pct', 'frag_rate', 'run'])
+
+        for scheduler_name, result_list in results.items():
+            for run_idx, result in enumerate(result_list):
+                for arrived_pct, frag_rate in result.fragmentation_curve:
+                    writer.writerow([scheduler_name, arrived_pct, frag_rate, run_idx])
+
+    print(f"Results saved to {output_path}")
+
+
+def load_results_from_csv(csv_path: str) -> Dict[str, List[ExperimentResult]]:
+    """
+    Load experiment results from CSV file.
+
+    Returns:
+        Dict mapping scheduler name to list of ExperimentResult
+    """
+    import csv
+    from collections import defaultdict
+
+    # Temporary storage: scheduler -> run -> [(x, y), ...]
+    data = defaultdict(lambda: defaultdict(list))
+
+    with open(csv_path, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            scheduler = row['scheduler']
+            run = int(row['run'])
+            x = float(row['arrived_workload_pct'])
+            y = float(row['frag_rate'])
+            data[scheduler][run].append((x, y))
+
+    # Convert to ExperimentResult objects
+    results = {}
+    for scheduler, runs in data.items():
+        results[scheduler] = []
+        for run_idx in sorted(runs.keys()):
+            result = ExperimentResult(scheduler_name=scheduler)
+            result.fragmentation_curve = sorted(runs[run_idx], key=lambda p: p[0])
+            results[scheduler].append(result)
+
+    return results
+
+
 def print_summary(results: Dict[str, List[ExperimentResult]]):
     """Print summary statistics"""
     print("\n" + "=" * 60)
@@ -350,6 +404,10 @@ if __name__ == "__main__":
 
     # Print summary
     print_summary(results)
+
+    # Save results to CSV
+    csv_path = os.path.join(os.path.dirname(__file__), 'figure7a_results.csv')
+    save_results_to_csv(results, csv_path)
 
     # Plot results
     output_path = os.path.join(os.path.dirname(__file__), 'figure7a.png')
