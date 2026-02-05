@@ -367,14 +367,14 @@ def load_results_from_csv(csv_path: str) -> Dict[str, List[ExperimentResult]]:
     return results
 
 
-def print_summary(results: Dict[str, List[ExperimentResult]]):
-    """Print summary statistics"""
-    print("\n" + "=" * 60)
-    print("EXPERIMENT SUMMARY")
-    print("=" * 60)
-
-    print(f"\n{'Scheduler':<12} {'Avg Frag%':>10} {'Avg Alloc%':>12} {'Scheduled':>12} {'Failed':>10}")
-    print("-" * 60)
+def format_summary(results: Dict[str, List[ExperimentResult]]) -> str:
+    """Format summary statistics as a string"""
+    lines = []
+    lines.append("=" * 60)
+    lines.append("EXPERIMENT SUMMARY")
+    lines.append("=" * 60)
+    lines.append(f"\n{'Scheduler':<12} {'Avg Frag%':>10} {'Avg Alloc%':>12} {'Scheduled':>12} {'Failed':>10}")
+    lines.append("-" * 60)
 
     for name, result_list in results.items():
         avg_frag = sum(r.final_frag_rate for r in result_list) / len(result_list)
@@ -382,10 +382,19 @@ def print_summary(results: Dict[str, List[ExperimentResult]]):
         total_scheduled = sum(r.tasks_scheduled for r in result_list) / len(result_list)
         total_failed = sum(r.tasks_failed for r in result_list) / len(result_list)
 
-        print(f"{name:<12} {avg_frag:>10.1f} {avg_alloc:>12.1f} {total_scheduled:>12.0f} {total_failed:>10.0f}")
+        lines.append(f"{name:<12} {avg_frag:>10.1f} {avg_alloc:>12.1f} {total_scheduled:>12.0f} {total_failed:>10.0f}")
+
+    return "\n".join(lines)
+
+
+def print_summary(results: Dict[str, List[ExperimentResult]]):
+    """Print summary statistics"""
+    print("\n" + format_summary(results))
 
 
 if __name__ == "__main__":
+    from datetime import datetime
+
     # Run the experiment
     data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -402,13 +411,30 @@ if __name__ == "__main__":
         sample_interval_pct=5.0
     )
 
+    # Create timestamped result directory
+    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+    result_dir = os.path.join(os.path.dirname(__file__), 'result', timestamp)
+    os.makedirs(result_dir, exist_ok=True)
+
     # Print summary
     print_summary(results)
 
+    # Save summary log
+    log_path = os.path.join(result_dir, 'experiment_summary.log')
+    with open(log_path, 'w') as f:
+        f.write(f"Experiment: Figure 7(a) Replication\n")
+        f.write(f"Timestamp: {timestamp}\n")
+        f.write(f"Seed: 42\n")
+        f.write(f"Num runs: 3\n")
+        f.write(f"Max workload: 120.0%\n")
+        f.write(f"Sample interval: 5.0%\n\n")
+        f.write(format_summary(results) + "\n")
+    print(f"Summary log saved to {log_path}")
+
     # Save results to CSV
-    csv_path = os.path.join(os.path.dirname(__file__), 'figure7a_results.csv')
+    csv_path = os.path.join(result_dir, 'figure7a_results.csv')
     save_results_to_csv(results, csv_path)
 
     # Plot results
-    output_path = os.path.join(os.path.dirname(__file__), 'figure7a.png')
-    plot_figure7a(results, output_path)
+    plot_path = os.path.join(result_dir, 'figure7a.png')
+    plot_figure7a(results, plot_path)
