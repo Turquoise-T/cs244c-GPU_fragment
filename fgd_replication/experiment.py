@@ -393,22 +393,32 @@ def print_summary(results: Dict[str, List[ExperimentResult]]):
 
 
 if __name__ == "__main__":
+    import argparse
     from datetime import datetime
+
+    parser = argparse.ArgumentParser(description="Figure 7(a) Replication Experiment")
+    parser.add_argument('--seed', type=int, default=42, help='Random seed (default: 42)')
+    parser.add_argument('--num-runs', type=int, default=3, help='Number of runs per scheduler (default: 3, paper uses 10)')
+    parser.add_argument('--max-workload', type=float, default=120.0, help='Max arrived workload %% (default: 120)')
+    parser.add_argument('--sample-interval', type=float, default=5.0, help='Fragmentation sampling interval %% (default: 5)')
+    args = parser.parse_args()
 
     # Run the experiment
     data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
     print("=" * 60)
     print("Figure 7(a) Replication Experiment")
+    print(f"  seed={args.seed}, runs={args.num_runs}, "
+          f"max_workload={args.max_workload}%, interval={args.sample_interval}%")
     print("=" * 60)
 
-    experiment = Figure7aExperiment(data_dir, seed=42)
+    experiment = Figure7aExperiment(data_dir, seed=args.seed)
 
     # Run with all schedulers
     results = experiment.run_experiment(
-        num_runs=3,  # Use 3 runs for quick test (paper uses 10)
-        max_workload_pct=120.0,
-        sample_interval_pct=5.0
+        num_runs=args.num_runs,
+        max_workload_pct=args.max_workload,
+        sample_interval_pct=args.sample_interval
     )
 
     # Create timestamped result directory
@@ -424,10 +434,10 @@ if __name__ == "__main__":
     with open(log_path, 'w') as f:
         f.write(f"Experiment: Figure 7(a) Replication\n")
         f.write(f"Timestamp: {timestamp}\n")
-        f.write(f"Seed: 42\n")
-        f.write(f"Num runs: 3\n")
-        f.write(f"Max workload: 120.0%\n")
-        f.write(f"Sample interval: 5.0%\n\n")
+        f.write(f"Seed: {args.seed}\n")
+        f.write(f"Num runs: {args.num_runs}\n")
+        f.write(f"Max workload: {args.max_workload}%\n")
+        f.write(f"Sample interval: {args.sample_interval}%\n\n")
         f.write(format_summary(results) + "\n")
     print(f"Summary log saved to {log_path}")
 
