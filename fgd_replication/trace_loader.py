@@ -241,7 +241,7 @@ def print_trace_statistics(loader: AlibabaTraceLoader):
 
 if __name__ == "__main__":
     # Test the trace loader
-    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    data_dir = os.path.join(os.path.dirname(__file__), '..', 'alibaba_traces', 'cluster-trace-gpu-v2023')
     loader = AlibabaTraceLoader(data_dir)
 
     # Load data

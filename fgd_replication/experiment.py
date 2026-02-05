@@ -404,7 +404,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Run the experiment
-    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    data_dir = os.path.join(os.path.dirname(__file__), '..', 'alibaba_traces', 'cluster-trace-gpu-v2023')
 
     print("=" * 60)
     print("Figure 7(a) Replication Experiment")
