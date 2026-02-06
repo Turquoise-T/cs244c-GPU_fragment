@@ -1,0 +1,762 @@
+{
+  "config": {
+    "cluster": "36:36:36",
+    "gpus_per_node": 4,
+    "seed": 42,
+    "total_gpus": 108,
+    "load_levels": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30,
+      35,
+      40,
+      45,
+      50,
+      55,
+      60,
+      65,
+      70,
+      75,
+      80,
+      85,
+      90,
+      95,
+      100,
+      105,
+      110,
+      115,
+      120
+    ]
+  },
+  "results": {
+    "fgd": [
+      {
+        "target_load_pct": 5,
+        "actual_load_gpus": 6,
+        "actual_load_pct": 5.555555555555555,
+        "jobs_generated": 5,
+        "jobs_placed": 5,
+        "gpus_allocated": 6.0,
+        "utilization_pct": 5.555555555555555,
+        "fragmentation_rate": 0.0
+      },
+      {
+        "target_load_pct": 10,
+        "actual_load_gpus": 11,
+        "actual_load_pct": 10.185185185185185,
+        "jobs_generated": 7,
+        "jobs_placed": 7,
+        "gpus_allocated": 11.0,
+        "utilization_pct": 10.185185185185185,
+        "fragmentation_rate": 0.29455081001472755
+      },
+      {
+        "target_load_pct": 15,
+        "actual_load_gpus": 16,
+        "actual_load_pct": 14.814814814814813,
+        "jobs_generated": 12,
+        "jobs_placed": 12,
+        "gpus_allocated": 16.0,
+        "utilization_pct": 14.814814814814813,
+        "fragmentation_rate": 0.0
+      },
+      {
+        "target_load_pct": 20,
+        "actual_load_gpus": 21,
+        "actual_load_pct": 19.444444444444446,
+        "jobs_generated": 17,
+        "jobs_placed": 17,
+        "gpus_allocated": 21.0,
+        "utilization_pct": 19.444444444444446,
+        "fragmentation_rate": 0.2028397565922921
+      },
+      {
+        "target_load_pct": 25,
+        "actual_load_gpus": 27,
+        "actual_load_pct": 25.0,
+        "jobs_generated": 20,
+        "jobs_placed": 20,
+        "gpus_allocated": 27.0,
+        "utilization_pct": 25.0,
+        "fragmentation_rate": 0.1851851851851852
+      },
+      {
+        "target_load_pct": 30,
+        "actual_load_gpus": 32,
+        "actual_load_pct": 29.629629629629626,
+        "jobs_generated": 22,
+        "jobs_placed": 22,
+        "gpus_allocated": 32.0,
+        "utilization_pct": 29.629629629629626,
+        "fragmentation_rate": 0.0
+      },
+      {
+        "target_load_pct": 35,
+        "actual_load_gpus": 42,
+        "actual_load_pct": 38.88888888888889,
+        "jobs_generated": 25,
+        "jobs_placed": 24,
+        "gpus_allocated": 34.0,
+        "utilization_pct": 31.48148148148148,
+        "fragmentation_rate": 4.324324324324325
+      },
+      {
+        "target_load_pct": 40,
+        "actual_load_gpus": 43,
+        "actual_load_pct": 39.81481481481482,
+        "jobs_generated": 26,
+        "jobs_placed": 25,
+        "gpus_allocated": 35.0,
+        "utilization_pct": 32.407407407407405,
+        "fragmentation_rate": 4.056902002107482
+      },
+      {
+        "target_load_pct": 45,
+        "actual_load_gpus": 49,
+        "actual_load_pct": 45.370370370370374,
+        "jobs_generated": 29,
+        "jobs_placed": 28,
+        "gpus_allocated": 41.0,
+        "utilization_pct": 37.96296296296296,
+        "fragmentation_rate": 4.0658775090066905
+      },
+      {
+        "target_load_pct": 50,
+        "actual_load_gpus": 54,
+        "actual_load_pct": 50.0,
+        "jobs_generated": 31,
+        "jobs_placed": 30,
+        "gpus_allocated": 46.0,
+        "utilization_pct": 42.592592592592595,
+        "fragmentation_rate": 3.7460978147762747
+      },
+      {
+        "target_load_pct": 55,
+        "actual_load_gpus": 65,
+        "actual_load_pct": 60.18518518518518,
+        "jobs_generated": 34,
+        "jobs_placed": 32,
+        "gpus_allocated": 49.0,
+        "utilization_pct": 45.370370370370374,
+        "fragmentation_rate": 6.630109670987039
+      },
+      {
+        "target_load_pct": 60,
+        "actual_load_gpus": 65,
+        "actual_load_pct": 60.18518518518518,
+        "jobs_generated": 34,
+        "jobs_placed": 32,
+        "gpus_allocated": 49.0,
+        "utilization_pct": 45.370370370370374,
+        "fragmentation_rate": 6.630109670987039
+      },
+      {
+        "target_load_pct": 65,
+        "actual_load_gpus": 71,
+        "actual_load_pct": 65.74074074074075,
+        "jobs_generated": 37,
+        "jobs_placed": 35,
+        "gpus_allocated": 55.0,
+        "utilization_pct": 50.92592592592593,
+        "fragmentation_rate": 5.8133605303416624
+      },
+      {
+        "target_load_pct": 70,
+        "actual_load_gpus": 76,
+        "actual_load_pct": 70.37037037037037,
+        "jobs_generated": 39,
+        "jobs_placed": 37,
+        "gpus_allocated": 60.0,
+        "utilization_pct": 55.55555555555556,
+        "fragmentation_rate": 5.128205128205129
+      },
+      {
+        "target_load_pct": 75,
+        "actual_load_gpus": 81,
+        "actual_load_pct": 75.0,
+        "jobs_generated": 43,
+        "jobs_placed": 41,
+        "gpus_allocated": 65.0,
+        "utilization_pct": 60.18518518518518,
+        "fragmentation_rate": 5.78691184424013
+      },
+      {
+        "target_load_pct": 80,
+        "actual_load_gpus": 86,
+        "actual_load_pct": 79.62962962962963,
+        "jobs_generated": 48,
+        "jobs_placed": 46,
+        "gpus_allocated": 70.0,
+        "utilization_pct": 64.81481481481481,
+        "fragmentation_rate": 4.934210526315789
+      },
+      {
+        "target_load_pct": 85,
+        "actual_load_gpus": 91,
+        "actual_load_pct": 84.25925925925925,
+        "jobs_generated": 53,
+        "jobs_placed": 51,
+        "gpus_allocated": 75.0,
+        "utilization_pct": 69.44444444444444,
+        "fragmentation_rate": 4.3453401943967975
+      },
+      {
+        "target_load_pct": 90,
+        "actual_load_gpus": 97,
+        "actual_load_pct": 89.81481481481481,
+        "jobs_generated": 56,
+        "jobs_placed": 54,
+        "gpus_allocated": 81.0,
+        "utilization_pct": 75.0,
+        "fragmentation_rate": 5.158730158730158
+      },
+      {
+        "target_load_pct": 95,
+        "actual_load_gpus": 102,
+        "actual_load_pct": 94.44444444444444,
+        "jobs_generated": 60,
+        "jobs_placed": 58,
+        "gpus_allocated": 86.0,
+        "utilization_pct": 79.62962962962963,
+        "fragmentation_rate": 4.545454545454546
+      },
+      {
+        "target_load_pct": 100,
+        "actual_load_gpus": 110,
+        "actual_load_pct": 101.85185185185186,
+        "jobs_generated": 61,
+        "jobs_placed": 58,
+        "gpus_allocated": 86.0,
+        "utilization_pct": 79.62962962962963,
+        "fragmentation_rate": 6.110283159463488
+      },
+      {
+        "target_load_pct": 105,
+        "actual_load_gpus": 113,
+        "actual_load_pct": 104.62962962962963,
+        "jobs_generated": 64,
+        "jobs_placed": 61,
+        "gpus_allocated": 89.0,
+        "utilization_pct": 82.4074074074074,
+        "fragmentation_rate": 6.661184210526317
+      },
+      {
+        "target_load_pct": 110,
+        "actual_load_gpus": 119,
+        "actual_load_pct": 110.18518518518519,
+        "jobs_generated": 66,
+        "jobs_placed": 63,
+        "gpus_allocated": 95.0,
+        "utilization_pct": 87.96296296296296,
+        "fragmentation_rate": 6.177156177156177
+      },
+      {
+        "target_load_pct": 115,
+        "actual_load_gpus": 124,
+        "actual_load_pct": 114.81481481481481,
+        "jobs_generated": 71,
+        "jobs_placed": 68,
+        "gpus_allocated": 100.0,
+        "utilization_pct": 92.5925925925926,
+        "fragmentation_rate": 4.225352112676056
+      },
+      {
+        "target_load_pct": 120,
+        "actual_load_gpus": 132,
+        "actual_load_pct": 122.22222222222223,
+        "jobs_generated": 73,
+        "jobs_placed": 70,
+        "gpus_allocated": 108.0,
+        "utilization_pct": 100.0,
+        "fragmentation_rate": 0.0
+      }
+    ],
+    "random": [
+      {
+        "target_load_pct": 5,
+        "actual_load_gpus": 6,
+        "actual_load_pct": 5.555555555555555,
+        "jobs_generated": 5,
+        "jobs_placed": 5,
+        "gpus_allocated": 6.0,
+        "utilization_pct": 5.555555555555555,
+        "fragmentation_rate": 0.0
+      },
+      {
+        "target_load_pct": 10,
+        "actual_load_gpus": 11,
+        "actual_load_pct": 10.185185185185185,
+        "jobs_generated": 7,
+        "jobs_placed": 7,
+        "gpus_allocated": 11.0,
+        "utilization_pct": 10.185185185185185,
+        "fragmentation_rate": 1.9145802650957289
+      },
+      {
+        "target_load_pct": 15,
+        "actual_load_gpus": 16,
+        "actual_load_pct": 14.814814814814813,
+        "jobs_generated": 12,
+        "jobs_placed": 12,
+        "gpus_allocated": 16.0,
+        "utilization_pct": 14.814814814814813,
+        "fragmentation_rate": 2.536231884057971
+      },
+      {
+        "target_load_pct": 20,
+        "actual_load_gpus": 21,
+        "actual_load_pct": 19.444444444444446,
+        "jobs_generated": 17,
+        "jobs_placed": 17,
+        "gpus_allocated": 21.0,
+        "utilization_pct": 19.444444444444446,
+        "fragmentation_rate": 2.434077079107505
+      },
+      {
+        "target_load_pct": 25,
+        "actual_load_gpus": 27,
+        "actual_load_pct": 25.0,
+        "jobs_generated": 20,
+        "jobs_placed": 20,
+        "gpus_allocated": 27.0,
+        "utilization_pct": 25.0,
+        "fragmentation_rate": 4.567901234567902
+      },
+      {
+        "target_load_pct": 30,
+        "actual_load_gpus": 32,
+        "actual_load_pct": 29.629629629629626,
+        "jobs_generated": 22,
+        "jobs_placed": 22,
+        "gpus_allocated": 32.0,
+        "utilization_pct": 29.629629629629626,
+        "fragmentation_rate": 5.861244019138756
+      },
+      {
+        "target_load_pct": 35,
+        "actual_load_gpus": 42,
+        "actual_load_pct": 38.88888888888889,
+        "jobs_generated": 25,
+        "jobs_placed": 24,
+        "gpus_allocated": 34.0,
+        "utilization_pct": 31.48148148148148,
+        "fragmentation_rate": 10.81081081081081
+      },
+      {
+        "target_load_pct": 40,
+        "actual_load_gpus": 43,
+        "actual_load_pct": 39.81481481481482,
+        "jobs_generated": 26,
+        "jobs_placed": 25,
+        "gpus_allocated": 35.0,
+        "utilization_pct": 32.407407407407405,
+        "fragmentation_rate": 9.799789251844047
+      },
+      {
+        "target_load_pct": 45,
+        "actual_load_gpus": 49,
+        "actual_load_pct": 45.370370370370374,
+        "jobs_generated": 29,
+        "jobs_placed": 28,
+        "gpus_allocated": 41.0,
+        "utilization_pct": 37.96296296296296,
+        "fragmentation_rate": 10.705095213587237
+      },
+      {
+        "target_load_pct": 50,
+        "actual_load_gpus": 54,
+        "actual_load_pct": 50.0,
+        "jobs_generated": 31,
+        "jobs_placed": 30,
+        "gpus_allocated": 46.0,
+        "utilization_pct": 42.592592592592595,
+        "fragmentation_rate": 14.308012486992716
+      },
+      {
+        "target_load_pct": 55,
+        "actual_load_gpus": 65,
+        "actual_load_pct": 60.18518518518518,
+        "jobs_generated": 34,
+        "jobs_placed": 32,
+        "gpus_allocated": 49.0,
+        "utilization_pct": 45.370370370370374,
+        "fragmentation_rate": 15.104685942173479
+      },
+      {
+        "target_load_pct": 60,
+        "actual_load_gpus": 65,
+        "actual_load_pct": 60.18518518518518,
+        "jobs_generated": 34,
+        "jobs_placed": 32,
+        "gpus_allocated": 49.0,
+        "utilization_pct": 45.370370370370374,
+        "fragmentation_rate": 15.104685942173479
+      },
+      {
+        "target_load_pct": 65,
+        "actual_load_gpus": 71,
+        "actual_load_pct": 65.74074074074075,
+        "jobs_generated": 37,
+        "jobs_placed": 35,
+        "gpus_allocated": 55.0,
+        "utilization_pct": 50.92592592592593,
+        "fragmentation_rate": 19.47985721570627
+      },
+      {
+        "target_load_pct": 70,
+        "actual_load_gpus": 76,
+        "actual_load_pct": 70.37037037037037,
+        "jobs_generated": 39,
+        "jobs_placed": 37,
+        "gpus_allocated": 60.0,
+        "utilization_pct": 55.55555555555556,
+        "fragmentation_rate": 19.017094017094017
+      },
+      {
+        "target_load_pct": 75,
+        "actual_load_gpus": 81,
+        "actual_load_pct": 75.0,
+        "jobs_generated": 43,
+        "jobs_placed": 41,
+        "gpus_allocated": 65.0,
+        "utilization_pct": 60.18518518518518,
+        "fragmentation_rate": 16.00865332612223
+      },
+      {
+        "target_load_pct": 80,
+        "actual_load_gpus": 86,
+        "actual_load_pct": 79.62962962962963,
+        "jobs_generated": 48,
+        "jobs_placed": 46,
+        "gpus_allocated": 70.0,
+        "utilization_pct": 64.81481481481481,
+        "fragmentation_rate": 19.24342105263158
+      },
+      {
+        "target_load_pct": 85,
+        "actual_load_gpus": 91,
+        "actual_load_pct": 84.25925925925925,
+        "jobs_generated": 53,
+        "jobs_placed": 51,
+        "gpus_allocated": 75.0,
+        "utilization_pct": 69.44444444444444,
+        "fragmentation_rate": 14.979988564894226
+      },
+      {
+        "target_load_pct": 90,
+        "actual_load_gpus": 97,
+        "actual_load_pct": 89.81481481481481,
+        "jobs_generated": 56,
+        "jobs_placed": 54,
+        "gpus_allocated": 81.0,
+        "utilization_pct": 75.0,
+        "fragmentation_rate": 19.246031746031743
+      },
+      {
+        "target_load_pct": 95,
+        "actual_load_gpus": 102,
+        "actual_load_pct": 94.44444444444444,
+        "jobs_generated": 60,
+        "jobs_placed": 58,
+        "gpus_allocated": 86.0,
+        "utilization_pct": 79.62962962962963,
+        "fragmentation_rate": 17.575757575757574
+      },
+      {
+        "target_load_pct": 100,
+        "actual_load_gpus": 110,
+        "actual_load_pct": 101.85185185185186,
+        "jobs_generated": 61,
+        "jobs_placed": 58,
+        "gpus_allocated": 86.0,
+        "utilization_pct": 79.62962962962963,
+        "fragmentation_rate": 18.926974664679584
+      },
+      {
+        "target_load_pct": 105,
+        "actual_load_gpus": 113,
+        "actual_load_pct": 104.62962962962963,
+        "jobs_generated": 64,
+        "jobs_placed": 60,
+        "gpus_allocated": 85.0,
+        "utilization_pct": 78.70370370370371,
+        "fragmentation_rate": 18.817934782608695
+      },
+      {
+        "target_load_pct": 110,
+        "actual_load_gpus": 119,
+        "actual_load_pct": 110.18518518518519,
+        "jobs_generated": 66,
+        "jobs_placed": 62,
+        "gpus_allocated": 91.0,
+        "utilization_pct": 84.25925925925925,
+        "fragmentation_rate": 19.518716577540108
+      },
+      {
+        "target_load_pct": 115,
+        "actual_load_gpus": 124,
+        "actual_load_pct": 114.81481481481481,
+        "jobs_generated": 71,
+        "jobs_placed": 68,
+        "gpus_allocated": 100.0,
+        "utilization_pct": 92.5925925925926,
+        "fragmentation_rate": 20.422535211267608
+      },
+      {
+        "target_load_pct": 120,
+        "actual_load_gpus": 132,
+        "actual_load_pct": 122.22222222222223,
+        "jobs_generated": 73,
+        "jobs_placed": 67,
+        "gpus_allocated": 96.0,
+        "utilization_pct": 88.88888888888889,
+        "fragmentation_rate": 20.319634703196346
+      }
+    ],
+    "bestfit": [
+      {
+        "target_load_pct": 5,
+        "actual_load_gpus": 6,
+        "actual_load_pct": 5.555555555555555,
+        "jobs_generated": 5,
+        "jobs_placed": 5,
+        "gpus_allocated": 6.0,
+        "utilization_pct": 5.555555555555555,
+        "fragmentation_rate": 0.0
+      },
+      {
+        "target_load_pct": 10,
+        "actual_load_gpus": 11,
+        "actual_load_pct": 10.185185185185185,
+        "jobs_generated": 7,
+        "jobs_placed": 7,
+        "gpus_allocated": 11.0,
+        "utilization_pct": 10.185185185185185,
+        "fragmentation_rate": 0.29455081001472755
+      },
+      {
+        "target_load_pct": 15,
+        "actual_load_gpus": 16,
+        "actual_load_pct": 14.814814814814813,
+        "jobs_generated": 12,
+        "jobs_placed": 12,
+        "gpus_allocated": 16.0,
+        "utilization_pct": 14.814814814814813,
+        "fragmentation_rate": 0.0
+      },
+      {
+        "target_load_pct": 20,
+        "actual_load_gpus": 21,
+        "actual_load_pct": 19.444444444444446,
+        "jobs_generated": 17,
+        "jobs_placed": 17,
+        "gpus_allocated": 21.0,
+        "utilization_pct": 19.444444444444446,
+        "fragmentation_rate": 0.2028397565922921
+      },
+      {
+        "target_load_pct": 25,
+        "actual_load_gpus": 27,
+        "actual_load_pct": 25.0,
+        "jobs_generated": 20,
+        "jobs_placed": 20,
+        "gpus_allocated": 27.0,
+        "utilization_pct": 25.0,
+        "fragmentation_rate": 0.1851851851851852
+      },
+      {
+        "target_load_pct": 30,
+        "actual_load_gpus": 32,
+        "actual_load_pct": 29.629629629629626,
+        "jobs_generated": 22,
+        "jobs_placed": 22,
+        "gpus_allocated": 32.0,
+        "utilization_pct": 29.629629629629626,
+        "fragmentation_rate": 0.0
+      },
+      {
+        "target_load_pct": 35,
+        "actual_load_gpus": 42,
+        "actual_load_pct": 38.88888888888889,
+        "jobs_generated": 25,
+        "jobs_placed": 24,
+        "gpus_allocated": 34.0,
+        "utilization_pct": 31.48148148148148,
+        "fragmentation_rate": 4.324324324324325
+      },
+      {
+        "target_load_pct": 40,
+        "actual_load_gpus": 43,
+        "actual_load_pct": 39.81481481481482,
+        "jobs_generated": 26,
+        "jobs_placed": 25,
+        "gpus_allocated": 35.0,
+        "utilization_pct": 32.407407407407405,
+        "fragmentation_rate": 4.056902002107482
+      },
+      {
+        "target_load_pct": 45,
+        "actual_load_gpus": 49,
+        "actual_load_pct": 45.370370370370374,
+        "jobs_generated": 29,
+        "jobs_placed": 28,
+        "gpus_allocated": 41.0,
+        "utilization_pct": 37.96296296296296,
+        "fragmentation_rate": 4.0658775090066905
+      },
+      {
+        "target_load_pct": 50,
+        "actual_load_gpus": 54,
+        "actual_load_pct": 50.0,
+        "jobs_generated": 31,
+        "jobs_placed": 30,
+        "gpus_allocated": 46.0,
+        "utilization_pct": 42.592592592592595,
+        "fragmentation_rate": 3.7460978147762747
+      },
+      {
+        "target_load_pct": 55,
+        "actual_load_gpus": 65,
+        "actual_load_pct": 60.18518518518518,
+        "jobs_generated": 34,
+        "jobs_placed": 32,
+        "gpus_allocated": 49.0,
+        "utilization_pct": 45.370370370370374,
+        "fragmentation_rate": 6.630109670987039
+      },
+      {
+        "target_load_pct": 60,
+        "actual_load_gpus": 65,
+        "actual_load_pct": 60.18518518518518,
+        "jobs_generated": 34,
+        "jobs_placed": 32,
+        "gpus_allocated": 49.0,
+        "utilization_pct": 45.370370370370374,
+        "fragmentation_rate": 6.630109670987039
+      },
+      {
+        "target_load_pct": 65,
+        "actual_load_gpus": 71,
+        "actual_load_pct": 65.74074074074075,
+        "jobs_generated": 37,
+        "jobs_placed": 35,
+        "gpus_allocated": 55.0,
+        "utilization_pct": 50.92592592592593,
+        "fragmentation_rate": 5.8133605303416624
+      },
+      {
+        "target_load_pct": 70,
+        "actual_load_gpus": 76,
+        "actual_load_pct": 70.37037037037037,
+        "jobs_generated": 39,
+        "jobs_placed": 37,
+        "gpus_allocated": 60.0,
+        "utilization_pct": 55.55555555555556,
+        "fragmentation_rate": 5.128205128205129
+      },
+      {
+        "target_load_pct": 75,
+        "actual_load_gpus": 81,
+        "actual_load_pct": 75.0,
+        "jobs_generated": 43,
+        "jobs_placed": 41,
+        "gpus_allocated": 65.0,
+        "utilization_pct": 60.18518518518518,
+        "fragmentation_rate": 5.78691184424013
+      },
+      {
+        "target_load_pct": 80,
+        "actual_load_gpus": 86,
+        "actual_load_pct": 79.62962962962963,
+        "jobs_generated": 48,
+        "jobs_placed": 46,
+        "gpus_allocated": 70.0,
+        "utilization_pct": 64.81481481481481,
+        "fragmentation_rate": 4.934210526315789
+      },
+      {
+        "target_load_pct": 85,
+        "actual_load_gpus": 91,
+        "actual_load_pct": 84.25925925925925,
+        "jobs_generated": 53,
+        "jobs_placed": 51,
+        "gpus_allocated": 75.0,
+        "utilization_pct": 69.44444444444444,
+        "fragmentation_rate": 4.3453401943967975
+      },
+      {
+        "target_load_pct": 90,
+        "actual_load_gpus": 97,
+        "actual_load_pct": 89.81481481481481,
+        "jobs_generated": 56,
+        "jobs_placed": 54,
+        "gpus_allocated": 81.0,
+        "utilization_pct": 75.0,
+        "fragmentation_rate": 5.158730158730158
+      },
+      {
+        "target_load_pct": 95,
+        "actual_load_gpus": 102,
+        "actual_load_pct": 94.44444444444444,
+        "jobs_generated": 60,
+        "jobs_placed": 58,
+        "gpus_allocated": 86.0,
+        "utilization_pct": 79.62962962962963,
+        "fragmentation_rate": 4.545454545454546
+      },
+      {
+        "target_load_pct": 100,
+        "actual_load_gpus": 110,
+        "actual_load_pct": 101.85185185185186,
+        "jobs_generated": 61,
+        "jobs_placed": 58,
+        "gpus_allocated": 86.0,
+        "utilization_pct": 79.62962962962963,
+        "fragmentation_rate": 6.110283159463488
+      },
+      {
+        "target_load_pct": 105,
+        "actual_load_gpus": 113,
+        "actual_load_pct": 104.62962962962963,
+        "jobs_generated": 64,
+        "jobs_placed": 61,
+        "gpus_allocated": 89.0,
+        "utilization_pct": 82.4074074074074,
+        "fragmentation_rate": 6.661184210526317
+      },
+      {
+        "target_load_pct": 110,
+        "actual_load_gpus": 119,
+        "actual_load_pct": 110.18518518518519,
+        "jobs_generated": 66,
+        "jobs_placed": 63,
+        "gpus_allocated": 95.0,
+        "utilization_pct": 87.96296296296296,
+        "fragmentation_rate": 6.177156177156177
+      },
+      {
+        "target_load_pct": 115,
+        "actual_load_gpus": 124,
+        "actual_load_pct": 114.81481481481481,
+        "jobs_generated": 71,
+        "jobs_placed": 68,
+        "gpus_allocated": 100.0,
+        "utilization_pct": 92.5925925925926,
+        "fragmentation_rate": 4.225352112676056
+      },
+      {
+        "target_load_pct": 120,
+        "actual_load_gpus": 132,
+        "actual_load_pct": 122.22222222222223,
+        "jobs_generated": 73,
+        "jobs_placed": 70,
+        "gpus_allocated": 108.0,
+        "utilization_pct": 100.0,
+        "fragmentation_rate": 0.0
+      }
+    ]
+  }
+}

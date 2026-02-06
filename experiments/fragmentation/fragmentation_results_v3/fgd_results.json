@@ -1,0 +1,4502 @@
+[
+  {
+    "job_index": 0,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 0.9259259259259258,
+    "arrived_workload_pct": 0.9259259259259258,
+    "fragmentation_rate": 6.0429906542056075,
+    "running_jobs": 1
+  },
+  {
+    "job_index": 1,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 1.8518518518518516,
+    "arrived_workload_pct": 1.8518518518518516,
+    "fragmentation_rate": 5.89811320754717,
+    "running_jobs": 2
+  },
+  {
+    "job_index": 2,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 2.7777777777777777,
+    "arrived_workload_pct": 2.7777777777777777,
+    "fragmentation_rate": 5.8342857142857145,
+    "running_jobs": 3
+  },
+  {
+    "job_index": 3,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 3.7037037037037033,
+    "arrived_workload_pct": 3.7037037037037033,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 4
+  },
+  {
+    "job_index": 4,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 5.555555555555555,
+    "arrived_workload_pct": 5.555555555555555,
+    "fragmentation_rate": 5.909803921568628,
+    "running_jobs": 5
+  },
+  {
+    "job_index": 5,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 6.481481481481481,
+    "arrived_workload_pct": 6.481481481481481,
+    "fragmentation_rate": 5.843564356435644,
+    "running_jobs": 6
+  },
+  {
+    "job_index": 6,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 9.25925925925926,
+    "arrived_workload_pct": 9.25925925925926,
+    "fragmentation_rate": 6.1020408163265305,
+    "running_jobs": 6
+  },
+  {
+    "job_index": 7,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 5.853608247422681,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 8,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 5.853608247422681,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 9,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 10,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.098947368421053,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 11,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 12,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 13,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 14,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 5.853608247422681,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 15,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 7.4074074074074066,
+    "arrived_workload_pct": 7.4074074074074066,
+    "fragmentation_rate": 6.232,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 16,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 6.481481481481481,
+    "arrived_workload_pct": 6.481481481481481,
+    "fragmentation_rate": 5.843564356435644,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 17,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 7.4074074074074066,
+    "arrived_workload_pct": 7.4074074074074066,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 18,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 5.853608247422681,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 19,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 5.853608247422681,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 20,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 21,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 22,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 23,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 24,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 25,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.098947368421053,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 26,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.35,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 27,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.098947368421053,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 28,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 29,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 30,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.144827586206897,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 31,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.1720930232558135,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 32,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.1720930232558135,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 33,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.1720930232558135,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 34,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.1720930232558135,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 35,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.1720930232558135,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 36,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 24.074074074074073,
+    "arrived_workload_pct": 24.074074074074073,
+    "fragmentation_rate": 6.199999999999999,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 37,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.1466666666666665,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 38,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 39,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 40,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.518181818181818,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 41,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 42,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 43,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 44,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 45,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 46,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.144827586206897,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 47,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.144827586206897,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 48,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 49,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 50,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 51,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 52,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.449462365591398,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 53,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 54,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 55,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 56,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 57,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.449462365591398,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 58,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 59,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 6.608510638297872,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 60,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 6.608510638297872,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 61,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.544086021505377,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 62,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 6.608510638297872,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 63,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.544086021505377,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 64,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.586516853932585,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 65,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 66,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 67,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 68,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 69,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.1466666666666665,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 70,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 71,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 72,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 23.14814814814815,
+    "arrived_workload_pct": 23.14814814814815,
+    "fragmentation_rate": 6.2771084337349405,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 73,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.804651162790698,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 74,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.972413793103447,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 75,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 7.036363636363636,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 76,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 7.036363636363636,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 77,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.815384615384615,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 78,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 79,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 80,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.586516853932585,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 81,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.751111111111112,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 82,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 83,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.529411764705882,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 84,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 85,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 86,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 87,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 88,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 89,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 90,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 91,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 92,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.478260869565218,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 93,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 94,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 95,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 96,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.478260869565218,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 97,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 98,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.478260869565218,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 99,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.685393258426966,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 100,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 101,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.418181818181817,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 102,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 103,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 104,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 105,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.258333333333334,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 106,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.191578947368421,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 107,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 108,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 9.25925925925926,
+    "arrived_workload_pct": 9.25925925925926,
+    "fragmentation_rate": 6.6571428571428575,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 109,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 9.25925925925926,
+    "arrived_workload_pct": 9.25925925925926,
+    "fragmentation_rate": 6.6571428571428575,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 110,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.916666666666667,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 111,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.916666666666667,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 112,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.258333333333334,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 113,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.191578947368421,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 114,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 115,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 116,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 117,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 118,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 119,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 120,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 121,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 122,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 123,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 124,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 125,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 126,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 127,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.518181818181818,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 128,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.632941176470589,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 129,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.632941176470589,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 130,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.702325581395349,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 131,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.702325581395349,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 132,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 24.074074074074073,
+    "arrived_workload_pct": 24.074074074074073,
+    "fragmentation_rate": 6.75609756097561,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 133,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 6.352380952380952,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 134,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.529411764705882,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 135,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 5.889411764705883,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 136,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 5.889411764705883,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 137,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 138,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 139,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 140,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 141,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 142,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 143,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 5.889411764705883,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 144,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 145,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 146,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 147,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.518181818181818,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 148,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.586516853932585,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 149,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 6.608510638297872,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 150,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.7642105263157895,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 151,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.7642105263157895,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 152,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 9.25925925925926,
+    "arrived_workload_pct": 9.25925925925926,
+    "fragmentation_rate": 6.56734693877551,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 153,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 6.505154639175258,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 154,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.258333333333334,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 155,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.258333333333334,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 156,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.191578947368421,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 157,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 158,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 159,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 160,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.191578947368421,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 161,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 162,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 163,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 164,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 165,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 166,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 167,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.586516853932585,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 168,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 169,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 6.608510638297872,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 170,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 171,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 172,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 173,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.1466666666666665,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 174,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.518181818181818,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 175,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 176,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 177,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 178,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 179,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 180,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 181,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 182,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 183,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 184,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 185,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 186,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 187,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 188,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 189,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 190,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 191,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 192,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 193,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 5.889411764705883,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 194,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 195,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 5.6,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 196,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 5.6,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 197,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 5.6,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 198,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 199,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.529411764705882,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 200,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.529411764705882,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 201,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 25.0,
+    "arrived_workload_pct": 25.0,
+    "fragmentation_rate": 6.57530864197531,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 202,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 25.0,
+    "arrived_workload_pct": 25.0,
+    "fragmentation_rate": 6.57530864197531,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 203,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.529411764705882,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 204,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 6.352380952380952,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 205,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 6.352380952380952,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 206,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 6.352380952380952,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 207,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 23.14814814814815,
+    "arrived_workload_pct": 23.14814814814815,
+    "fragmentation_rate": 6.2771084337349405,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 208,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.632941176470589,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 209,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.804651162790698,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 210,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.449462365591398,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 211,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.098947368421053,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 212,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 213,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 214,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 215,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.191578947368421,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 216,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 217,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 218,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 219,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.258333333333334,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 220,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 7.4074074074074066,
+    "arrived_workload_pct": 7.4074074074074066,
+    "fragmentation_rate": 6.232,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 221,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 7.4074074074074066,
+    "arrived_workload_pct": 7.4074074074074066,
+    "fragmentation_rate": 6.232,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 222,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 8.333333333333332,
+    "arrived_workload_pct": 8.333333333333332,
+    "fragmentation_rate": 6.167676767676768,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 223,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 9.25925925925926,
+    "arrived_workload_pct": 9.25925925925926,
+    "fragmentation_rate": 6.1020408163265305,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 224,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 5.853608247422681,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 225,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 5.853608247422681,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 226,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 227,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 228,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 229,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.191578947368421,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 230,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 231,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 232,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 233,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 234,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 235,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 236,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 237,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 238,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 239,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 240,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.144827586206897,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 241,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 242,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 243,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 6.352380952380952,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 244,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 245,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 246,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 247,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.382608695652174,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 248,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.382608695652174,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 249,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.098947368421053,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 250,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.35,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 251,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.376842105263157,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 252,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.35,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 253,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.35,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 254,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.35,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 255,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 9.25925925925926,
+    "arrived_workload_pct": 9.25925925925926,
+    "fragmentation_rate": 6.1020408163265305,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 256,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 9.25925925925926,
+    "arrived_workload_pct": 9.25925925925926,
+    "fragmentation_rate": 5.922448979591837,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 257,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 8.333333333333332,
+    "arrived_workload_pct": 8.333333333333332,
+    "fragmentation_rate": 6.167676767676768,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 258,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 7.4074074074074066,
+    "arrived_workload_pct": 7.4074074074074066,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 259,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 5.853608247422681,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 260,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 261,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 262,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 263,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.144827586206897,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 264,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.804651162790698,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 265,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.702325581395349,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 266,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 267,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 268,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 269,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 270,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.529411764705882,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 271,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 6.352380952380952,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 272,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 23.14814814814815,
+    "arrived_workload_pct": 23.14814814814815,
+    "fragmentation_rate": 6.2771084337349405,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 273,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 26.851851851851855,
+    "arrived_workload_pct": 26.851851851851855,
+    "fragmentation_rate": 6.31139240506329,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 274,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 26.851851851851855,
+    "arrived_workload_pct": 26.851851851851855,
+    "fragmentation_rate": 6.199999999999999,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 275,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 26.851851851851855,
+    "arrived_workload_pct": 26.851851851851855,
+    "fragmentation_rate": 6.199999999999999,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 276,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 24.074074074074073,
+    "arrived_workload_pct": 24.074074074074073,
+    "fragmentation_rate": 5.9853658536585375,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 277,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 23.14814814814815,
+    "arrived_workload_pct": 23.14814814814815,
+    "fragmentation_rate": 6.2771084337349405,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 278,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 279,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 280,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 281,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 282,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 283,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 284,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.35,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 285,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.449462365591398,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 286,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 287,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 288,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 289,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.815384615384615,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 290,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.815384615384615,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 291,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 292,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 293,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 294,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 295,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 296,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 297,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 298,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 299,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 300,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.586516853932585,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 301,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.586516853932585,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 302,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.518181818181818,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 303,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 304,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 305,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 306,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 307,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.529411764705882,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 308,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 23.14814814814815,
+    "arrived_workload_pct": 23.14814814814815,
+    "fragmentation_rate": 6.171084337349397,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 309,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 26.851851851851855,
+    "arrived_workload_pct": 26.851851851851855,
+    "fragmentation_rate": 6.199999999999999,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 310,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 25.925925925925924,
+    "arrived_workload_pct": 25.925925925925924,
+    "fragmentation_rate": 6.5,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 311,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 25.925925925925924,
+    "arrived_workload_pct": 25.925925925925924,
+    "fragmentation_rate": 6.39,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 312,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 25.0,
+    "arrived_workload_pct": 25.0,
+    "fragmentation_rate": 6.57530864197531,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 313,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 25.0,
+    "arrived_workload_pct": 25.0,
+    "fragmentation_rate": 6.57530864197531,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 314,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 26.851851851851855,
+    "arrived_workload_pct": 26.851851851851855,
+    "fragmentation_rate": 6.199999999999999,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 315,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 316,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 317,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 318,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 319,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 5.889411764705883,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 320,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 25.0,
+    "arrived_workload_pct": 25.0,
+    "fragmentation_rate": 5.903703703703704,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 321,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 6.561904761904762,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 322,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 25.0,
+    "arrived_workload_pct": 25.0,
+    "fragmentation_rate": 6.68395061728395,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 323,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 27.77777777777778,
+    "arrived_workload_pct": 27.77777777777778,
+    "fragmentation_rate": 6.9282051282051285,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 324,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 26.851851851851855,
+    "arrived_workload_pct": 26.851851851851855,
+    "fragmentation_rate": 6.199999999999999,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 325,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 25.0,
+    "arrived_workload_pct": 25.0,
+    "fragmentation_rate": 5.903703703703704,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 326,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 327,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 23.14814814814815,
+    "arrived_workload_pct": 23.14814814814815,
+    "fragmentation_rate": 6.2771084337349405,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 328,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 23.14814814814815,
+    "arrived_workload_pct": 23.14814814814815,
+    "fragmentation_rate": 6.2771084337349405,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 329,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 23.14814814814815,
+    "arrived_workload_pct": 23.14814814814815,
+    "fragmentation_rate": 6.2771084337349405,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 330,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 26.851851851851855,
+    "arrived_workload_pct": 26.851851851851855,
+    "fragmentation_rate": 6.31139240506329,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 331,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 27.77777777777778,
+    "arrived_workload_pct": 27.77777777777778,
+    "fragmentation_rate": 6.005128205128205,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 332,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 29.629629629629626,
+    "arrived_workload_pct": 29.629629629629626,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 333,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 25.925925925925924,
+    "arrived_workload_pct": 25.925925925925924,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 334,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 25.0,
+    "arrived_workload_pct": 25.0,
+    "fragmentation_rate": 5.903703703703704,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 335,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 27.77777777777778,
+    "arrived_workload_pct": 27.77777777777778,
+    "fragmentation_rate": 6.230769230769232,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 336,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 25.0,
+    "arrived_workload_pct": 25.0,
+    "fragmentation_rate": 5.903703703703704,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 337,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 28.703703703703702,
+    "arrived_workload_pct": 28.703703703703702,
+    "fragmentation_rate": 5.91948051948052,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 338,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 29.629629629629626,
+    "arrived_workload_pct": 29.629629629629626,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 339,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 26.851851851851855,
+    "arrived_workload_pct": 26.851851851851855,
+    "fragmentation_rate": 6.199999999999999,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 340,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 28.703703703703702,
+    "arrived_workload_pct": 28.703703703703702,
+    "fragmentation_rate": 5.91948051948052,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 341,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 29.629629629629626,
+    "arrived_workload_pct": 29.629629629629626,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 342,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 23.14814814814815,
+    "arrived_workload_pct": 23.14814814814815,
+    "fragmentation_rate": 6.171084337349397,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 343,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.702325581395349,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 344,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.632941176470589,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 345,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.804651162790698,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 346,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.751111111111112,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 347,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.815384615384615,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 348,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 349,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 350,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 7.129032258064516,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 351,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.916666666666667,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 352,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.973913043478261,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 353,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.973913043478261,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 354,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 7.129032258064516,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 355,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.973913043478261,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 356,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.973913043478261,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 357,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.912087912087912,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 358,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 359,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.098947368421053,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 360,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 361,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 362,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 363,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.098947368421053,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 364,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 365,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 366,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 367,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 368,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 369,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.478260869565218,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 370,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 371,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 372,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 373,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 374,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 375,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.518181818181818,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 376,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 6.608510638297872,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 377,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.544086021505377,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 378,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.544086021505377,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 379,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.751111111111112,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 380,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.418181818181817,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 381,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.418181818181817,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 382,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 383,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.815384615384615,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 384,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 385,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.544086021505377,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 386,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 387,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 6.608510638297872,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 388,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 7.129032258064516,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 389,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.7642105263157895,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 390,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.815384615384615,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 391,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.815384615384615,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 392,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 393,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 394,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.586516853932585,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 395,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 396,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 397,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 398,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.751111111111112,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 399,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 6.653333333333333,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 400,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.586516853932585,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 401,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 402,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.449462365591398,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 403,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 404,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 405,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 406,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 407,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.144827586206897,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 408,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 409,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 410,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 411,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 5.889411764705883,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 412,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 413,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 414,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 415,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 416,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 5.889411764705883,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 417,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 418,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 6.529411764705882,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 419,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.702325581395349,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 420,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.586516853932585,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 421,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 422,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 19.444444444444446,
+    "arrived_workload_pct": 19.444444444444446,
+    "fragmentation_rate": 6.245977011494253,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 423,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 424,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 425,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 426,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 427,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 428,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.217582417582418,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 429,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 430,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 431,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 432,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 433,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 434,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 435,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 436,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 437,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 438,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 439,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.418181818181817,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 440,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 6.487640449438202,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 441,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 7.069565217391305,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 442,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 6.608510638297872,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 443,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 11.11111111111111,
+    "arrived_workload_pct": 11.11111111111111,
+    "fragmentation_rate": 6.258333333333334,
+    "running_jobs": 6
+  },
+  {
+    "job_index": 444,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 445,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 7
+  },
+  {
+    "job_index": 446,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 8
+  },
+  {
+    "job_index": 447,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 448,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 449,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 21.296296296296298,
+    "arrived_workload_pct": 21.296296296296298,
+    "fragmentation_rate": 5.889411764705883,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 450,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 25.0,
+    "arrived_workload_pct": 25.0,
+    "fragmentation_rate": 5.903703703703704,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 451,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 26.851851851851855,
+    "arrived_workload_pct": 26.851851851851855,
+    "fragmentation_rate": 6.31139240506329,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 452,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 27.77777777777778,
+    "arrived_workload_pct": 27.77777777777778,
+    "fragmentation_rate": 6.005128205128205,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 453,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 27.77777777777778,
+    "arrived_workload_pct": 27.77777777777778,
+    "fragmentation_rate": 6.005128205128205,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 454,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 27.77777777777778,
+    "arrived_workload_pct": 27.77777777777778,
+    "fragmentation_rate": 6.005128205128205,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 455,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 28.703703703703702,
+    "arrived_workload_pct": 28.703703703703702,
+    "fragmentation_rate": 5.91948051948052,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 456,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 30.555555555555557,
+    "arrived_workload_pct": 30.555555555555557,
+    "fragmentation_rate": 6.349333333333335,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 457,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 24.074074074074073,
+    "arrived_workload_pct": 24.074074074074073,
+    "fragmentation_rate": 5.9853658536585375,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 458,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 459,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 16.666666666666664,
+    "arrived_workload_pct": 16.666666666666664,
+    "fragmentation_rate": 5.9511111111111115,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 460,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 461,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 462,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 463,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 464,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 465,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.191578947368421,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 466,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 467,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 468,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 6.12340425531915,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 469,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.037037037037036,
+    "arrived_workload_pct": 12.037037037037036,
+    "fragmentation_rate": 6.191578947368421,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 470,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 12.962962962962962,
+    "arrived_workload_pct": 12.962962962962962,
+    "fragmentation_rate": 5.9361702127659575,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 471,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 5.864516129032258,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 472,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 473,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 5.6000000000000005,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 474,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 16
+  },
+  {
+    "job_index": 475,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.418181818181817,
+    "running_jobs": 16
+  },
+  {
+    "job_index": 476,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.418181818181817,
+    "running_jobs": 16
+  },
+  {
+    "job_index": 477,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.418181818181817,
+    "running_jobs": 16
+  },
+  {
+    "job_index": 478,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 22.22222222222222,
+    "arrived_workload_pct": 22.22222222222222,
+    "fragmentation_rate": 6.457142857142857,
+    "running_jobs": 17
+  },
+  {
+    "job_index": 479,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 23.14814814814815,
+    "arrived_workload_pct": 23.14814814814815,
+    "fragmentation_rate": 6.489156626506025,
+    "running_jobs": 17
+  },
+  {
+    "job_index": 480,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 24.074074074074073,
+    "arrived_workload_pct": 24.074074074074073,
+    "fragmentation_rate": 6.199999999999999,
+    "running_jobs": 18
+  },
+  {
+    "job_index": 481,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 482,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 15
+  },
+  {
+    "job_index": 483,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 17.59259259259259,
+    "arrived_workload_pct": 17.59259259259259,
+    "fragmentation_rate": 5.876404494382023,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 484,
+    "gpu_request": 4,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.1720930232558135,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 485,
+    "gpu_request": 8,
+    "placed": false,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 6.1720930232558135,
+    "running_jobs": 14
+  },
+  {
+    "job_index": 486,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 18.51851851851852,
+    "arrived_workload_pct": 18.51851851851852,
+    "fragmentation_rate": 6.318181818181818,
+    "running_jobs": 12
+  },
+  {
+    "job_index": 487,
+    "gpu_request": 2,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 488,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 489,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 490,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 20.37037037037037,
+    "arrived_workload_pct": 20.37037037037037,
+    "fragmentation_rate": 5.967441860465116,
+    "running_jobs": 13
+  },
+  {
+    "job_index": 491,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 15.74074074074074,
+    "arrived_workload_pct": 15.74074074074074,
+    "fragmentation_rate": 6.120879120879121,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 492,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 493,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 14.814814814814813,
+    "arrived_workload_pct": 14.814814814814813,
+    "fragmentation_rate": 6.28695652173913,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 494,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.544086021505377,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 495,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 13.88888888888889,
+    "arrived_workload_pct": 13.88888888888889,
+    "fragmentation_rate": 6.449462365591398,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 496,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 8.333333333333332,
+    "arrived_workload_pct": 8.333333333333332,
+    "fragmentation_rate": 6.717171717171717,
+    "running_jobs": 9
+  },
+  {
+    "job_index": 497,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 9.25925925925926,
+    "arrived_workload_pct": 9.25925925925926,
+    "fragmentation_rate": 6.56734693877551,
+    "running_jobs": 10
+  },
+  {
+    "job_index": 498,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 6.505154639175258,
+    "running_jobs": 11
+  },
+  {
+    "job_index": 499,
+    "gpu_request": 1,
+    "placed": true,
+    "utilization_pct": 10.185185185185185,
+    "arrived_workload_pct": 10.185185185185185,
+    "fragmentation_rate": 6.414432989690722,
+    "running_jobs": 11
+  }
+]

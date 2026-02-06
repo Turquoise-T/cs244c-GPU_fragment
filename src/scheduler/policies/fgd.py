@@ -138,6 +138,31 @@ class FGDPolicy(Policy):
         self._name = 'FGD'
         self._node_config = node_config or {}
         self._default_gpus_per_node = 1
+        # Track state for fragmentation metrics
+        self._last_nodes = None
+        self._last_workload = None
+        self._last_fragmentation_rate = 0.0
+
+    # ----- fragmentation metrics -------------------------------------------
+
+    def get_fragmentation_rate(self, nodes=None, workload=None):
+        """Return fragmentation rate as percentage (0-100).
+
+        If nodes/workload not provided, uses the state from last get_allocation() call.
+        """
+        if nodes is None:
+            nodes = self._last_nodes
+        if workload is None:
+            workload = self._last_workload
+        if nodes is None or workload is None:
+            return 0.0
+
+        total_frag = sum(
+            FragmentationCalculator.node_fragmentation_for_workload(n, workload)
+            for n in nodes
+        )
+        total_capacity = sum(sum(n.gpu_capacities) for n in nodes)
+        return (total_frag / total_capacity) * 100 if total_capacity > 0 else 0.0
 
     # ----- virtual cluster construction ------------------------------------
 
@@ -257,6 +282,11 @@ class FGDPolicy(Policy):
         # 3. Run FGD greedy placement
         placements = self._run_placement(nodes, workload, job_ids,
                                          scale_factors)
+
+        # Store state for fragmentation metrics
+        self._last_nodes = nodes
+        self._last_workload = workload
+        self._last_fragmentation_rate = self.get_fragmentation_rate(nodes, workload)
 
         # 4. Convert placements to Gavel allocation fractions
         allocation = {}

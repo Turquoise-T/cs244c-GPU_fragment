@@ -13,7 +13,7 @@ from job import Job
 from job_table import JobTable
 from policies import allox, fgd, fifo, finish_time_fairness, gandiva, \
     isolated, max_min_fairness, max_min_fairness_water_filling, \
-    max_sum_throughput, min_total_duration
+    max_sum_throughput, min_total_duration, placement_baselines
 
 def _generate_scale_factor(rng):
     # Sample the scale factor from the Philly distribution.
@@ -219,6 +219,8 @@ def get_available_policies():
             'min_total_duration_perf',
             'min_total_duration_packed',
             'fgd',
+            'random',
+            'bestfit',
             ]
 
 def read_per_instance_type_spot_prices_aws(directory):
@@ -502,6 +504,22 @@ def get_policy(policy_name, solver=None, seed=None,
             wt, count = part.split('=')
             node_config[wt] = int(count)
         policy = fgd.FGDPolicy(node_config=node_config)
+    elif policy_name == 'random':
+        policy = placement_baselines.RandomPolicy(seed=seed)
+    elif policy_name.startswith('random_'):
+        node_config = {}
+        for part in policy_name.split('_')[1:]:
+            wt, count = part.split('=')
+            node_config[wt] = int(count)
+        policy = placement_baselines.RandomPolicy(node_config=node_config, seed=seed)
+    elif policy_name == 'bestfit':
+        policy = placement_baselines.BestFitPolicy(seed=seed)
+    elif policy_name.startswith('bestfit_'):
+        node_config = {}
+        for part in policy_name.split('_')[1:]:
+            wt, count = part.split('=')
+            node_config[wt] = int(count)
+        policy = placement_baselines.BestFitPolicy(node_config=node_config, seed=seed)
     else:
         raise ValueError('Unknown policy!')
     return policy
