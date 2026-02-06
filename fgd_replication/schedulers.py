@@ -12,9 +12,10 @@ Implements 6 scheduling policies from the FGD paper (Section 6.1):
 
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
+from collections import deque, Counter
 import random
 
-from simulator import Task, Node, Cluster
+from simulator import Task, Node, Cluster, TaskDistribution
 
 
 class Scheduler(ABC):
@@ -354,6 +355,102 @@ class FGDScheduler(Scheduler):
             self._pool.close()
             self._pool.join()
             self._pool = None
+
+
+class WindowedFGDScheduler(FGDScheduler):
+    """
+    Distribution-shift-aware FGD using a sliding window.
+
+    Instead of using the global task distribution (which assumes perfect
+    future knowledge), this variant estimates the distribution online
+    from the last `window_size` tasks observed.
+
+    This addresses FGD's key assumption: that the task popularity
+    distribution is known in advance. In production, distributions
+    shift over time, so a sliding window provides a more realistic
+    and adaptive estimate.
+    """
+
+    def __init__(self, window_size: int = 500, num_workers: int = None):
+        super().__init__(num_workers=num_workers)
+        self.name = f"W-FGD-{window_size}"
+        self.window_size = window_size
+        self._window: deque = deque(maxlen=window_size)
+        self._cached_task_types = None
+        self._cache_dirty = True
+
+    def observe_task(self, task: Task):
+        """Record a task into the sliding window"""
+        gpu_rounded = round(task.gpu_demand, 2)
+        cpu_bucket = round(task.cpu_demand / 4) * 4
+        self._window.append((cpu_bucket, gpu_rounded))
+        self._cache_dirty = True
+
+    def _get_windowed_task_types(self) -> List[Tuple[Tuple[float, float], float]]:
+        """Compute task distribution from the sliding window"""
+        if not self._cache_dirty and self._cached_task_types is not None:
+            return self._cached_task_types
+
+        if not self._window:
+            return []
+
+        counts = Counter(self._window)
+        total = sum(counts.values())
+        self._cached_task_types = [
+            ((cpu, gpu), count / total) for (cpu, gpu), count in counts.items()
+        ]
+        self._cache_dirty = False
+        return self._cached_task_types
+
+    def select_node(self, task: Task, cluster: Cluster) -> Optional[int]:
+        eligible = cluster.get_eligible_nodes(task)
+        if not eligible:
+            return None
+
+        # Use windowed distribution instead of global
+        task_types = self._get_windowed_task_types()
+
+        # Fall back to global distribution if window is empty
+        if not task_types:
+            if cluster.task_distribution is not None:
+                task_types = cluster.task_distribution.get_task_types()
+            else:
+                return BestFitScheduler().select_node(task, cluster)
+
+        # Prepare arguments for parallel workers
+        args_list = [
+            (
+                node.node_id,
+                node.remaining_cpu,
+                tuple(node.gpu_remaining),
+                node.num_gpus,
+                node.total_cpu,
+                task.cpu_demand,
+                task.gpu_demand,
+                task_types
+            )
+            for node in eligible
+        ]
+
+        # Parallel execution
+        pool = self._get_pool()
+        results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
+
+        # Find best node
+        best_node_id = None
+        best_delta = float('inf')
+        for node_id, delta in results:
+            if delta < best_delta:
+                best_delta = delta
+                best_node_id = node_id
+
+        return best_node_id
+
+    def reset(self):
+        """Reset the sliding window"""
+        self._window.clear()
+        self._cached_task_types = None
+        self._cache_dirty = True
 
 
 def get_scheduler(name: str) -> Scheduler:
