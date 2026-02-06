@@ -27,6 +27,54 @@ def _generate_scale_factor(rng):
         scale_factor = 8
     return scale_factor
 
+
+def _generate_scale_factor_fragmentation_friendly(rng):
+    """Alibaba-like mix: many small jobs (1–2 GPU), some 4-GPU.
+    Creates fragmentation on 4-GPU-per-server clusters so FGD vs strided shows difference.
+    ~55% 1-GPU, ~30% 2-GPU, ~15% 4-GPU (no 8 to avoid always filling 2 servers)."""
+    r = rng.uniform(0, 1)
+    if r < 0.55:
+        return 1
+    if r < 0.85:
+        return 2
+    return 4
+
+
+def _generate_gpu_milli_sharing(rng):
+    """Generate fractional GPU requests (gpu_milli) for GPU sharing workloads.
+
+    Alibaba-like distribution: mix of small and large GPU fractions.
+    Returns gpu_milli value (0-1000, where 1000 = 1.0 GPU).
+
+    Distribution:
+      ~20% request 200 milli (0.2 GPU)
+      ~20% request 300 milli (0.3 GPU)
+      ~25% request 500 milli (0.5 GPU)
+      ~15% request 700 milli (0.7 GPU)
+      ~20% request 1000 milli (1.0 full GPU)
+    """
+    r = rng.uniform(0, 1)
+    if r < 0.20:
+        return 200
+    elif r < 0.40:
+        return 300
+    elif r < 0.65:
+        return 500
+    elif r < 0.80:
+        return 700
+    else:
+        return 1000
+
+
+def format_job_for_print(job, index=None):
+    """Return a short readable string for one job (for debugging/samples)."""
+    prefix = "" if index is None else f"[{index}] "
+    return (
+        f"{prefix}job_type={job.job_type!r} scale_factor={job.scale_factor} "
+        f"total_steps={job.total_steps} priority={job.priority_weight} "
+        f"gpu_milli={getattr(job, 'gpu_milli', job.scale_factor * 1000)}"
+    )
+
 def _generate_duration(rng):
     # Sample the job duration from the Philly distribution.
     if rng.random() >= 0.8:
@@ -42,7 +90,8 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
                  scale_factor_generator_func=_generate_scale_factor,
                  duration_generator_func=_generate_duration,
                  scale_factor_rng=None, duration_rng=None, SLO_rng=None,
-                 always_generate_scale_factor=True):
+                 always_generate_scale_factor=True,
+                 gpu_milli_generator_func=None):
     """Generates a new job.
 
        Args:
@@ -66,6 +115,10 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
          always_generate_scale_factor: If set, generate a scale factor
                                        regardless of whether user has
                                        requested multi-GPU jobs.
+         gpu_milli_generator_func: If set, a function that accepts an RNG and
+                                   returns a gpu_milli value (0-1000) for
+                                   fractional GPU sharing. Fractional jobs
+                                   (gpu_milli < 1000) get scale_factor=1.
       Returns:
         The generated Job.
     """
@@ -76,6 +129,11 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
         scale_factor_rng = rng
     if duration_rng is None:
         duration_rng = rng
+
+    # Generate gpu_milli for GPU sharing mode
+    gpu_milli_value = None
+    if gpu_milli_generator_func is not None:
+        gpu_milli_value = gpu_milli_generator_func(rng)
 
     job_template = None
 
@@ -96,6 +154,11 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
         run_time = duration_generator_func(duration_rng)
     if not generate_multi_gpu_jobs:
         scale_factor = 1
+
+    # For GPU sharing: fractional jobs (gpu_milli < 1000) always use scale_factor=1
+    if gpu_milli_value is not None and gpu_milli_value < 1000:
+        scale_factor = 1
+
     assert(run_time > 0)
     assert(scale_factor >= 1 and scale_factor <= 8)
 
@@ -150,7 +213,8 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
               scale_factor=scale_factor,
               priority_weight=priority_weight,
               SLO=SLO,
-              needs_data_dir=job_template.needs_data_dir)
+              needs_data_dir=job_template.needs_data_dir,
+              gpu_milli=gpu_milli_value)
 
     return job
 

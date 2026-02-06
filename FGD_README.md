@@ -195,7 +195,44 @@ FGD strategy (minimize fragmentation):
   → Goal: keep remaining free space contiguous
 ```
 
-**Note**: For whole-GPU workloads, both strategies behave similarly. FGD's main advantage is in **fractional GPU (GPU sharing)** scenarios.
+**Note**: For whole-GPU workloads, both strategies produce **identical results** (same JCT, utilization, makespan). This is because Gavel's time-slicing model assigns each GPU exclusively to one job per round — there is no "fragmented free space" for FGD to optimize. FGD's advantage only appears with **fractional GPU sharing** (multiple jobs sharing one physical GPU simultaneously).
+
+### Why Strided and FGD produce the same results in Gavel
+
+In Gavel's round-based time-slicing model:
+1. Each GPU is assigned to **exactly one job** per round (whole-GPU, exclusive).
+2. The **Allocation Policy** (FIFO, MaxMinFairness, etc.) decides which jobs run and for what fraction of time.
+3. The **Placement Strategy** (strided/FGD) only decides **which physical GPU** a job gets — but since each GPU runs exactly one job, there is no fragmentation to optimize.
+
+To see a difference between FGD and strided, you need **GPU spatial sharing** (multiple jobs running concurrently on the same GPU with fractional requests). Use the standalone GPU sharing simulator (`simulate_gpu_sharing.py`) for this.
+
+### Job Mix Options
+
+The `--job-mix` flag controls the scale factor distribution of generated jobs:
+
+| Mix | Distribution | Use case |
+|-----|-------------|----------|
+| `default` | 70% 1-GPU, 10% 2-GPU, 15% 4-GPU, 5% 8-GPU (Philly) | Standard Gavel experiments |
+| `fragmentation` | 55% 1-GPU, 30% 2-GPU, 15% 4-GPU (Alibaba-like) | More diverse sizes to stress placement |
+
+```bash
+# Print sample jobs to see the mix
+cd src/scheduler
+python scripts/print_sample_jobs.py -n 20 --mix both
+
+# Run comparison with fragmentation-friendly mix
+python scripts/sweeps/run_sweep_static.py \
+    --cluster-spec 16:0:0 --num_gpus_per_server 4:4:4 \
+    --policies fifo --seeds 0 -a 100 -b 100 -n 1 \
+    --job-mix fragmentation --generate-multi-gpu-jobs \
+    --placement-strategy strided -l /tmp/compare/strided -v
+
+python scripts/sweeps/run_sweep_static.py \
+    --cluster-spec 16:0:0 --num_gpus_per_server 4:4:4 \
+    --policies fifo --seeds 0 -a 100 -b 100 -n 1 \
+    --job-mix fragmentation --generate-multi-gpu-jobs \
+    --placement-strategy fgd -l /tmp/compare/fgd -v
+```
 
 ---
 

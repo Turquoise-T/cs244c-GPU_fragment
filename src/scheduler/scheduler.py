@@ -545,6 +545,7 @@ class Scheduler:
                 'total_steps': job.total_steps,
                 'arrival_time': timestamp,
                 'sim_time': self._current_timestamp,
+                'gpu_milli': job.gpu_milli,
             }
             self._logger.info('EVENT ' + json.dumps(arrival_event))
             self._scheduler_cv.notifyAll()
@@ -779,13 +780,31 @@ class Scheduler:
                     deficit=deficits[worker_type][job_id],
                     allocation=allocation_str))
         num_workers_assigned = {}
-        for job_id, worker_ids in self._current_worker_assignments.items():
-            if not self._simulate and job_id in completed_jobs:
-                continue
-            worker_type = self._worker_id_to_worker_type_mapping[worker_ids[0]]
-            if worker_type not in num_workers_assigned:
-                num_workers_assigned[worker_type] = 0
-            num_workers_assigned[worker_type] += len(worker_ids)
+        if self._gpu_sharing_mode:
+            # GPU sharing: count unique worker IDs (not duplicates)
+            workers_in_use = {}  # worker_type -> set of worker_ids
+            for job_id, worker_ids in \
+                    self._current_worker_assignments.items():
+                if not self._simulate and job_id in completed_jobs:
+                    continue
+                wt = self._worker_id_to_worker_type_mapping[worker_ids[0]]
+                if wt not in workers_in_use:
+                    workers_in_use[wt] = set()
+                for wid in worker_ids:
+                    workers_in_use[wt].add(wid)
+            for wt in worker_types:
+                num_workers_assigned[wt] = len(
+                    workers_in_use.get(wt, set()))
+        else:
+            for job_id, worker_ids in \
+                    self._current_worker_assignments.items():
+                if not self._simulate and job_id in completed_jobs:
+                    continue
+                worker_type = \
+                    self._worker_id_to_worker_type_mapping[worker_ids[0]]
+                if worker_type not in num_workers_assigned:
+                    num_workers_assigned[worker_type] = 0
+                num_workers_assigned[worker_type] += len(worker_ids)
         for worker_type in worker_types:
             if worker_type not in num_workers_assigned:
                 num_workers_assigned[worker_type] = 0
@@ -865,6 +884,85 @@ class Scheduler:
         worker_assignments[job_id] = tuple(worker_ids_for_job)
         worker_state['server_id_ptr'] = server_id_ptr
 
+    def _assign_workers_to_job_gpu_sharing(self, job_id, gpu_milli,
+                                           worker_type, worker_state,
+                                           worker_assignments):
+        """GPU sharing worker assignment.
+
+        Places a fractional-GPU job on a physical GPU that has enough
+        remaining capacity.  Dispatches to FGD (fragmentation-minimizing)
+        or first-fit (strided fallback) depending on placement_strategy.
+        """
+        worker_ids = worker_state['worker_ids']
+        worker_cap = worker_state['worker_capacity_used']
+
+        if self._placement_strategy == 'fgd':
+            # Build GPUState objects from current capacity state
+            from policies.fgd import GPUState, fgd_select_gpu
+            gpu_states = []
+            # Flatten all worker_ids and build GPU states
+            all_worker_ids_flat = []
+            for server_id, server_workers in enumerate(worker_ids):
+                for wid in server_workers:
+                    all_worker_ids_flat.append(wid)
+            # Build GPUState for each worker
+            gpu_state_map = {}  # worker_id -> GPUState
+            for idx, wid in enumerate(all_worker_ids_flat):
+                server_id = idx // max(
+                    1, len(all_worker_ids_flat) // len(worker_ids))
+                used = worker_cap.get(wid, 0)
+                gs = GPUState(
+                    gpu_id=wid,
+                    server_id=server_id,
+                    total_milli=1000,
+                    used_milli=used,
+                    job_assignments=[]
+                )
+                gpu_states.append(gs)
+                gpu_state_map[wid] = gs
+
+            selected_id = fgd_select_gpu(gpu_states, gpu_milli)
+            if selected_id is not None:
+                worker_cap[selected_id] = \
+                    worker_cap.get(selected_id, 0) + gpu_milli
+                worker_state['assigned_worker_ids'].add(selected_id)
+                worker_assignments[job_id] = (selected_id,)
+                return
+
+        # Strided / worst-fit fallback: spread jobs across GPUs (like
+        # original strided which uses different servers for different jobs).
+        # This creates more fragmentation than FGD, which packs tightly.
+        best_wid = None
+        best_remaining = -1
+        for server_workers in worker_ids:
+            for wid in server_workers:
+                remaining = 1000 - worker_cap.get(wid, 0)
+                if remaining >= gpu_milli and remaining > best_remaining:
+                    best_remaining = remaining
+                    best_wid = wid
+        if best_wid is not None:
+            worker_cap[best_wid] = \
+                worker_cap.get(best_wid, 0) + gpu_milli
+            worker_state['assigned_worker_ids'].add(best_wid)
+            worker_assignments[job_id] = (best_wid,)
+            return
+
+        # Could not place job (fragmentation issue - total capacity may be
+        # enough but no single GPU has enough free space)
+        self._logger.warn(
+            'GPU sharing: Could not place job {job_id} '
+            '(needs {milli} milli) due to fragmentation'.format(
+                job_id=job_id, milli=gpu_milli))
+        return
+
+    def _finalize_gpu_sharing_assignment(self, job_id):
+        """Update timestamps and running jobs set after GPU sharing placement."""
+        for single_job_id in job_id.singletons():
+            if self._simulate:
+                self._per_job_latest_timestamps[single_job_id] = \
+                    self.get_current_timestamp()
+                self._running_jobs.add(single_job_id)
+
     def _assign_workers_to_job_fgd(self, job_id, scale_factor, worker_type,
                                    worker_state, worker_assignments):
         """FGD (Fragmentation Gradient Descent) worker assignment.
@@ -914,10 +1012,14 @@ class Scheduler:
         scheduled_jobs = {}
 
         num_workers_left = {}
+        # GPU sharing: track capacity in milli units (1 GPU = 1000 milli)
+        num_milli_left = {}
         for worker_type in worker_types:
             scheduled_jobs[worker_type] = []
             num_workers = self._cluster_spec[worker_type]
             num_workers_left[worker_type] = num_workers
+            if self._gpu_sharing_mode:
+                num_milli_left[worker_type] = num_workers * 1000
 
         sorted_job_queue = []
         for worker_type in worker_types:
@@ -978,13 +1080,25 @@ class Scheduler:
                     continue
             else:
                 scale_factor = self._jobs[job_id].scale_factor
-            if scale_factor > num_workers_left[worker_type]:
-                continue
-            num_workers_left[worker_type] -= scale_factor
+
+            if self._gpu_sharing_mode:
+                # GPU sharing: check capacity in milli units
+                gpu_milli = self._jobs[job_id.singletons()[0]].gpu_milli
+                if gpu_milli > num_milli_left[worker_type]:
+                    continue
+                num_milli_left[worker_type] -= gpu_milli
+                # In sharing mode, scale_factor for placement = 1 for
+                # fractional jobs (they occupy 1 physical GPU)
+                effective_scale = 1 if gpu_milli <= 1000 else scale_factor
+            else:
+                if scale_factor > num_workers_left[worker_type]:
+                    continue
+                num_workers_left[worker_type] -= scale_factor
+                effective_scale = scale_factor
 
             for single_job_id in job_id.singletons():
                 already_scheduled_jobs.add(single_job_id)
-            scheduled_jobs[worker_type].append((job_id, scale_factor))
+            scheduled_jobs[worker_type].append((job_id, effective_scale))
 
         return scheduled_jobs
 
@@ -1018,78 +1132,263 @@ class Scheduler:
             self._worker_type_shuffler.shuffle(worker_types)
 
         new_worker_assignments = collections.OrderedDict()
-        scheduled_jobs = self._schedule_jobs_on_workers_helper(worker_types)
-
         worker_state = {}
-        for worker_type in worker_types:
-            # Sort jobs by the scale factor: want to assign jobs from largest
-            # to smallest to minimize fragmentation.
-            scheduled_jobs[worker_type].sort(key=lambda x: x[1], reverse=True)
-            worker_ids = copy.deepcopy(
-                self._worker_type_to_worker_id_mapping[worker_type])
-            worker_state[worker_type] = {
-                'worker_ids': worker_ids,
-                'assigned_worker_ids': set(),
-                'server_id_ptr': 0,
-            }
+
+        if self._gpu_sharing_mode:
+            # ============================================================
+            # GPU SHARING: Combined scheduling + placement in one pass.
+            # Instead of approving jobs based on total cluster capacity
+            # (which ignores per-GPU fragmentation), we try to place each
+            # job and only schedule it if placement succeeds.
+            # This means FGD (pack tight) can fit more concurrent jobs
+            # than strided (spread out / worst-fit).
+            # ============================================================
+            self._update_priorities()
+            for worker_type in worker_types:
+                worker_ids = copy.deepcopy(
+                    self._worker_type_to_worker_id_mapping[worker_type])
+                worker_state[worker_type] = {
+                    'worker_ids': worker_ids,
+                    'assigned_worker_ids': set(),
+                    'server_id_ptr': 0,
+                    'worker_capacity_used': {},
+                }
+
+            # Build sorted job queue (same as helper)
+            sorted_job_queue = []
+            for worker_type in worker_types:
+                for job_id in self._priorities[worker_type]:
+                    allocation = 0.0
+                    if (self._allocation is not None and
+                            job_id in self._allocation):
+                        allocation = self._allocation[job_id][worker_type]
+                    sorted_job_queue.append(
+                        (job_id, worker_type,
+                         self._priorities[worker_type][job_id],
+                         self._deficits[worker_type][job_id],
+                         allocation))
+            sorted_job_queue.sort(
+                key=lambda x: (x[2], x[3], x[4]), reverse=True)
+
+            # Two-phase placement for GPU sharing:
+            # Phase 1: Place ACTIVE jobs (continuing from previous round)
+            #          first — this creates the GPU fragmentation state.
+            # Phase 2: Place NEW/WAITING jobs in remaining capacity.
+            # The strategy used in Phase 1 determines fragmentation:
+            #   worst-fit (strided) → more fragmentation → fewer new jobs
+            #   FGD (pack-tight)    → less fragmentation → more new jobs
+            prev_job_ids = set()
+            for jid in self._current_worker_assignments:
+                for sjid in jid.singletons():
+                    prev_job_ids.add(sjid)
+
+            already_scheduled = set()
+
+            # DEBUG: Log initial state
+            self._logger.debug(f"GPU_SHARING: Starting two-phase placement. "
+                              f"Prev jobs: {len(prev_job_ids)}, "
+                              f"Job queue: {len(sorted_job_queue)}")
+
+            # Phase 1: active jobs from previous round
+            phase1_placed = 0
+            for job_id, worker_type, *_ in sorted_job_queue:
+                # Only process jobs that were running last round
+                is_continuing = any(
+                    sjid in prev_job_ids
+                    for sjid in job_id.singletons())
+                if not is_continuing:
+                    continue
+                if ((not job_id.is_pair() and
+                        job_id in already_scheduled) or
+                    (job_id.is_pair() and
+                     (job_id.singletons()[0] in already_scheduled or
+                      job_id.singletons()[1] in already_scheduled))):
+                    continue
+                if ((job_id.is_pair() and
+                    (self._throughputs[job_id][worker_type][0] <= 0 or
+                     self._throughputs[job_id][worker_type][1] <= 0)) or
+                    (not job_id.is_pair() and
+                     self._throughputs[job_id][worker_type] <= 0)):
+                    continue
+                if (self._policy.name.startswith("FIFO") and
+                    self._priorities[worker_type][job_id] <= 0.0):
+                    continue
+                if job_id not in self._allocation:
+                    continue
+
+                gpu_milli = self._jobs[
+                    job_id.singletons()[0]].gpu_milli
+                per_ws = worker_state[worker_type]
+                before_len = len(new_worker_assignments)
+                self._assign_workers_to_job_gpu_sharing(
+                    job_id, gpu_milli, worker_type,
+                    per_ws, new_worker_assignments)
+                if len(new_worker_assignments) > before_len:
+                    self._finalize_gpu_sharing_assignment(job_id)
+                    for sjid in job_id.singletons():
+                        already_scheduled.add(sjid)
+                    phase1_placed += 1
+
+            # DEBUG: Log phase 1 completion
+            self._logger.debug(f"GPU_SHARING: Phase 1 complete. Placed {phase1_placed} continuing jobs")
+
+            # Phase 2: new/waiting jobs in remaining capacity
+            phase2_placed = 0
+            phase2_skipped_reasons = {}
+            for job_id, worker_type, *_ in sorted_job_queue:
+                if ((not job_id.is_pair() and
+                        job_id in already_scheduled) or
+                    (job_id.is_pair() and
+                     (job_id.singletons()[0] in already_scheduled or
+                      job_id.singletons()[1] in already_scheduled))):
+                    phase2_skipped_reasons[job_id] = "already_scheduled"
+                    continue
+                if ((job_id.is_pair() and
+                    (self._throughputs[job_id][worker_type][0] <= 0 or
+                     self._throughputs[job_id][worker_type][1] <= 0)) or
+                    (not job_id.is_pair() and
+                     self._throughputs[job_id][worker_type] <= 0)):
+                    phase2_skipped_reasons[job_id] = "zero_throughput"
+                    continue
+                # In GPU sharing mode, try to place all jobs regardless of policy allocation
+                # (policy doesn't understand fractional GPUs, so it may not allocate all jobs)
+                if not self._gpu_sharing_mode:
+                    if (self._policy.name.startswith("FIFO") and
+                        self._priorities[worker_type][job_id] <= 0.0):
+                        phase2_skipped_reasons[job_id] = "zero_priority"
+                        continue
+                    if job_id not in self._allocation:
+                        phase2_skipped_reasons[job_id] = "no_allocation"
+                        continue
+
+                gpu_milli = self._jobs[
+                    job_id.singletons()[0]].gpu_milli
+                per_ws = worker_state[worker_type]
+                before_len = len(new_worker_assignments)
+                self._assign_workers_to_job_gpu_sharing(
+                    job_id, gpu_milli, worker_type,
+                    per_ws, new_worker_assignments)
+                if len(new_worker_assignments) > before_len:
+                    self._finalize_gpu_sharing_assignment(job_id)
+                    for sjid in job_id.singletons():
+                        already_scheduled.add(sjid)
+                    phase2_placed += 1
+                    # DEBUG: Log successful placement
+                    if phase2_placed <= 10:
+                        worker_id = new_worker_assignments[job_id][0]
+                        gpu_used = per_ws['worker_capacity_used'].get(worker_id, 0)
+                        self._logger.debug(
+                            f"GPU_SHARING: Placed job {job_id} ({gpu_milli} milli) "
+                            f"on GPU {worker_id} (now {gpu_used}/{1000} used)")
+
+            # DEBUG: Log phase 2 completion
+            self._logger.debug(f"GPU_SHARING: Phase 2 complete. Placed {phase2_placed} new jobs. "
+                              f"Total scheduled: {len(new_worker_assignments)}")
+            if len(phase2_skipped_reasons) > 0 and phase2_placed < 5:
+                skip_summary = {}
+                for reason in phase2_skipped_reasons.values():
+                    skip_summary[reason] = skip_summary.get(reason, 0) + 1
+                self._logger.debug(f"GPU_SHARING: Skipped jobs reasons: {skip_summary}")
+
+        else:
+            scheduled_jobs = \
+                self._schedule_jobs_on_workers_helper(worker_types)
+
+        if not self._gpu_sharing_mode:
+            worker_state = {}
+            for worker_type in worker_types:
+                # Sort jobs by the scale factor: want to assign jobs from
+                # largest to smallest to minimize fragmentation.
+                scheduled_jobs[worker_type].sort(
+                    key=lambda x: x[1], reverse=True)
+                worker_ids = copy.deepcopy(
+                    self._worker_type_to_worker_id_mapping[worker_type])
+                worker_state[worker_type] = {
+                    'worker_ids': worker_ids,
+                    'assigned_worker_ids': set(),
+                    'server_id_ptr': 0,
+                }
 
         prev_worker_types = {}
         for (job_id, worker_ids) in self._current_worker_assignments.items():
             worker_type = self._worker_id_to_worker_type_mapping[worker_ids[0]]
             prev_worker_types[job_id] = worker_type
 
-        for worker_type in worker_types:
-            per_worker_state = worker_state[worker_type]
-            assigned_worker_ids = per_worker_state['assigned_worker_ids']
-            current_job = 0
-            scale_factors = set([x[1] for x in scheduled_jobs[worker_type]])
-            scale_factors = sorted(scale_factors, reverse=True)
+        if not self._gpu_sharing_mode:
+            for worker_type in worker_types:
+                per_worker_state = worker_state[worker_type]
+                assigned_worker_ids = per_worker_state['assigned_worker_ids']
+                current_job = 0
+                scale_factors = set(
+                    [x[1] for x in scheduled_jobs[worker_type]])
+                scale_factors = sorted(scale_factors, reverse=True)
 
-            # Assign workers in order of decreasing scale factor to prioritize
-            # locality for multi-GPU jobs.
-            for current_scale_factor in scale_factors:
-                # Try to keep jobs on current workers if possible.
-                for (job_id, scale_factor) in scheduled_jobs[worker_type]:
-                    if scale_factor != current_scale_factor:
-                        continue
-                    if (job_id in prev_worker_types and
-                        prev_worker_types[job_id] == worker_type):
-                        prev_worker_ids = \
-                            self._current_worker_assignments[job_id]
-                        assert(isinstance(prev_worker_ids, tuple))
-                        extend_placement = True
-                        for prev_worker_id in prev_worker_ids:
-                            if prev_worker_id in assigned_worker_ids:
-                                extend_placement = False
-                                break
-                        if extend_placement:
-                            new_worker_assignments[job_id] = prev_worker_ids
+                # Assign workers in order of decreasing scale factor to
+                # prioritize locality for multi-GPU jobs.
+                for current_scale_factor in scale_factors:
+                    # Try to keep jobs on current workers if possible.
+                    for (job_id, scale_factor) in \
+                            scheduled_jobs[worker_type]:
+                        if scale_factor != current_scale_factor:
+                            continue
+                        if (job_id in prev_worker_types and
+                            prev_worker_types[job_id] == worker_type):
+                            prev_worker_ids = \
+                                self._current_worker_assignments[job_id]
+                            assert(isinstance(prev_worker_ids, tuple))
+                            extend_placement = True
                             for prev_worker_id in prev_worker_ids:
-                                assigned_worker_ids.add(prev_worker_id)
+                                if prev_worker_id in assigned_worker_ids:
+                                    extend_placement = False
+                                    break
+                            if extend_placement:
+                                new_worker_assignments[job_id] = \
+                                    prev_worker_ids
+                                for prev_worker_id in prev_worker_ids:
+                                    assigned_worker_ids.add(prev_worker_id)
 
-                # Assign workers for remaining jobs.
-                for (job_id, scale_factor) in scheduled_jobs[worker_type]:
-                    if scale_factor != current_scale_factor:
-                        continue
-                    elif job_id not in self._allocation:
-                        continue
-                    self._assign_workers_to_job(job_id, scale_factor,
-                                                worker_type,
-                                                per_worker_state,
-                                                new_worker_assignments)
+                    # Assign workers for remaining jobs.
+                    for (job_id, scale_factor) in \
+                            scheduled_jobs[worker_type]:
+                        if scale_factor != current_scale_factor:
+                            continue
+                        elif job_id not in self._allocation:
+                            continue
+                        elif job_id in new_worker_assignments:
+                            continue
+                        self._assign_workers_to_job(
+                            job_id, scale_factor,
+                            worker_type,
+                            per_worker_state,
+                            new_worker_assignments)
 
         # Verify the assignment.
-        num_assignments = {}
-        for job_id in new_worker_assignments:
-            for worker_id in new_worker_assignments[job_id]:
-                if worker_id not in num_assignments:
-                    num_assignments[worker_id] = 0
-                num_assignments[worker_id] += 1
-        for worker_id in num_assignments:
-            if num_assignments[worker_id] != 1:
-                raise RuntimeError(
-                    'Worker {0} was assigned {1} times!'.format(
-                        worker_id, num_assignments[worker_id]))
+        if self._gpu_sharing_mode:
+            # GPU sharing: verify total capacity per worker <= 1000 milli
+            worker_milli_total = {}
+            for job_id in new_worker_assignments:
+                gpu_milli = self._jobs[
+                    job_id.singletons()[0]].gpu_milli
+                for worker_id in new_worker_assignments[job_id]:
+                    worker_milli_total[worker_id] = \
+                        worker_milli_total.get(worker_id, 0) + gpu_milli
+            for worker_id, total in worker_milli_total.items():
+                if total > 1000:
+                    raise RuntimeError(
+                        'Worker {0} over-committed: {1} milli '
+                        '(max 1000)!'.format(worker_id, total))
+        else:
+            num_assignments = {}
+            for job_id in new_worker_assignments:
+                for worker_id in new_worker_assignments[job_id]:
+                    if worker_id not in num_assignments:
+                        num_assignments[worker_id] = 0
+                    num_assignments[worker_id] += 1
+            for worker_id in num_assignments:
+                if num_assignments[worker_id] != 1:
+                    raise RuntimeError(
+                        'Worker {0} was assigned {1} times!'.format(
+                            worker_id, num_assignments[worker_id]))
 
         return new_worker_assignments
 
@@ -1277,7 +1576,9 @@ class Scheduler:
                  min_simulated_time=36000,
                  utilization_threshold=0.99,
                  min_runtime=300,
-                 max_simulated_time=7200000):  # Simulated time timeout: 2000 hours
+                 max_simulated_time=7200000,
+                 scale_factor_generator_func=None,
+                 gpu_milli_generator_func=None):  # Simulated time timeout: 2000 hours
         """Simulates the scheduler execution.
 
            Simulation can be performed using a trace or with continuously
@@ -1392,18 +1693,24 @@ class Scheduler:
                 queued_jobs.append((arrival_time, job))
             self._current_timestamp = arrival_times[0]
         elif simulate_steady_state:
+            gen_kw = dict(
+                throughputs=self._oracle_throughputs,
+                reference_worker_type='v100',
+                rng=self._job_generator,
+                job_id=None,
+                fixed_job_duration=fixed_job_duration,
+                generate_multi_gpu_jobs=generate_multi_gpu_jobs,
+                generate_multi_priority_jobs=generate_multi_priority_jobs,
+                SLO_rng=SLO_generator,
+            )
+            if scale_factor_generator_func is not None:
+                gen_kw['scale_factor_generator_func'] = scale_factor_generator_func
+            if gpu_milli_generator_func is not None:
+                gen_kw['gpu_milli_generator_func'] = gpu_milli_generator_func
             for worker_type in worker_types:
                 num_remaining_workers = cluster_spec[worker_type]
                 while num_remaining_workers > 0:
-                    job = utils.generate_job(
-                            throughputs=self._oracle_throughputs,
-                            reference_worker_type='v100',
-                            rng=self._job_generator,
-                            job_id=None,
-                            fixed_job_duration=fixed_job_duration,
-                            generate_multi_gpu_jobs=generate_multi_gpu_jobs,
-                            generate_multi_priority_jobs=generate_multi_priority_jobs,
-                            SLO_rng=SLO_generator)
+                    job = utils.generate_job(**gen_kw)
                     if ((jobs_to_complete is None or
                          window_start_time is not None) and
                         output_trace_file is not None):
@@ -1654,19 +1961,25 @@ class Scheduler:
                     else:
                         break
             else:
+                gen_kw = dict(
+                    throughputs=self._oracle_throughputs,
+                    reference_worker_type='v100',
+                    rng=self._job_generator,
+                    job_id=None,
+                    fixed_job_duration=fixed_job_duration,
+                    generate_multi_gpu_jobs=generate_multi_gpu_jobs,
+                    generate_multi_priority_jobs=generate_multi_priority_jobs,
+                    SLO_rng=SLO_generator,
+                )
+                if scale_factor_generator_func is not None:
+                    gen_kw['scale_factor_generator_func'] = scale_factor_generator_func
+                if gpu_milli_generator_func is not None:
+                    gen_kw['gpu_milli_generator_func'] = gpu_milli_generator_func
                 while next_job_arrival_time <= self._current_timestamp:
                     if num_total_jobs is not None:
                         if num_jobs_generated >= num_total_jobs:
                             break
-                    job = utils.generate_job(
-                            throughputs=self._oracle_throughputs,
-                            reference_worker_type='v100',
-                            rng=self._job_generator,
-                            job_id=None,
-                            fixed_job_duration=fixed_job_duration,
-                            generate_multi_gpu_jobs=generate_multi_gpu_jobs,
-                            generate_multi_priority_jobs=generate_multi_priority_jobs,
-                            SLO_rng=SLO_generator)
+                    job = utils.generate_job(**gen_kw)
                     num_jobs_generated += 1
                     self._all_jobs.append((next_job_arrival_time, job))
                     job_id = self.add_job(job, timestamp=next_job_arrival_time)
@@ -1775,17 +2088,38 @@ class Scheduler:
                     }
                     self._logger.info('EVENT ' + json.dumps(schedule_event))
 
-                for (job_id, worker_ids) in scheduled_jobs.items():
-                    worker_type = \
-                        self._worker_id_to_worker_type_mapping[worker_ids[0]]
-                    for worker_id in worker_ids:
-                        self._remove_available_worker_id(worker_id)
-                    all_num_steps, max_finish_time = \
-                            self._get_job_steps_and_finish_times(job_id,
-                                                                 worker_type)
-                    heapq.heappush(running_jobs, (-max_finish_time, job_id,
-                                                  worker_ids,
-                                                  all_num_steps))
+                if self._gpu_sharing_mode:
+                    # GPU sharing: remove each worker only once
+                    # (multiple jobs may share the same worker)
+                    removed_workers = set()
+                    for (job_id, worker_ids) in scheduled_jobs.items():
+                        for worker_id in worker_ids:
+                            if worker_id not in removed_workers:
+                                self._remove_available_worker_id(worker_id)
+                                removed_workers.add(worker_id)
+                    for (job_id, worker_ids) in scheduled_jobs.items():
+                        worker_type = \
+                            self._worker_id_to_worker_type_mapping[
+                                worker_ids[0]]
+                        all_num_steps, max_finish_time = \
+                                self._get_job_steps_and_finish_times(
+                                    job_id, worker_type)
+                        heapq.heappush(running_jobs,
+                                       (-max_finish_time, job_id,
+                                        worker_ids, all_num_steps))
+                else:
+                    for (job_id, worker_ids) in scheduled_jobs.items():
+                        worker_type = \
+                            self._worker_id_to_worker_type_mapping[
+                                worker_ids[0]]
+                        for worker_id in worker_ids:
+                            self._remove_available_worker_id(worker_id)
+                        all_num_steps, max_finish_time = \
+                                self._get_job_steps_and_finish_times(
+                                    job_id, worker_type)
+                        heapq.heappush(running_jobs,
+                                       (-max_finish_time, job_id,
+                                        worker_ids, all_num_steps))
 
             if checkpoint_threshold is not None and last_added_job_id is not None \
                 and last_added_job_id[0] >= checkpoint_threshold \
@@ -2212,7 +2546,8 @@ class Scheduler:
                                  self._worker_start_times[worker_id])
                 worker_time = self._cumulative_worker_time_so_far[worker_id]
                 utilization = worker_time / total_runtime
-                if utilization > 1.0 and not self._job_packing:
+                if utilization > 1.0 and not self._job_packing \
+                        and not self._gpu_sharing_mode:
                     print('Error: invalid utilization %.3f' % (utilization))
                     print('Worker ID: %d' % (worker_id))
                     print('Worker time: %.3f' % (worker_time))
@@ -2560,8 +2895,16 @@ class Scheduler:
             job_type = self._jobs[job_id].job_type
             scale_factor = self._jobs[job_id].scale_factor
             key = (job_type, scale_factor)
-            self._throughputs[job_id][worker_type] = \
+            base_throughput = \
                 self._oracle_throughputs[worker_type][key]['null']
+            # GPU sharing: scale throughput by GPU fraction
+            # e.g., job with gpu_milli=500 gets 50% of full-GPU throughput
+            if self._gpu_sharing_mode:
+                gpu_fraction = self._jobs[job_id].gpu_milli / 1000.0
+                self._throughputs[job_id][worker_type] = \
+                    base_throughput * gpu_fraction
+            else:
+                self._throughputs[job_id][worker_type] = base_throughput
         else:
             self._throughputs[job_id][worker_type] = DEFAULT_THROUGHPUT
 

@@ -27,7 +27,9 @@ def simulate_with_timeout(experiment_id, policy_name,
                           log_dir, timeout, verbose,
                           num_gpus_per_server,
                           ideal,
-                          placement_strategy='strided'):
+                          placement_strategy='strided',
+                          job_mix='default',
+                          gpu_sharing=False):
     # Add some random delay to prevent outputs from overlapping.
     # TODO: Replace this with postprocessing in the log parsing script.
     time.sleep(random.uniform(0, 5))
@@ -58,18 +60,26 @@ def simulate_with_timeout(experiment_id, policy_name,
                     assign_SLOs=assign_SLOs,
                     enable_global_queue=enable_global_queue,
                     simulate=True,
-                    placement_strategy=placement_strategy)
+                    placement_strategy=placement_strategy,
+                    gpu_sharing_mode=gpu_sharing)
 
             cluster_spec_str = 'v100:%d|p100:%d|k80:%d' % (cluster_spec['v100'],
                                                            cluster_spec['p100'],
                                                            cluster_spec['k80'])
+            sim_kw = dict(
+                lam=lam,
+                fixed_job_duration=fixed_job_duration,
+                generate_multi_gpu_jobs=generate_multi_gpu_jobs,
+                num_total_jobs=num_total_jobs,
+                num_gpus_per_server=num_gpus_per_server,
+                ideal=ideal,
+            )
+            if job_mix == 'fragmentation':
+                sim_kw['scale_factor_generator_func'] = utils._generate_scale_factor_fragmentation_friendly
+            if gpu_sharing:
+                sim_kw['gpu_milli_generator_func'] = utils._generate_gpu_milli_sharing
             if timeout is None:
-                sched.simulate(cluster_spec, lam=lam,
-                               fixed_job_duration=fixed_job_duration,
-                               generate_multi_gpu_jobs=generate_multi_gpu_jobs,
-                               num_total_jobs=num_total_jobs,
-                               num_gpus_per_server=num_gpus_per_server,
-                               ideal=ideal)
+                sched.simulate(cluster_spec, **sim_kw)
                 average_jct = sched.get_average_jct()
                 utilization = sched.get_cluster_utilization()
                 makespan = sched.get_current_timestamp()
@@ -78,14 +88,7 @@ def simulate_with_timeout(experiment_id, policy_name,
                 try:
                     func_timeout(timeout, sched.simulate,
                                  args=(cluster_spec,),
-                                 kwargs={
-                                    'lam': lam,
-                                    'fixed_job_duration': fixed_job_duration,
-                                    'generate_multi_gpu_jobs': generate_multi_gpu_jobs,
-                                    'num_total_jobs': num_total_jobs,
-                                    'num_gpus_per_server': num_gpus_per_server,
-                                    'ideal': ideal
-                                 })
+                                 kwargs=sim_kw)
                     average_jct = sched.get_average_jct()
                     utilization = sched.get_cluster_utilization()
                     makespan = sched.get_current_timestamp()
@@ -98,6 +101,12 @@ def simulate_with_timeout(experiment_id, policy_name,
 
     if verbose:
         current_time = datetime.datetime.now()
+        # Handle None values from get_cluster_utilization (can happen
+        # with GPU sharing or other edge cases)
+        if utilization is None:
+            utilization = -1.0
+        if average_jct is None:
+            average_jct = float('inf')
         print('[%s] [Experiment ID: %2d] '
               'Results: average JCT=%f, utilization=%f, '
               'makespan=%f, total_cost=$%.2f' % (
@@ -191,7 +200,9 @@ def main(args):
                                           args.timeout, args.verbose,
                                           num_gpus_per_server,
                                           args.ideal,
-                                          args.placement_strategy))
+                                          args.placement_strategy,
+                                          args.job_mix,
+                                          args.gpu_sharing))
                     experiment_id += 1
     if len(all_args_list) > 0:
         current_time = datetime.datetime.now()
@@ -266,6 +277,16 @@ if __name__=='__main__':
     parser.add_argument('--placement-strategy', type=str,
                         choices=['strided', 'fgd'], default='strided',
                         help='Worker placement strategy: strided (default) or fgd')
+    parser.add_argument('--job-mix', type=str,
+                        choices=['default', 'fragmentation'], default='default',
+                        help='Job size mix: default (Philly 70%% 1-GPU/10%% 2/15%% 4/5%% 8), '
+                             'fragmentation (Alibaba-like 55%% 1/30%% 2/15%% 4 to see FGD vs strided difference)')
+    parser.add_argument('--gpu-sharing', action='store_true', default=False,
+                        help='Enable GPU spatial sharing mode: multiple jobs '
+                             'share a physical GPU via fractional gpu_milli '
+                             'requests. Generates Alibaba-like fractional GPU '
+                             'workloads. Use with --placement-strategy fgd vs '
+                             'strided to see fragmentation difference.')
     fixed_range.add_argument('-a', '--num-total-jobs-lower-bound', type=int,
                              default=None,
                              help='Lower bound for num_total_jobs to sweep')
