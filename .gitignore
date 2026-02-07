@@ -1,7 +1,31 @@
+# Large data
 data/
-.venv/
-venv/
-.DS_Store
-**/logs/
-.claude/phone-a-friend/
+experiments/fgd/telemetry/*.log
 experiments/replication/results/results_full/*/simulation.log
+cluster/viz/
+fgd_src/results/
+fgd_src/figures/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+
+# OS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Venvs
+venv/
+.venv/
+cluster/.venv/
+
+# Logs
+**/logs/
+
+# Claude
+.claude/phone-a-friend/
