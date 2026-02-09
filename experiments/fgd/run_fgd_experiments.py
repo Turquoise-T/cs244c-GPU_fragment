@@ -83,7 +83,7 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
     num_total_jobs = config.get('num_total_jobs', 50)
     generate_multi_gpu_jobs = config.get('generate_multi_gpu_jobs', False)
     mode = config.get('mode', 'fixed_jobs')
-    time_per_iteration = config.get('time_per_iteration', 360)
+    time_per_iteration = config.get('time_per_iteration', 600)
     enable_migration_penalty = config.get('enable_migration_penalty', False)
 
     print(f"\n{'='*70}")
