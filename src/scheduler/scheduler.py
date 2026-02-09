@@ -70,7 +70,10 @@ class Scheduler:
                  minimum_time_between_allocation_resets=1920,
                  max_rounds=None,
                  enable_fgd=False,
-                 fgd_placement_mode='fgd'):
+                 fgd_placement_mode='fgd',
+                 fgd_workload_mode='philly',
+                 enable_migration_penalty=False,
+                 log_level=None):
 
         # Flag to control whether scheduler runs in simulation mode.
         self._simulate = simulate
@@ -78,11 +81,13 @@ class Scheduler:
         # FGD placement: when enabled, replaces strided placement with
         # fragmentation-aware placement from FGD (ATC'23).
         self._enable_fgd = enable_fgd
+        self._enable_migration_penalty = enable_migration_penalty
         self._fgd_placement = None
         self._fgd_fragmentation_history = []
         if enable_fgd:
-            from fgd_placement import GavelFGDPlacement
+            from fgd_placement import GavelFGDPlacement, build_fgd_workload
             self._fgd_placement = GavelFGDPlacement(
+                workload=build_fgd_workload(fgd_workload_mode),
                 placement_mode=fgd_placement_mode)
 
         # Initial timestamp.
@@ -94,11 +99,17 @@ class Scheduler:
         self._current_timestamp = self._start_timestamp
 
         # Configure logger.
+        # FIX: Previously setLevel(DEBUG) was hardcoded, making the -q flag
+        # ineffective. Now the caller can pass log_level (e.g., WARNING for
+        # quiet mode). Default is DEBUG for backward compatibility.
         logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
+        logger.propagate = False
+        logger.setLevel(log_level if log_level is not None else logging.DEBUG)
         ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
         ch.setFormatter(logging.Formatter(LOG_FORMAT, style='{'))
-        logger.addHandler(ch)
+        if not logger.handlers:
+            logger.addHandler(ch)
         self._orig_logger = logger
         self._logger = \
             SchedulerAdapter(logger,
@@ -488,6 +499,11 @@ class Scheduler:
             self._job_id_counter += 1
             job._job_id = job_id
             self._jobs[job_id] = job
+            # Compute migration time when switching penalty is enabled.
+            if (self._enable_migration_penalty
+                    and job.migration_time == 0):
+                job._migration_time = utils.estimate_migration_time(
+                    job.job_type, job.scale_factor)
             self._steps_run_so_far[job_id] = {}
             self._job_time_so_far[job_id] = {}
             self._job_cost_so_far[job_id] = 0.0
@@ -603,6 +619,17 @@ class Scheduler:
             del self._max_steps[job_id]
         if job_id in self._jobs_with_extended_lease:
             self._jobs_with_extended_lease.remove(job_id)
+        # Clean up accumulated per-job data that is no longer needed
+        # after completion. These dicts grow monotonically otherwise,
+        # causing OOM at scale (34K+ entries on Alibaba cluster).
+        if job_id in self._total_steps_run:
+            del self._total_steps_run[job_id]
+        if job_id in self._per_job_start_timestamps:
+            del self._per_job_start_timestamps[job_id]
+        if job_id in self._per_job_latest_timestamps:
+            del self._per_job_latest_timestamps[job_id]
+        if job_id in self._job_timelines:
+            del self._job_timelines[job_id]
         if self._job_packing:
             to_delete = []
             for other_job_id in self._throughputs:
@@ -761,7 +788,7 @@ class Scheduler:
             allocation_str = ''
             for x in worker_types:
                 allocation_str += ' [%4s %.2f]' % (x, allocation[job_id][x])
-            self._logger.info(
+            self._logger.debug(
                 '[Micro-task scheduled]\tJob ID: {job_id}\t'
                 'Worker type: {worker_type}\tWorker ID(s): {worker_ids}\t'
                 'Priority: {priority:.2f}\tDeficit: {deficit:.2f}\t'
@@ -955,14 +982,15 @@ class Scheduler:
         # in the upcoming round.
         self._update_priorities()
 
-        to_remove = []
-        worker_types = ["v100", "p100", "k80"]
-
-        for i, worker_type in enumerate(worker_types):
-            if worker_type not in self._worker_type_to_worker_id_mapping:
-                to_remove.append(i)
-        for i in reversed(to_remove):
-            worker_types.pop(i)
+        # Use the original hardcoded order for backward compatibility with
+        # the standard v100/p100/k80 cluster. For other GPU types (e.g.,
+        # Alibaba cluster), derive from registered workers.
+        _default_types = ["v100", "p100", "k80"]
+        registered = set(self._worker_type_to_worker_id_mapping.keys())
+        if registered.issubset(set(_default_types)):
+            worker_types = [wt for wt in _default_types if wt in registered]
+        else:
+            worker_types = sorted(registered)
 
         if ('Perf' not in self._policy.name and
             'Packing' not in self._policy.name):
@@ -1257,7 +1285,10 @@ class Scheduler:
                  min_simulated_time=36000,
                  utilization_threshold=0.99,
                  min_runtime=300,
-                 max_simulated_time=7200000):  # Simulated time timeout: 2000 hours
+                 max_simulated_time=7200000,  # Simulated time timeout: 2000 hours
+                 max_wall_time=None,  # Wall-clock timeout in seconds (None = no limit)
+                 scale_factor_generator_func=None,
+                 reference_worker_type='v100'):
         """Simulates the scheduler execution.
 
            Simulation can be performed using a trace or with continuously
@@ -1358,15 +1389,19 @@ class Scheduler:
             for worker_type in worker_types:
                 num_remaining_workers = cluster_spec[worker_type]
                 while num_remaining_workers > 0:
+                    _sf_gen_kwargs = {}
+                    if scale_factor_generator_func is not None:
+                        _sf_gen_kwargs['scale_factor_generator_func'] = scale_factor_generator_func
                     job = utils.generate_job(
                             throughputs=self._oracle_throughputs,
-                            reference_worker_type='v100',
+                            reference_worker_type=reference_worker_type,
                             rng=self._job_generator,
                             job_id=None,
                             fixed_job_duration=fixed_job_duration,
                             generate_multi_gpu_jobs=generate_multi_gpu_jobs,
                             generate_multi_priority_jobs=generate_multi_priority_jobs,
-                            SLO_rng=SLO_generator)
+                            SLO_rng=SLO_generator,
+                            **_sf_gen_kwargs)
                     if ((jobs_to_complete is None or
                          window_start_time is not None) and
                         output_trace_file is not None):
@@ -1389,66 +1424,70 @@ class Scheduler:
         while True:
             if debug:
                 input('Press Enter to continue...')
+            # --- Telemetry (emitted every round for all simulation modes) ---
             if jobs_to_complete is not None:
                 num_completed_jobs = \
                     len(jobs_to_complete.intersection(self._completed_jobs))
+            else:
+                num_completed_jobs = len(self._completed_jobs)
 
-                # Track completion timestamps for windowed rate calculation (ALL jobs, not just measurement window)
-                total_completed = len(self._completed_jobs)
-                if total_completed > last_total_completed_count:
-                    new_completions = total_completed - last_total_completed_count
-                    for _ in range(new_completions):
-                        all_completion_times.append(self._current_timestamp)
-                    last_total_completed_count = total_completed
+            # Track completion timestamps for windowed rate calculation (ALL jobs)
+            total_completed = len(self._completed_jobs)
+            if total_completed > last_total_completed_count:
+                new_completions = total_completed - last_total_completed_count
+                for _ in range(new_completions):
+                    all_completion_times.append(self._current_timestamp)
+                last_total_completed_count = total_completed
 
-                # Calculate metrics for logging
-                current_util = self._get_current_utilization()
-                completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
-                jcts_so_far = [self._job_completion_times[job_id]
-                               for job_id in completed_in_window
-                               if job_id in self._job_completion_times
-                               and self._job_completion_times[job_id] is not None]
-                avg_jct = sum(jcts_so_far) / len(jcts_so_far) if jcts_so_far else 0
+            # Calculate metrics for logging
+            current_util = self._get_current_utilization()
+            all_jcts = [self._job_completion_times[job_id]
+                        for job_id in self._completed_jobs
+                        if job_id in self._job_completion_times
+                        and self._job_completion_times[job_id] is not None]
+            avg_jct = sum(all_jcts) / len(all_jcts) if all_jcts else 0
 
-                # Comprehensive telemetry for time series visualization
-                telemetry = {
-                    'round': round_number,
-                    'sim_time': self._current_timestamp,
-                    'wall_time': time.time() - simulation_start_time,
-                    'jobs_generated': num_jobs_generated,
-                    'jobs_active': len(self._jobs),
-                    'jobs_running': len(running_jobs),
-                    'jobs_completed_total': len(self._completed_jobs),
-                    'jobs_completed_window': num_completed_jobs,
-                    'jobs_queued': len(self._jobs) - len(running_jobs),
-                    'utilization': current_util if current_util else 0,
-                    'avg_jct': avg_jct,
-                    'next_arrival': next_job_arrival_time,
-                }
-                # Per-GPU-type utilization (count available workers from SetQueue)
-                with self._available_worker_ids.mutex:
-                    available_workers = set(self._available_worker_ids.queue)
-                for worker_type in cluster_spec:
-                    total_gpus = cluster_spec[worker_type]
-                    available = len([w for w in available_workers
-                                    if self._worker_id_to_worker_type_mapping.get(w) == worker_type])
-                    in_use = total_gpus - available
-                    telemetry[f'{worker_type}_used'] = in_use
-                    telemetry[f'{worker_type}_total'] = total_gpus
+            # Comprehensive telemetry for time series visualization
+            telemetry = {
+                'round': round_number,
+                'sim_time': self._current_timestamp,
+                'wall_time': time.time() - simulation_start_time,
+                'jobs_generated': num_jobs_generated,
+                'jobs_active': len(self._jobs),
+                'jobs_running': len(running_jobs),
+                'jobs_completed_total': len(self._completed_jobs),
+                'jobs_completed_window': num_completed_jobs,
+                'jobs_queued': len(self._jobs) - len(running_jobs),
+                'utilization': current_util if current_util else 0,
+                'avg_jct': avg_jct,
+                'next_arrival': next_job_arrival_time,
+            }
+            # Per-GPU-type utilization (count available workers from SetQueue)
+            with self._available_worker_ids.mutex:
+                available_workers = set(self._available_worker_ids.queue)
+            for worker_type in cluster_spec:
+                total_gpus = cluster_spec[worker_type]
+                available = len([w for w in available_workers
+                                if self._worker_id_to_worker_type_mapping.get(w) == worker_type])
+                in_use = total_gpus - available
+                telemetry[f'{worker_type}_used'] = in_use
+                telemetry[f'{worker_type}_total'] = total_gpus
 
-                # Add windowed completion rate (last N jobs, up to 100)
-                if len(all_completion_times) >= 2:
-                    time_span = all_completion_times[-1] - all_completion_times[0]
-                    if time_span > 0:
-                        telemetry['windowed_completion_rate'] = len(all_completion_times) / (time_span / 3600.0)
-                    else:
-                        telemetry['windowed_completion_rate'] = None
+            # Add windowed completion rate (last N jobs, up to 100)
+            if len(all_completion_times) >= 2:
+                time_span = all_completion_times[-1] - all_completion_times[0]
+                if time_span > 0:
+                    telemetry['windowed_completion_rate'] = len(all_completion_times) / (time_span / 3600.0)
                 else:
                     telemetry['windowed_completion_rate'] = None
+            else:
+                telemetry['windowed_completion_rate'] = None
 
-                self._logger.info('TELEMETRY ' + json.dumps(telemetry))
-                round_number += 1
+            self._logger.info('TELEMETRY ' + json.dumps(telemetry))
+            round_number += 1
 
+            # --- Exit conditions ---
+            if jobs_to_complete is not None:
                 if self.is_done(jobs_to_complete):
                     break
                 # Early exit if partial JCT exceeds threshold (system saturated)
@@ -1473,6 +1512,25 @@ class Scheduler:
                 # Check utilization threshold and minimum runtime first
                 current_utilization = self._get_current_utilization()
                 elapsed_runtime = time.time() - simulation_start_time
+
+                # Wall-clock timeout: exit gracefully before OOM/SLURM kill
+                if max_wall_time is not None and elapsed_runtime >= max_wall_time:
+                    self._logger.info(
+                        'Early exit (wall timeout): wall_time {0:.1f}s >= max {1:.1f}s, '
+                        'sim_time={2:.1f}hrs, {3}/{4} window jobs done'.format(
+                            elapsed_runtime, max_wall_time,
+                            self._current_timestamp / 3600,
+                            num_completed_jobs,
+                            len(jobs_to_complete) if jobs_to_complete else 0))
+                    self._saturated = True
+                    completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
+                    partial_jcts = [self._job_completion_times[job_id]
+                                    for job_id in completed_in_window
+                                    if job_id in self._job_completion_times
+                                    and self._job_completion_times[job_id] is not None]
+                    if len(partial_jcts) > 0:
+                        self._partial_jct = sum(partial_jcts) / len(partial_jcts)
+                    break
 
                 # Simulated time timeout: exit if simulation has run too long (default 2000 hours)
                 if self._current_timestamp >= max_simulated_time:
@@ -1549,6 +1607,19 @@ class Scheduler:
             else:
                 if next_job_arrival_time is not None:
                     self._current_timestamp = next_job_arrival_time
+                elif len(running_jobs) == 0 and len(self._jobs) > 0:
+                    # Deadlock: active jobs exist but none could be placed
+                    # and no new arrivals are pending. This happens with
+                    # single-node placement when jobs need more GPUs than
+                    # any single server has. Mark remaining jobs as failed.
+                    self._logger.info(
+                        'Placement deadlock: %d jobs cannot be placed '
+                        '(single-node constraint). Ending simulation.' %
+                        len(self._jobs))
+                    for job_id in list(self._jobs.keys()):
+                        if job_id not in self._completed_jobs:
+                            self._job_completion_times[job_id] = None
+                    break
 
             # Update per-instance type prices.
             if self._per_worker_type_prices is not None:
@@ -1617,19 +1688,25 @@ class Scheduler:
                     else:
                         break
             else:
-                while next_job_arrival_time <= self._current_timestamp:
+                while (next_job_arrival_time is not None and
+                       next_job_arrival_time <= self._current_timestamp):
                     if num_total_jobs is not None:
                         if num_jobs_generated >= num_total_jobs:
+                            next_job_arrival_time = None
                             break
+                    _sf_gen_kwargs = {}
+                    if scale_factor_generator_func is not None:
+                        _sf_gen_kwargs['scale_factor_generator_func'] = scale_factor_generator_func
                     job = utils.generate_job(
                             throughputs=self._oracle_throughputs,
-                            reference_worker_type='v100',
+                            reference_worker_type=reference_worker_type,
                             rng=self._job_generator,
                             job_id=None,
                             fixed_job_duration=fixed_job_duration,
                             generate_multi_gpu_jobs=generate_multi_gpu_jobs,
                             generate_multi_priority_jobs=generate_multi_priority_jobs,
-                            SLO_rng=SLO_generator)
+                            SLO_rng=SLO_generator,
+                            **_sf_gen_kwargs)
                     num_jobs_generated += 1
                     self._all_jobs.append((next_job_arrival_time, job))
                     job_id = self.add_job(job, timestamp=next_job_arrival_time)
@@ -1670,6 +1747,11 @@ class Scheduler:
                                 self._sample_arrival_time_delta(1.0 / lam)
                     next_job_arrival_time = \
                             arrival_time_delta + last_job_arrival_time
+                # Clear future arrival time if all jobs have been generated
+                if (num_total_jobs is not None and
+                        num_jobs_generated >= num_total_jobs and
+                        next_job_arrival_time is not None):
+                    next_job_arrival_time = None
 
             # Schedule jobs until there are no available workers or no jobs
             # with non-zero allocations on available workers.
@@ -1736,11 +1818,20 @@ class Scheduler:
                         'num_jobs_scheduled': len(scheduled_jobs),
                         'assignments': {str(jid): len(wids) for jid, wids in scheduled_jobs.items()},
                     }
-                    self._logger.info('EVENT ' + json.dumps(schedule_event))
+                    self._logger.debug('EVENT ' + json.dumps(schedule_event))
 
                 for (job_id, worker_ids) in scheduled_jobs.items():
                     worker_type = \
                         self._worker_id_to_worker_type_mapping[worker_ids[0]]
+                    worker_ids_str = ', '.join(str(w) for w in worker_ids)
+                    priority = self._priorities.get(
+                        worker_type, {}).get(job_id, 1.0)
+                    self._logger.debug(
+                        '[Micro-task scheduled]\tJob ID: %s\t'
+                        'Worker type: %s\tWorker ID(s): %s\t'
+                        'Priority: %.2f' % (
+                            job_id, worker_type, worker_ids_str,
+                            priority))
                     for worker_id in worker_ids:
                         self._remove_available_worker_id(worker_id)
                     all_num_steps, max_finish_time = \
@@ -2155,7 +2246,7 @@ class Scheduler:
 
 
     def get_completed_steps(self, job_ids=None):
-        print('Completed steps:')
+        print('Completed steps (active jobs only -- completed jobs are cleaned up):')
         if job_ids is None:
             job_ids = sorted(list(self._total_steps_run.keys()))
         else:
@@ -2260,13 +2351,15 @@ class Scheduler:
             print('')
 
     def get_job_start_and_end_times(self):
-        """Returns the start and end times of each job.
+        """Returns the start and end times of each active job.
 
-           Debug function for returning the start and end times of each job.
+           Debug function. Note: completed job timestamps are cleaned up
+           to save memory; only active jobs are returned.
         """
         with self._scheduler_lock:
             job_ids = sorted(
-                [job_id for job_id in self._per_job_latest_timestamps])
+                [job_id for job_id in self._per_job_latest_timestamps
+                 if job_id in self._per_job_start_timestamps])
             start_times = [
                 self._per_job_start_timestamps[job_id]
                 for job_id in job_ids]
@@ -2379,6 +2472,20 @@ class Scheduler:
         priority_weights = state['priority_weights']
         cluster_spec = state['cluster_spec']
 
+        # Provide migration context to the policy for switching penalty.
+        # Only active when enable_migration_penalty is set on the scheduler.
+        if (self._enable_migration_penalty
+                and hasattr(self._policy, 'set_migration_context')):
+            migration_times = {}
+            for job_id in throughputs:
+                for single_job_id in job_id.singletons():
+                    if single_job_id in self._jobs:
+                        migration_times[job_id] = \
+                            self._jobs[single_job_id].migration_time
+                        break
+            self._policy.set_migration_context(
+                migration_times, self._time_per_iteration)
+
         # Compute the allocation.
         if self._policy.name == "AlloX_Perf":
             allocation = self._policy.get_allocation(
@@ -2484,7 +2591,27 @@ class Scheduler:
                     self._priorities[worker_type][job_id] = 0.0
                     self._deficits[worker_type][job_id] = 0.0
                 self._job_time_so_far[merged_job_id][worker_type] = 0.0
-                if self._estimate_throughputs:
+                # Fractional GPU pair handling: if either job has
+                # gpu_request < 1.0, use no-interference model where each
+                # job gets its (already gpu_request-scaled) solo throughput,
+                # provided their combined gpu_request fits on one GPU.
+                gpu_req_a = job.gpu_request if job.gpu_request is not None else 1.0
+                gpu_req_b = other_job.gpu_request if other_job.gpu_request is not None else 1.0
+                is_fractional_pair = (gpu_req_a < 1.0 or gpu_req_b < 1.0)
+                if is_fractional_pair:
+                    if gpu_req_a + gpu_req_b > 1.0:
+                        self._throughputs[merged_job_id][worker_type] = [0.0, 0.0]
+                    else:
+                        # Each job keeps its solo throughput (already scaled
+                        # by gpu_request in _set_initial_throughput).
+                        solo_a = self._throughputs[job_id][worker_type]
+                        solo_b = self._throughputs[other_job_id][worker_type]
+                        # JobIdPair stores IDs in sorted order
+                        if job_id < other_job_id:
+                            self._throughputs[merged_job_id][worker_type] = [solo_a, solo_b]
+                        else:
+                            self._throughputs[merged_job_id][worker_type] = [solo_b, solo_a]
+                elif self._estimate_throughputs:
                     reference_job_types = \
                         [self._reference_job_map[job_id],
                          self._reference_job_map[other_job_id]]
@@ -2523,8 +2650,14 @@ class Scheduler:
             job_type = self._jobs[job_id].job_type
             scale_factor = self._jobs[job_id].scale_factor
             key = (job_type, scale_factor)
-            self._throughputs[job_id][worker_type] = \
-                self._oracle_throughputs[worker_type][key]['null']
+            base = self._oracle_throughputs[worker_type][key]['null']
+            # Scale throughput for fractional GPU jobs (gpu_request < 1.0).
+            # A 0.5-GPU job gets 50% of the solo throughput, modeling
+            # hardware-isolated GPU sharing (MPS/MIG).
+            gpu_request = self._jobs[job_id].gpu_request
+            if gpu_request is not None and gpu_request < 1.0:
+                base *= gpu_request
+            self._throughputs[job_id][worker_type] = base
         else:
             self._throughputs[job_id][worker_type] = DEFAULT_THROUGHPUT
 

@@ -8,20 +8,26 @@ from policy import Policy, PolicyWithPacking
 from proportional import ProportionalPolicy
 
 
-def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS", **kwargs):
+def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS",
+                         warm_start=False, **kwargs):
     """Solve CVXPY problem with automatic fallback on solver failure.
 
     Attempts to solve with the primary solver (typically ECOS for speed).
     If the primary solver fails with a SolverError, automatically retries
     with the fallback solver (SCS, which is slower but more numerically stable).
+
+    When warm_start=True, the solver is seeded with the current .value of
+    the cp.Variable (set by the caller before invoking this function).
     """
     try:
-        return cvxprob.solve(solver=primary_solver, **kwargs)
+        return cvxprob.solve(solver=primary_solver, warm_start=warm_start,
+                             **kwargs)
     except cp.error.SolverError as e:
         print(f"WARNING: Solver '{primary_solver}' failed, retrying with '{fallback_solver}'")
         # Use SCS-specific kwargs when falling back to SCS
         fallback_kwargs = {'acceleration_lookback': 0} if fallback_solver == "SCS" else {}
-        return cvxprob.solve(solver=fallback_solver, **fallback_kwargs)
+        return cvxprob.solve(solver=fallback_solver, warm_start=warm_start,
+                             **fallback_kwargs)
 
 # PAPER[§4.1] "MaximizeX min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)"
 # PAPER[§4.1] "Max-min fairness: maximize minimum normalized throughput across jobs"
@@ -32,6 +38,10 @@ class MaxMinFairnessPolicy(Policy):
         self._name = 'MaxMinFairness'
         self._max_min_fairness_perf_policy = \
             MaxMinFairnessPolicyWithPerf(solver)
+
+    def set_migration_context(self, migration_times, time_per_iteration):
+        self._max_min_fairness_perf_policy.set_migration_context(
+            migration_times, time_per_iteration)
 
     def get_allocation(self, unflattened_throughputs, scale_factors,
                        priority_weights, cluster_spec):
@@ -59,6 +69,8 @@ class MaxMinFairnessPolicyWithPerf(Policy):
         Policy.__init__(self, solver)
         self._name = 'MaxMinFairness_Perf'
         self._proportional_policy = ProportionalPolicy()
+        # Track previous allocation for switching penalty
+        self._prev_allocation = None  # {job_id: {worker_type: fraction}}
 
     def get_allocation(self, unflattened_throughputs, scale_factors,
                        unflattened_priority_weights, cluster_spec):
@@ -89,10 +101,51 @@ class MaxMinFairnessPolicyWithPerf(Policy):
         # A job run on 1 GPU should receive `scale_factor` more time than
         # a job run on `scale_factor` GPUs if throughputs are equal.
         # PAPER[§4.1|eq] Objective: Maximize min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)
-        objective = cp.Maximize(
-            cp.min(cp.sum(cp.multiply(
-                np.multiply(throughputs * priority_weights.reshape((m, 1)),
-                            scale_factors_array), x), axis=1)))
+        coefficients = np.multiply(
+            throughputs * priority_weights.reshape((m, 1)),
+            scale_factors_array)
+        per_job_throughput = cp.sum(cp.multiply(coefficients, x), axis=1)
+
+        # Build previous allocation matrix (used for both switching penalty
+        # and warm-start seeding). New jobs get x_prev=0.
+        x_prev = None
+        if self._prev_allocation is not None:
+            x_prev = np.zeros((m, n))
+            for i, job_id in enumerate(job_ids):
+                if job_id in self._prev_allocation:
+                    for j, wt in enumerate(worker_types):
+                        x_prev[i, j] = self._prev_allocation[job_id].get(
+                            wt, 0.0)
+
+        # Switching penalty: penalize allocation changes proportional to
+        # per-job migration cost. Only active when migration context is set
+        # AND we have a previous allocation to compare against.
+        if (x_prev is not None
+                and self._migration_times is not None
+                and self._time_per_iteration is not None
+                and self._time_per_iteration > 0):
+            # Per-job migration fraction: migration_time / round_duration.
+            # Represents the fraction of the round lost to migration.
+            migration_frac = np.zeros(m)
+            for i, job_id in enumerate(job_ids):
+                mt = self._migration_times.get(job_id, 0)
+                migration_frac[i] = mt / self._time_per_iteration
+
+            # Penalty coefficient per job: scale by peak throughput so the
+            # penalty is in the same units as the fairness objective.
+            # For a complete type switch (|change|=2), penalty equals
+            # migration_frac * peak_throughput -- the throughput lost.
+            peak_throughput = np.max(coefficients, axis=1)  # (m,)
+            alpha = migration_frac * peak_throughput / 2.0  # (m,)
+
+            # L1 switching cost per job
+            switch_per_job = cp.sum(cp.abs(x - x_prev), axis=1)  # (m,)
+            penalty = cp.multiply(alpha, switch_per_job)  # (m,)
+
+            objective = cp.Maximize(cp.min(per_job_throughput - penalty))
+        else:
+            objective = cp.Maximize(cp.min(per_job_throughput))
+
         # Make sure that the allocation can fit in the cluster.
         constraints = self.get_base_constraints(x, scale_factors_array)
 
@@ -104,12 +157,31 @@ class MaxMinFairnessPolicyWithPerf(Policy):
                     constraints.append(x[i, j] == 0)
 
         cvxprob = cp.Problem(objective, constraints)
-        result = _solve_with_fallback(cvxprob, self._solver)
+
+        # Warm-start: seed x with previous allocation so the solver starts
+        # near the likely optimum. Beneficial when allocations are stable
+        # across rounds (especially with switching penalty enabled).
+        use_warm_start = False
+        if x_prev is not None:
+            x.value = x_prev
+            use_warm_start = True
+
+        result = _solve_with_fallback(cvxprob, self._solver,
+                                      warm_start=use_warm_start)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')
 
-        return super().unflatten(x.value.clip(min=0.0).clip(max=1.0), index)
+        solved_x = x.value.clip(min=0.0).clip(max=1.0)
+
+        # Always save allocation for warm-start seeding and switching penalty
+        self._prev_allocation = {}
+        for i, job_id in enumerate(job_ids):
+            self._prev_allocation[job_id] = {}
+            for j, wt in enumerate(worker_types):
+                self._prev_allocation[job_id][wt] = float(solved_x[i, j])
+
+        return super().unflatten(solved_x, index)
 
 
 class MaxMinFairnessPolicyWithPacking(PolicyWithPacking):

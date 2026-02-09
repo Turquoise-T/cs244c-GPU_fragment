@@ -13,6 +13,20 @@ class Policy:
     def __init__(self, solver='ECOS'):
         self._name = None
         self._solver = solver
+        # Migration context: set by scheduler before each get_allocation()
+        # call to enable switching penalty. When None, no penalty is applied.
+        self._migration_times = None   # {job_id: seconds}
+        self._time_per_iteration = None  # seconds per round
+
+    def set_migration_context(self, migration_times, time_per_iteration):
+        """Provide per-job migration times for switching penalty.
+
+        Args:
+            migration_times: Dict {job_id: migration_time_seconds}.
+            time_per_iteration: Round duration in seconds.
+        """
+        self._migration_times = migration_times
+        self._time_per_iteration = time_per_iteration
 
     @property
     def name(self):
