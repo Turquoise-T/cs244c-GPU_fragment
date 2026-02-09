@@ -1,0 +1,39 @@
+{
+  "_description": "Reference data digitized from Gavel OSDI 2020 paper Figures 9a, 10a, 11a. Values are approximate readings from the published plots. Each figure shows Average JCT (hours) vs Input Job Rate (jobs/hr).",
+  "_source": "Narayanan et al., 'Heterogeneity-Aware Cluster Scheduling Policies for Deep Learning Workloads', OSDI 2020",
+  "_cluster": "Simulated: 36 V100 + 36 P100 + 36 K80 GPUs",
+
+  "fig9": {
+    "_description": "Figure 9a: Single-GPU jobs, LAS (Max-Min Fairness) policy. Continuous-single trace.",
+    "_x_axis": "Input job rate (jobs/hr)",
+    "_y_axis": "Average JCT (hours)",
+    "jobs_per_hr": [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.6, 6.0, 6.5, 7.0, 7.5, 8.0],
+    "gavel":       [4.0, 4.0, 4.5, 4.5, 4.5, 5.0, 5.0, 5.0, 5.5, 6.0, 7.0, 10.0, 15.0, 25.0, 55.0, 90.0],
+    "baseline":    [5.0, 5.5, 6.0, 6.5, 7.0, 8.0, 9.0, 11.0, 14.0, 20.0, 32.0, 50.0, 75.0, 100.0, null, null]
+  },
+
+  "fig10": {
+    "_description": "Figure 10a: Multi-GPU jobs (70% 1-worker, 25% 2-4 workers, 5% 8 workers), LAS (Max-Min Fairness) policy. Continuous-multiple trace.",
+    "_x_axis": "Input job rate (jobs/hr)",
+    "_y_axis": "Average JCT (hours)",
+    "jobs_per_hr": [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0],
+    "gavel":       [5.0, 5.0, 5.5, 6.0, 6.0, 6.5, 7.0, 7.5, 8.0, 9.0, 11.0, 15.0, 22.0, 40.0, 75.0],
+    "baseline":    [5.5, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 15.0, 19.0, 25.0, 35.0, 55.0, 78.0, 100.0, null]
+  },
+
+  "fig11": {
+    "_description": "Figure 11a: Multi-GPU jobs, Finish-Time Fairness (FTF) policy. Continuous-multiple trace.",
+    "_x_axis": "Input job rate (jobs/hr)",
+    "_y_axis": "Average JCT (hours)",
+    "jobs_per_hr": [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.5],
+    "gavel":       [4.0, 4.5, 5.0, 5.5, 5.5, 6.0, 6.0, 6.5, 7.0, 7.5, 8.0, 9.0, 10.0, 12.0, 16.0, 22.0, 40.0],
+    "baseline":    [8.0, 9.0, 10.0, 10.5, 11.0, 12.0, 13.0, 14.0, 16.0, 19.0, 23.0, 30.0, 40.0, 55.0, 78.0, 100.0, null]
+  },
+
+  "_validation_checks": {
+    "fig9_gavel_improvement_at_5.6jph": "~4.6x lower JCT (7 vs 32 hours)",
+    "fig10_gavel_improvement_at_2.6jph": "~3.5x lower JCT (22 vs 78 hours)",
+    "fig11_gavel_improvement_at_3.0jph": "~4.9x lower JCT (16 vs 78 hours)",
+    "general_pattern": "All curves show hockey-stick behavior as cluster saturates; Gavel shifts the saturation point to the right"
+  }
+}
