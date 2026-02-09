@@ -1,0 +1,33 @@
+{
+    "description": "Phase E test: Multi-GPU MaxMinFairness at 4 jph, all 5 configs x 3 seeds = 15 experiments. Steady-state mode with num_gpus_per_server=4.",
+    "common": {
+        "cluster_spec": {"v100": 36, "p100": 36, "k80": 36},
+        "num_gpus_per_server": 4,
+        "mode": "steady_state",
+        "window_start": 4000,
+        "window_end": 5000,
+        "max_jct": 360000,
+        "generate_multi_gpu_jobs": true
+    },
+    "experiments": [
+        {"name": "baseline_strided_4.0jph_s0", "policy": "max_min_fairness", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 900.0, "seed": 0},
+        {"name": "baseline_strided_4.0jph_s1", "policy": "max_min_fairness", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 900.0, "seed": 1},
+        {"name": "baseline_strided_4.0jph_s2", "policy": "max_min_fairness", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 900.0, "seed": 2},
+
+        {"name": "gavel_strided_4.0jph_s0", "policy": "max_min_fairness_perf", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 900.0, "seed": 0},
+        {"name": "gavel_strided_4.0jph_s1", "policy": "max_min_fairness_perf", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 900.0, "seed": 1},
+        {"name": "gavel_strided_4.0jph_s2", "policy": "max_min_fairness_perf", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 900.0, "seed": 2},
+
+        {"name": "gavel_random_4.0jph_s0", "policy": "max_min_fairness_perf", "enable_fgd": true, "fgd_placement_mode": "random", "lam": 900.0, "seed": 0},
+        {"name": "gavel_random_4.0jph_s1", "policy": "max_min_fairness_perf", "enable_fgd": true, "fgd_placement_mode": "random", "lam": 900.0, "seed": 1},
+        {"name": "gavel_random_4.0jph_s2", "policy": "max_min_fairness_perf", "enable_fgd": true, "fgd_placement_mode": "random", "lam": 900.0, "seed": 2},
+
+        {"name": "gavel_bestfit_4.0jph_s0", "policy": "max_min_fairness_perf", "enable_fgd": true, "fgd_placement_mode": "bestfit", "lam": 900.0, "seed": 0},
+        {"name": "gavel_bestfit_4.0jph_s1", "policy": "max_min_fairness_perf", "enable_fgd": true, "fgd_placement_mode": "bestfit", "lam": 900.0, "seed": 1},
+        {"name": "gavel_bestfit_4.0jph_s2", "policy": "max_min_fairness_perf", "enable_fgd": true, "fgd_placement_mode": "bestfit", "lam": 900.0, "seed": 2},
+
+        {"name": "gavel_fgd_4.0jph_s0", "policy": "max_min_fairness_perf", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 900.0, "seed": 0},
+        {"name": "gavel_fgd_4.0jph_s1", "policy": "max_min_fairness_perf", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 900.0, "seed": 1},
+        {"name": "gavel_fgd_4.0jph_s2", "policy": "max_min_fairness_perf", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 900.0, "seed": 2}
+    ]
+}
