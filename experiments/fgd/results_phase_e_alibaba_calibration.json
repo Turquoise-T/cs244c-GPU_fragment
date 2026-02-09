@@ -1,0 +1,33 @@
+[
+  {
+    "name": "calibration_gavel_strided_100jph_s0",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": false,
+    "fgd_placement_mode": "strided",
+    "seed": 0,
+    "lam": 36.0,
+    "avg_jct": 100504.5206625233,
+    "wall_time_seconds": 17.34944200515747,
+    "num_completed_jobs": 100,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 0,
+    "saturated": false,
+    "mode": "fixed_jobs"
+  },
+  {
+    "name": "calibration_gavel_fgd_100jph_s0",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 0,
+    "lam": 36.0,
+    "avg_jct": 100504.5206625233,
+    "wall_time_seconds": 18.84974503517151,
+    "num_completed_jobs": 100,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 4,
+    "saturated": false,
+    "mode": "fixed_jobs",
+    "avg_fragmentation": 0.12
+  }
+]
