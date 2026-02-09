@@ -25,13 +25,27 @@ def build_fgd_workload(mode='philly'):
     """Build a Workload model for FGD fragmentation calculation.
 
     Args:
-        mode: 'philly' for Philly trace distribution.
+        mode: 'philly' for Philly trace distribution,
+              'alibaba' for Alibaba cluster-trace-gpu-v2023 distribution.
 
     Returns:
         FGD Workload object.
     """
     workload = Workload()
-    if mode == 'philly':
+    if mode == 'alibaba':
+        workload.add_task_type(
+            Task(id='0.25gpu', cpu_request=2, gpu_request=0.25), 0.10)
+        workload.add_task_type(
+            Task(id='0.5gpu', cpu_request=4, gpu_request=0.5), 0.16)
+        workload.add_task_type(
+            Task(id='1gpu', cpu_request=8, gpu_request=1.0), 0.63)
+        workload.add_task_type(
+            Task(id='2gpu', cpu_request=16, gpu_request=2.0), 0.01)
+        workload.add_task_type(
+            Task(id='4gpu', cpu_request=32, gpu_request=4.0), 0.02)
+        workload.add_task_type(
+            Task(id='8gpu', cpu_request=64, gpu_request=8.0), 0.08)
+    elif mode == 'philly':
         workload.add_task_type(
             Task(id='1gpu', cpu_request=4, gpu_request=1.0), 0.70)
         workload.add_task_type(
@@ -125,7 +139,8 @@ class GavelFGDPlacement:
         if not nodes:
             return 0.0
 
-        # Create FGD scheduler for this round
+        # Create FGD scheduler or baseline placer for this round.
+        # All modes enforce single-node placement (FGD paper semantics).
         if self.placement_mode == 'fgd':
             fgd = FGDScheduler(nodes, self.workload)
         elif self.placement_mode == 'bestfit':
@@ -134,6 +149,9 @@ class GavelFGDPlacement:
         elif self.placement_mode == 'firstfit':
             from baselines import FirstFitPlacer
             placer = FirstFitPlacer()
+        elif self.placement_mode == 'random':
+            from baselines import RandomPlacer
+            placer = RandomPlacer()
         else:
             raise ValueError(f"Unknown placement mode: {self.placement_mode}")
 
@@ -147,19 +165,16 @@ class GavelFGDPlacement:
 
         # Place each job
         for (job_id, scale_factor) in jobs_to_place:
-            # Create FGD task for this job
-            gpu_request = scale_factor
-            # Check if job has a gpu_request attribute (partial GPU support)
-            for sjid in job_id.singletons():
-                job = jobs_dict.get(sjid)
-                if job is not None and hasattr(job, '_gpu_request') and job._gpu_request is not None:
-                    gpu_request = job._gpu_request
-                    break
-
+            # For FGD placement purposes, each job needs `scale_factor` full
+            # GPU slots (worker IDs). Fractional GPU sharing is handled by
+            # Gavel's JobIdPair mechanism at a higher level, not here.
+            # The FGD workload model still includes fractional task types for
+            # accurate fragmentation calculation, but the actual placement
+            # request must match the number of worker IDs needed.
             fgd_task = Task(
                 id=str(job_id),
                 cpu_request=scale_factor * 10.0,
-                gpu_request=float(gpu_request),
+                gpu_request=float(scale_factor),
             )
 
             # Use FGD to pick placement
@@ -176,6 +191,9 @@ class GavelFGDPlacement:
                     for idx in gpu_indices:
                         best_node.gpus[idx] = 0.0
 
+            # Single-node placement only: if the job can't fit on one node,
+            # it's a placement failure (fragmentation). This matches the FGD
+            # paper's definition where tasks must fit on a single node.
             if best_node is None:
                 continue
 
@@ -187,25 +205,8 @@ class GavelFGDPlacement:
                 worker_ids_for_job.append(wid)
                 assigned_worker_ids.add(wid)
 
-            # If we couldn't get enough workers from this node (multi-GPU job
-            # spanning nodes is not supported by FGD), fall back
-            if len(worker_ids_for_job) < scale_factor:
-                # Need to grab remaining from other nodes
-                for node in nodes:
-                    if len(worker_ids_for_job) >= scale_factor:
-                        break
-                    nid = node.id
-                    sidx, swids = node_to_server[nid]
-                    for gi, gpu_cap in enumerate(node.gpus):
-                        if gpu_cap == 1.0 and swids[gi] not in assigned_worker_ids:
-                            worker_ids_for_job.append(swids[gi])
-                            assigned_worker_ids.add(swids[gi])
-                            node.gpus[gi] = 0.0
-                            if len(worker_ids_for_job) >= scale_factor:
-                                break
-
-            if len(worker_ids_for_job) >= scale_factor:
-                worker_assignments[job_id] = tuple(worker_ids_for_job[:scale_factor])
+            if len(worker_ids_for_job) == scale_factor:
+                worker_assignments[job_id] = tuple(worker_ids_for_job)
 
         # Compute fragmentation metric for this round
         frag = FragmentationCalculator.compute_cluster_fragmentation(

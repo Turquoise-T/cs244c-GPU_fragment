@@ -214,6 +214,47 @@ class TestGavelFGDPlacement(unittest.TestCase):
         self.assertIn(jid, assignments)
         self.assertEqual(len(assignments[jid]), 4)
 
+    def test_random_mode(self):
+        placement = GavelFGDPlacement(placement_mode='random')
+        worker_ids = self._make_4x4x4_topology()
+        assigned = set()
+        assignments = collections.OrderedDict()
+
+        jid = FakeJobId('job-0')
+        jobs_dict = {jid: FakeJob(scale_factor=2)}
+
+        placement.assign_workers_for_round(
+            scheduled_jobs_for_type=[(jid, 2)],
+            worker_ids_by_server=worker_ids,
+            assigned_worker_ids=assigned,
+            worker_assignments=assignments,
+            jobs_dict=jobs_dict,
+        )
+
+        self.assertIn(jid, assignments)
+        self.assertEqual(len(assignments[jid]), 2)
+
+    def test_oversized_job_not_placed(self):
+        """An 8-GPU job on 4-GPU servers cannot be placed (single-node semantics)."""
+        placement = GavelFGDPlacement()
+        worker_ids = self._make_4x4x4_topology()
+        assigned = set()
+        assignments = collections.OrderedDict()
+
+        jid = FakeJobId('job-big')
+        jobs_dict = {jid: FakeJob(scale_factor=8)}
+
+        placement.assign_workers_for_round(
+            scheduled_jobs_for_type=[(jid, 8)],
+            worker_ids_by_server=worker_ids,
+            assigned_worker_ids=assigned,
+            worker_assignments=assignments,
+            jobs_dict=jobs_dict,
+        )
+
+        # Job needs 8 GPUs but each server only has 4 -- placement fails
+        self.assertNotIn(jid, assignments)
+
 
 class TestBuildWorkload(unittest.TestCase):
     def test_philly_workload(self):
