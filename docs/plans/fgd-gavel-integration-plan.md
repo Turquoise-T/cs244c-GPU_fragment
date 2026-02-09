@@ -73,9 +73,9 @@ _schedule_jobs_on_workers_helper()  ->  scheduled_jobs (which jobs, which type)
 ```
 
 **Status:**
-- [x] Code written (uncommitted, in working tree)
-- [ ] Unit tests passing (`test_fgd_placement.py`)
-- [ ] Code reviewed and committed
+- [x] Code written
+- [x] Unit tests passing (`test_fgd_placement.py` -- 7/7 pass)
+- [x] Code reviewed and committed (`5c2249a`)
 
 ---
 
@@ -91,7 +91,7 @@ Run with `enable_fgd=False` through the new code path. Confirm results match pre
 - [x] Config written: `experiments/fgd/configs/phase_c.json`
 - [x] Experiment runner: `experiments/fgd/run_fgd_experiments.py`
 - [x] Results: Gavel JCT = 57171.41 (relative error ~2e-08) -- PASS
-- [ ] Results file truncated, needs clean re-run and commit
+- [x] Validated again during Phase B commit (integration test in pre-commit hook)
 
 ---
 
