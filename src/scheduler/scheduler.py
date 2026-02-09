@@ -99,12 +99,11 @@ class Scheduler:
         self._current_timestamp = self._start_timestamp
 
         # Configure logger.
-        # FIX: Previously setLevel(DEBUG) was hardcoded, making the -q flag
-        # ineffective. Now the caller can pass log_level (e.g., WARNING for
-        # quiet mode). Default is DEBUG for backward compatibility.
+        # Default is INFO (events, telemetry). Use log_level=DEBUG for
+        # verbose output, or WARNING (via -q) to suppress most output.
         logger = logging.getLogger(__name__)
         logger.propagate = False
-        logger.setLevel(log_level if log_level is not None else logging.DEBUG)
+        logger.setLevel(log_level if log_level is not None else logging.INFO)
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
         ch.setFormatter(logging.Formatter(LOG_FORMAT, style='{'))
