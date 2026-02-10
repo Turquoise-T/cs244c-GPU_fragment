@@ -160,7 +160,10 @@ class FIFOPolicy(Policy):
             if throughputs[job_id_to_schedule][worker_type] > 0.0:
                 self._allocation[job_id_to_schedule] = worker_type
                 available_workers[worker_type] -= scale_factors[job_id_to_schedule]
-                if available_workers[worker_type] == 0:
+                # Use epsilon comparison for float safety (fractional gpu_milli
+                # scale_factors like 0.3, 0.5 may not sum to exactly 0).
+                if available_workers[worker_type] < 1e-6:
+                    available_workers[worker_type] = 0
                     worker_type_idx =\
                         original_available_worker_types_mapping[worker_type_idx]
                     available_worker_types.pop(worker_type_idx)

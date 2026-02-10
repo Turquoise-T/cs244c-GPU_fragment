@@ -1257,16 +1257,17 @@ class Scheduler:
                      self._throughputs[job_id][worker_type] <= 0)):
                     phase2_skipped_reasons[job_id] = "zero_throughput"
                     continue
-                # In GPU sharing mode, try to place all jobs regardless of policy allocation
-                # (policy doesn't understand fractional GPUs, so it may not allocate all jobs)
-                if not self._gpu_sharing_mode:
-                    if (self._policy.name.startswith("FIFO") and
-                        self._priorities[worker_type][job_id] <= 0.0):
-                        phase2_skipped_reasons[job_id] = "zero_priority"
-                        continue
-                    if job_id not in self._allocation:
-                        phase2_skipped_reasons[job_id] = "no_allocation"
-                        continue
+                # Policy allocation check: skip jobs that the policy did not allocate.
+                # With fractional-aware FIFO (gpu_milli/1000 as scale_factor),
+                # the policy can now allocate many more jobs than before, so this
+                # check no longer artificially limits GPU sharing placement.
+                if (self._policy.name.startswith("FIFO") and
+                    self._priorities[worker_type][job_id] <= 0.0):
+                    phase2_skipped_reasons[job_id] = "zero_priority"
+                    continue
+                if job_id not in self._allocation:
+                    phase2_skipped_reasons[job_id] = "no_allocation"
+                    continue
 
                 gpu_milli = self._jobs[
                     job_id.singletons()[0]].gpu_milli
@@ -2698,10 +2699,19 @@ class Scheduler:
     def _get_allocation_state(self):
         """Prepare all relevant scheduler state for computing the allocation."""
         state = {}
-        state['scale_factors'] = {
-            job_id: self._jobs[job_id].scale_factor
-            for job_id in self._jobs
-        }
+        if self._gpu_sharing_mode:
+            # In GPU sharing mode, express capacity in fractional GPU units
+            # (gpu_milli / 1000) so the policy can allocate based on actual
+            # fractional usage rather than whole-GPU scale_factor.
+            state['scale_factors'] = {
+                job_id: self._jobs[job_id].gpu_milli / 1000.0
+                for job_id in self._jobs
+            }
+        else:
+            state['scale_factors'] = {
+                job_id: self._jobs[job_id].scale_factor
+                for job_id in self._jobs
+            }
         state['priority_weights'] = {
             job_id: self._jobs[job_id].priority_weight
             for job_id in self._jobs

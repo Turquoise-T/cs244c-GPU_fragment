@@ -296,13 +296,13 @@ For large-scale runs (e.g. replicating Gavel figures):
 
 ## Limitations
 
-1. **Policy layer:** Gavel’s policies assume whole-GPU allocation; in GPU sharing we bypass allocation checks for placement so all waiting jobs can be tried. Fairness is still driven by policy but placement is capacity-based.
+1. **Policy layer:** Gavel’s policies assume whole-GPU allocation; we modified FIFO to use `gpu_milli / 1000` as the scale factor so it allocates fractional jobs correctly at the cluster level. The per-GPU constraint (each GPU ≤ 1000 milli) is enforced by the placement layer. FIFO's strict arrival ordering can cause head-of-line blocking when a large job cannot fit.
 2. **Throughput:** GPU sharing can affect throughput (contention); the oracle does not model this.
 3. **Memory:** FGD does not model GPU memory fragmentation or contention.
 
 ## Future Work
 
-- Policy constraints that understand fractional GPU (e.g. Σ gpu_milli per GPU ≤ 1000).
+- **Fractional-aware policy (implemented):** We modified FIFO to pass `gpu_milli / 1000` as the effective scale factor, so the policy allocates based on actual fractional GPU usage instead of whole GPUs. This removed the previous bypass and improved FGD's advantage from ~10% to 10–45%. However, the current approach is a **cluster-level** capacity check (Σ fractional usage ≤ total GPUs), not a per-GPU check. The per-GPU constraint (Σ gpu_milli ≤ 1000 on each physical GPU) is enforced by the placement layer. **Remaining work:** (a) Optimization-based policies (MaxMinFairness, etc.) use CVXPY cluster-level constraints that may slightly over-allocate; adding per-GPU constraints would require integer programming. (b) FIFO's strict arrival ordering causes head-of-line blocking when a large job can't fit — a capacity-aware FIFO variant could skip to smaller jobs that fit.
 - Dynamic arrivals (λ > 0) and larger-scale GPU sharing experiments.
 - Memory-aware FGD; interference models for co-located jobs.
 - Real Alibaba (or other) trace pipelines end-to-end in the scheduler.
