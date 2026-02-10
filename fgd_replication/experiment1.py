@@ -39,7 +39,7 @@ class Figure7aExperiment:
     """
 
     def __init__(self, data_dir: str, window_size: int = 500, task_order: str = 'trace',
-                 cluster_scale: float = 100.0):
+                 cluster_scale: float = 100.0, tier_order: List[int] = None):
         self.data_dir = data_dir
         self.window_size = window_size
         self.task_order = task_order
@@ -57,12 +57,14 @@ class Figure7aExperiment:
         self.scaled_node_count = len(self.loader.nodes)
 
         # Sort tasks by type if requested (creates skewed arrival pattern)
-        if task_order != 'trace':
+        if task_order in ('ascending', 'descending'):
             reverse = (task_order == 'descending')
             self.loader.tasks.sort(
                 key=lambda t: (round(t.gpu_demand, 2), round(t.cpu_demand / 4) * 4),
                 reverse=reverse
             )
+        elif task_order == 'phased':
+            self.loader.tasks, self.phase_info = self._phased_order(self.loader.tasks, tier_order or [0,1,2,3,4])
 
         # Compute TWO task distributions:
         # 1. Full distribution (all tasks) - for original FGD baseline
@@ -93,6 +95,55 @@ class Figure7aExperiment:
         for (cpu, gpu), count in type_counts.items():
             dist.add_task_type(cpu, gpu, count / total)
         return dist
+
+    @staticmethod
+    def _phased_order(tasks: list, tier_order: List[int]) -> list:
+        """
+        Phased arrival order: tasks grouped by GPU demand tier, tiers ordered by tier_order.
+        Within each tier, tasks are shuffled (seeded).
+
+        Tiers:
+          0: gpu == 0        (CPU-only / no-GPU tasks)
+          1: 0 < gpu < 0.5   (small fractional GPU)
+          2: 0.5 <= gpu < 1  (large fractional GPU)
+          3: gpu == 1         (single full GPU)
+          4: gpu > 1          (multi-GPU)
+        """
+        import random as rng
+
+        tiers = {0: [], 1: [], 2: [], 3: [], 4: []}
+        for task in tasks:
+            g = task.gpu_demand
+            if g == 0:
+                tier = 0
+            elif g < 0.5:
+                tier = 1
+            elif g < 1.0:
+                tier = 2
+            elif g == 1.0:
+                tier = 3
+            else:
+                tier = 4
+            tiers[tier].append(task)
+
+        # Shuffle within each tier (seeded for reproducibility)
+        r = rng.Random(42)
+        for tier_tasks in tiers.values():
+            r.shuffle(tier_tasks)
+
+        lines = [f"Tier order: {tier_order}"]
+        result = []
+        for phase_idx, tier_id in enumerate(tier_order):
+            tier_tasks = tiers[tier_id]
+            if tier_tasks:
+                lines.append(f"  Phase {phase_idx}: Tier {tier_id} - {len(tier_tasks)} tasks "
+                             f"(gpu range: {min(t.gpu_demand for t in tier_tasks):.2f}"
+                             f"-{max(t.gpu_demand for t in tier_tasks):.2f})")
+            result.extend(tier_tasks)
+
+        phase_info = "\n".join(lines)
+        print(phase_info)
+        return result, phase_info
 
     def format_distribution_comparison(self) -> str:
         """Format side-by-side comparison of full vs first-N distributions"""
@@ -401,11 +452,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Figure 7(a) Replication - Trace Replay")
     parser.add_argument('--sample-interval', type=float, default=5.0, help='Fragmentation sampling interval %% (default: 5)')
     parser.add_argument('--window-size', type=int, default=500, help='Sliding window size for W-FGD (default: 500)')
-    parser.add_argument('--task-order', choices=['trace', 'ascending', 'descending'], default='trace',
-                        help='Task arrival order: trace (original), ascending/descending (sorted by type)')
+    parser.add_argument('--task-order', choices=['trace', 'ascending', 'descending', 'phased'], default='trace',
+                        help='Task arrival order: trace (original), ascending/descending (sorted by GPU type), phased (GPU tier phases)')
     parser.add_argument('--cluster-scale', type=float, default=100.0,
                         help='Cluster size as %% of original (e.g., 50 keeps 50%% of each node type)')
+    parser.add_argument('--tier-order', type=str, default='0,1,2,3,4',
+                        help='Tier order for phased mode (comma-separated, e.g., 3,2,1,4,0)')
     args = parser.parse_args()
+
+    # Parse tier order
+    args.tier_order_list = [int(x) for x in args.tier_order.split(',')]
 
     # Run the experiment
     data_dir = os.path.join(os.path.dirname(__file__), '..', 'alibaba_traces', 'cluster-trace-gpu-v2023')
@@ -415,12 +471,15 @@ if __name__ == "__main__":
     print(f"  mode=replay, interval={args.sample_interval}%")
     print(f"  window_size={args.window_size}")
     print(f"  task_order={args.task_order}")
+    if args.task_order == 'phased':
+        print(f"  tier_order={args.tier_order}")
     print(f"  cluster_scale={args.cluster_scale}%")
     print("=" * 60)
 
     experiment = Figure7aExperiment(
         data_dir, window_size=args.window_size,
-        task_order=args.task_order, cluster_scale=args.cluster_scale
+        task_order=args.task_order, cluster_scale=args.cluster_scale,
+        tier_order=args.tier_order_list
     )
 
     # Build schedulers:
@@ -455,7 +514,10 @@ if __name__ == "__main__":
 
     # Create result directory
     scale_str = f"{args.cluster_scale:g}"
-    result_name = f"exp1-{args.window_size}-{args.task_order}-{scale_str}"
+    order_str = args.task_order
+    if args.task_order == 'phased':
+        order_str = f"phased-{''.join(str(x) for x in args.tier_order_list)}"
+    result_name = f"exp1-{args.window_size}-{order_str}-{scale_str}"
     result_dir = os.path.join(os.path.dirname(__file__), 'result', result_name)
     os.makedirs(result_dir, exist_ok=True)
 
@@ -471,6 +533,8 @@ if __name__ == "__main__":
         f.write(f"Sample interval: {args.sample_interval}%\n")
         f.write(f"Window size (W-FGD): {args.window_size}\n")
         f.write(f"Task order: {args.task_order}\n")
+        if args.task_order == 'phased':
+            f.write(experiment.phase_info + "\n")
         f.write(f"Cluster: {experiment.original_node_count} nodes -> {experiment.scaled_node_count} nodes ({args.cluster_scale}%)\n")
         f.write(f"Full distribution: {len(experiment.full_task_distribution.get_task_types())} task types\n")
         f.write(f"First-{args.window_size} distribution: {len(experiment.first_n_distribution.get_task_types())} task types\n\n")
