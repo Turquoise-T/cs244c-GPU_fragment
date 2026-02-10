@@ -768,7 +768,14 @@ class Scheduler:
                 continue
             allocation_str = ''
             for x in worker_types:
-                allocation_str += ' [%4s %.2f]' % (x, allocation[job_id][x])
+                if job_id in allocation and x in allocation[job_id]:
+                    allocation_str += ' [%4s %.2f]' % (x, allocation[job_id][x])
+                else:
+                    allocation_str += ' [%4s  N/A]' % (x,)
+            priority_val = (priorities[worker_type].get(job_id, 0.0)
+                            if worker_type in priorities else 0.0)
+            deficit_val = (deficits[worker_type].get(job_id, 0.0)
+                           if worker_type in deficits else 0.0)
             self._logger.info(
                 '[Micro-task scheduled]\tJob ID: {job_id}\t'
                 'Worker type: {worker_type}\tWorker ID(s): {worker_ids}\t'
@@ -776,8 +783,8 @@ class Scheduler:
                 'Allocation: {allocation}'.format(
                     job_id=job_id, worker_type=worker_type,
                     worker_ids=",".join([str(x) for x in worker_ids]),
-                    priority=priorities[worker_type][job_id],
-                    deficit=deficits[worker_type][job_id],
+                    priority=priority_val,
+                    deficit=deficit_val,
                     allocation=allocation_str))
         num_workers_assigned = {}
         if self._gpu_sharing_mode:

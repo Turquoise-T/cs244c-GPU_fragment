@@ -237,7 +237,8 @@ if __name__=='__main__':
                         default=['25:0:0', '12:12:0', '16:8:0', '8:8:8'],
                         help=('Cluster specification in the form of '
                               '#v100s:#p100s:#k80s'))
-    parser.add_argument('--num_gpus_per_server', type=str, default='1:1:1',
+    # node level and GPU level need to be considered
+    parser.add_argument('--num_gpus_per_server', type=str, default='4:4:4',
                         help=('Cluster specification in the form of '
                               '#v100s:#p100s:#k80s'))
     parser.add_argument('--seeds', type=int, nargs='+',
