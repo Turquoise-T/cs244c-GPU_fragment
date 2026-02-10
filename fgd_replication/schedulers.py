@@ -256,10 +256,12 @@ class FGDScheduler(Scheduler):
     Algorithm 1 from the paper.
     """
 
-    def __init__(self, num_workers: int = None):
+    def __init__(self, num_workers: int = None, scheduling_task_types=None):
         super().__init__("FGD")
         self.num_workers = num_workers
         self._pool = None
+        # If set, use this for scheduling decisions instead of cluster's distribution
+        self.scheduling_task_types = scheduling_task_types
 
     @staticmethod
     def _compute_frag_delta_for_node(args: Tuple) -> Tuple[int, float]:
@@ -318,7 +320,11 @@ class FGDScheduler(Scheduler):
         if not eligible:
             return None
 
-        task_types = cluster.task_distribution.get_task_types()
+        # Use override distribution for scheduling if set, otherwise cluster's
+        if self.scheduling_task_types is not None:
+            task_types = self.scheduling_task_types
+        else:
+            task_types = cluster.task_distribution.get_task_types()
 
         # Prepare arguments for parallel workers
         args_list = [
