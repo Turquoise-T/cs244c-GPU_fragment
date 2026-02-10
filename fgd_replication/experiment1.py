@@ -38,21 +38,29 @@ class Figure7aExperiment:
     Trace Replay mode: processes tasks in creation_time order from the trace.
     """
 
-    def __init__(self, data_dir: str, window_size: int = 500, task_order: str = 'trace'):
+    def __init__(self, data_dir: str, window_size: int = 500, task_order: str = 'trace',
+                 cluster_scale: float = 100.0):
         self.data_dir = data_dir
         self.window_size = window_size
         self.task_order = task_order
+        self.cluster_scale = cluster_scale
         self.loader = AlibabaTraceLoader(data_dir)
 
         # Load trace data
         self.loader.load_nodes()
         self.loader.load_tasks()
 
+        # Reduce cluster size if requested
+        self.original_node_count = len(self.loader.nodes)
+        if cluster_scale < 100.0:
+            self.loader.nodes = self._scale_cluster(self.loader.nodes, cluster_scale)
+        self.scaled_node_count = len(self.loader.nodes)
+
         # Sort tasks by type if requested (creates skewed arrival pattern)
         if task_order != 'trace':
             reverse = (task_order == 'descending')
             self.loader.tasks.sort(
-                key=lambda t: (round(t.cpu_demand / 4) * 4, round(t.gpu_demand, 2)),
+                key=lambda t: (round(t.gpu_demand, 2), round(t.cpu_demand / 4) * 4),
                 reverse=reverse
             )
 
@@ -70,6 +78,7 @@ class Figure7aExperiment:
         print(f"Task order: {task_order}")
         print(f"Full distribution: {len(self.full_task_distribution.get_task_types())} task types")
         print(f"First-{window_size} distribution: {len(self.first_n_distribution.get_task_types())} task types")
+        print("\n" + self.format_distribution_comparison() + "\n")
 
     def _compute_initial_distribution(self, n: int) -> TaskDistribution:
         """Compute task distribution from first N tasks of the trace"""
@@ -84,6 +93,48 @@ class Figure7aExperiment:
         for (cpu, gpu), count in type_counts.items():
             dist.add_task_type(cpu, gpu, count / total)
         return dist
+
+    def format_distribution_comparison(self) -> str:
+        """Format side-by-side comparison of full vs first-N distributions"""
+        n = self.window_size
+        full_types = {(cpu, gpu): pop for (cpu, gpu), pop in self.full_task_distribution.get_task_types()}
+        first_n_types = {(cpu, gpu): pop for (cpu, gpu), pop in self.first_n_distribution.get_task_types()}
+
+        all_keys = sorted(set(full_types) | set(first_n_types), key=lambda k: (-full_types.get(k, 0)))
+
+        lines = []
+        lines.append(f"{'Task Type (cpu,gpu)':<22} {'Full%':>8} {'First-'+str(n)+'%':>10} {'Diff':>8}")
+        lines.append("-" * 52)
+        for cpu, gpu in all_keys:
+            f = full_types.get((cpu, gpu), 0) * 100
+            p = first_n_types.get((cpu, gpu), 0) * 100
+            diff = p - f
+            marker = " *" if abs(diff) > 3 else ""
+            lines.append(f"  ({cpu:>4}, {gpu:>5})       {f:>7.1f}  {p:>9.1f}  {diff:>+7.1f}{marker}")
+        lines.append(f"  {'Types present:':<20} {len(full_types):>7}  {len(first_n_types):>9}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _scale_cluster(nodes: list, scale_pct: float) -> list:
+        """Keep scale_pct% of nodes per type (same cpu, mem, gpu count, gpu model). At least 1 per type."""
+        from collections import defaultdict
+        import math
+
+        # Group nodes by type
+        type_groups: dict = defaultdict(list)
+        for node in nodes:
+            key = (node.total_cpu, node.memory_mib, node.num_gpus, node.gpu_model)
+            type_groups[key].append(node)
+
+        scaled_nodes = []
+        print(f"\nCluster scaling to {scale_pct}%:")
+        for key, group in sorted(type_groups.items()):
+            keep = max(1, math.ceil(len(group) * scale_pct / 100.0))
+            scaled_nodes.extend(group[:keep])
+            print(f"  {key}: {len(group)} -> {keep}")
+
+        print(f"  Total: {len(nodes)} -> {len(scaled_nodes)} nodes")
+        return scaled_nodes
 
     def create_fresh_cluster(self) -> Cluster:
         """Create a fresh cluster with full distribution (always used for evaluation)"""
@@ -346,13 +397,14 @@ def print_summary(results: Dict[str, List[ExperimentResult]]):
 
 if __name__ == "__main__":
     import argparse
-    from datetime import datetime
 
     parser = argparse.ArgumentParser(description="Figure 7(a) Replication - Trace Replay")
     parser.add_argument('--sample-interval', type=float, default=5.0, help='Fragmentation sampling interval %% (default: 5)')
     parser.add_argument('--window-size', type=int, default=500, help='Sliding window size for W-FGD (default: 500)')
     parser.add_argument('--task-order', choices=['trace', 'ascending', 'descending'], default='trace',
                         help='Task arrival order: trace (original), ascending/descending (sorted by type)')
+    parser.add_argument('--cluster-scale', type=float, default=100.0,
+                        help='Cluster size as %% of original (e.g., 50 keeps 50%% of each node type)')
     args = parser.parse_args()
 
     # Run the experiment
@@ -363,9 +415,13 @@ if __name__ == "__main__":
     print(f"  mode=replay, interval={args.sample_interval}%")
     print(f"  window_size={args.window_size}")
     print(f"  task_order={args.task_order}")
+    print(f"  cluster_scale={args.cluster_scale}%")
     print("=" * 60)
 
-    experiment = Figure7aExperiment(data_dir, window_size=args.window_size, task_order=args.task_order)
+    experiment = Figure7aExperiment(
+        data_dir, window_size=args.window_size,
+        task_order=args.task_order, cluster_scale=args.cluster_scale
+    )
 
     # Build schedulers:
     # - Baselines: don't use FGD, distribution irrelevant
@@ -397,9 +453,10 @@ if __name__ == "__main__":
         sample_interval_pct=args.sample_interval
     )
 
-    # Create timestamped result directory
-    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-    result_dir = os.path.join(os.path.dirname(__file__), 'result', timestamp)
+    # Create result directory
+    scale_str = f"{args.cluster_scale:g}"
+    result_name = f"exp1-{args.window_size}-{args.task_order}-{scale_str}"
+    result_dir = os.path.join(os.path.dirname(__file__), 'result', result_name)
     os.makedirs(result_dir, exist_ok=True)
 
     # Print summary
@@ -409,10 +466,15 @@ if __name__ == "__main__":
     log_path = os.path.join(result_dir, 'experiment_summary.log')
     with open(log_path, 'w') as f:
         f.write(f"Experiment: Figure 7(a) Replication - Trace Replay\n")
-        f.write(f"Timestamp: {timestamp}\n")
+        f.write(f"Result: {result_name}\n")
         f.write(f"Mode: replay\n")
         f.write(f"Sample interval: {args.sample_interval}%\n")
-        f.write(f"Window size (W-FGD): {args.window_size}\n\n")
+        f.write(f"Window size (W-FGD): {args.window_size}\n")
+        f.write(f"Task order: {args.task_order}\n")
+        f.write(f"Cluster: {experiment.original_node_count} nodes -> {experiment.scaled_node_count} nodes ({args.cluster_scale}%)\n")
+        f.write(f"Full distribution: {len(experiment.full_task_distribution.get_task_types())} task types\n")
+        f.write(f"First-{args.window_size} distribution: {len(experiment.first_n_distribution.get_task_types())} task types\n\n")
+        f.write(experiment.format_distribution_comparison() + "\n\n")
         f.write(format_summary(results) + "\n")
     print(f"Summary log saved to {log_path}")
 
