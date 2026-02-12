@@ -73,6 +73,7 @@ class Scheduler:
                  fgd_placement_mode='fgd',
                  fgd_workload_mode='philly',
                  enable_migration_penalty=False,
+                 enable_gpu_sharing=False,
                  log_level=None):
 
         # Flag to control whether scheduler runs in simulation mode.
@@ -82,13 +83,15 @@ class Scheduler:
         # fragmentation-aware placement from FGD (ATC'23).
         self._enable_fgd = enable_fgd
         self._enable_migration_penalty = enable_migration_penalty
+        self._enable_gpu_sharing = enable_gpu_sharing
         self._fgd_placement = None
         self._fgd_fragmentation_history = []
         if enable_fgd:
             from fgd_placement import GavelFGDPlacement, build_fgd_workload
             self._fgd_placement = GavelFGDPlacement(
                 workload=build_fgd_workload(fgd_workload_mode),
-                placement_mode=fgd_placement_mode)
+                placement_mode=fgd_placement_mode,
+                enable_gpu_sharing=enable_gpu_sharing)
 
         # Initial timestamp.
         if self._simulate:
@@ -784,19 +787,20 @@ class Scheduler:
                                        job_id=job_id, num_gpus=len(worker_ids),
                                        worker_type=worker_type))
                 continue
-            allocation_str = ''
-            for x in worker_types:
-                allocation_str += ' [%4s %.2f]' % (x, allocation[job_id][x])
-            self._logger.debug(
-                '[Micro-task scheduled]\tJob ID: {job_id}\t'
-                'Worker type: {worker_type}\tWorker ID(s): {worker_ids}\t'
-                'Priority: {priority:.2f}\tDeficit: {deficit:.2f}\t'
-                'Allocation: {allocation}'.format(
-                    job_id=job_id, worker_type=worker_type,
-                    worker_ids=",".join([str(x) for x in worker_ids]),
-                    priority=priorities[worker_type][job_id],
-                    deficit=deficits[worker_type][job_id],
-                    allocation=allocation_str))
+            if self._logger.isEnabledFor(logging.DEBUG):
+                allocation_str = ''
+                for x in worker_types:
+                    allocation_str += ' [%4s %.2f]' % (x, allocation[job_id][x])
+                self._logger.debug(
+                    '[Micro-task scheduled]\tJob ID: {job_id}\t'
+                    'Worker type: {worker_type}\tWorker ID(s): {worker_ids}\t'
+                    'Priority: {priority:.2f}\tDeficit: {deficit:.2f}\t'
+                    'Allocation: {allocation}'.format(
+                        job_id=job_id, worker_type=worker_type,
+                        worker_ids=",".join([str(x) for x in worker_ids]),
+                        priority=priorities[worker_type][job_id],
+                        deficit=deficits[worker_type][job_id],
+                        allocation=allocation_str))
         num_workers_assigned = {}
         for job_id, worker_ids in self._current_worker_assignments.items():
             if not self._simulate and job_id in completed_jobs:
@@ -920,7 +924,7 @@ class Scheduler:
                                   reverse=True)
 
         for job_id, worker_type, *_ in sorted_job_queue:
-            if num_workers_left[worker_type] == 0:
+            if num_workers_left[worker_type] < 1e-9:
                 continue
 
             # Don't schedule jobs that have already been scheduled.
@@ -955,9 +959,13 @@ class Scheduler:
                     continue
             else:
                 scale_factor = self._jobs[job_id].scale_factor
-            if scale_factor > num_workers_left[worker_type]:
+            if self._enable_gpu_sharing:
+                gpu_demand = self._jobs[job_id].gpu_request or float(scale_factor)
+            else:
+                gpu_demand = float(scale_factor)
+            if gpu_demand > num_workers_left[worker_type] + 1e-9:
                 continue
-            num_workers_left[worker_type] -= scale_factor
+            num_workers_left[worker_type] -= gpu_demand
 
             for single_job_id in job_id.singletons():
                 already_scheduled_jobs.add(single_job_id)
@@ -979,7 +987,11 @@ class Scheduler:
 
         # Update priorities before trying to figure out applications to run
         # in the upcoming round.
+        _tp0 = time.perf_counter()
         self._update_priorities()
+        if hasattr(self, '_profile'):
+            self._profile.setdefault('priorities', 0.0)
+            self._profile['priorities'] += time.perf_counter() - _tp0
 
         # Use the original hardcoded order for backward compatibility with
         # the standard v100/p100/k80 cluster. For other GPU types (e.g.,
@@ -996,8 +1008,31 @@ class Scheduler:
             self._worker_type_shuffler.shuffle(worker_types)
 
         new_worker_assignments = collections.OrderedDict()
+        _tp0 = time.perf_counter()
         scheduled_jobs = self._schedule_jobs_on_workers_helper(worker_types)
+        if hasattr(self, '_profile'):
+            self._profile.setdefault('helper', 0.0)
+            self._profile['helper'] += time.perf_counter() - _tp0
 
+        # Optimization: skip Phase 1 + Phase 2 when the helper output is
+        # identical to the previous round.  At 60 jph with ~58 rounds/min,
+        # allocation rarely changes, so most rounds can reuse the previous
+        # worker assignments directly -- avoiding FGD node rebuilding and
+        # placement entirely.
+        _sched_key = frozenset(
+            (wt, frozenset(scheduled_jobs[wt]))
+            for wt in worker_types)
+        if (hasattr(self, '_prev_sched_key')
+                and _sched_key == self._prev_sched_key
+                and self._current_worker_assignments):
+            if hasattr(self, '_profile'):
+                self._profile.setdefault('fgd_skipped_rounds', 0)
+                self._profile['fgd_skipped_rounds'] += 1
+            return collections.OrderedDict(
+                self._current_worker_assignments)
+        self._prev_sched_key = _sched_key
+
+        _tp0 = time.perf_counter()
         worker_state = {}
         for worker_type in worker_types:
             # Sort jobs by the scale factor: want to assign jobs from largest
@@ -1007,7 +1042,7 @@ class Scheduler:
                 self._worker_type_to_worker_id_mapping[worker_type])
             worker_state[worker_type] = {
                 'worker_ids': worker_ids,
-                'assigned_worker_ids': set(),
+                'assigned_worker_ids': {} if self._enable_gpu_sharing else set(),
                 'server_id_ptr': 0,
             }
 
@@ -1035,15 +1070,35 @@ class Scheduler:
                         prev_worker_ids = \
                             self._current_worker_assignments[job_id]
                         assert(isinstance(prev_worker_ids, tuple))
-                        extend_placement = True
-                        for prev_worker_id in prev_worker_ids:
-                            if prev_worker_id in assigned_worker_ids:
-                                extend_placement = False
-                                break
-                        if extend_placement:
-                            new_worker_assignments[job_id] = prev_worker_ids
+                        if self._enable_gpu_sharing:
+                            # Capacity-dict path: check fractional room
+                            gpu_request = (
+                                self._jobs[job_id.singletons()[0]].gpu_request
+                                or 1.0)
+                            extend_placement = True
                             for prev_worker_id in prev_worker_ids:
-                                assigned_worker_ids.add(prev_worker_id)
+                                remaining = 1.0 - assigned_worker_ids.get(
+                                    prev_worker_id, 0.0)
+                                if remaining < gpu_request - 1e-9:
+                                    extend_placement = False
+                                    break
+                            if extend_placement:
+                                new_worker_assignments[job_id] = prev_worker_ids
+                                for prev_worker_id in prev_worker_ids:
+                                    assigned_worker_ids[prev_worker_id] = (
+                                        assigned_worker_ids.get(
+                                            prev_worker_id, 0.0) + gpu_request)
+                        else:
+                            # Original set-based path
+                            extend_placement = True
+                            for prev_worker_id in prev_worker_ids:
+                                if prev_worker_id in assigned_worker_ids:
+                                    extend_placement = False
+                                    break
+                            if extend_placement:
+                                new_worker_assignments[job_id] = prev_worker_ids
+                                for prev_worker_id in prev_worker_ids:
+                                    assigned_worker_ids.add(prev_worker_id)
 
             # Phase 2: Place remaining jobs (new or preempted).
             if self._enable_fgd:
@@ -1085,18 +1140,39 @@ class Scheduler:
                                                     per_worker_state,
                                                     new_worker_assignments)
 
+        if hasattr(self, '_profile'):
+            self._profile.setdefault('worker_assignment', 0.0)
+            self._profile['worker_assignment'] += time.perf_counter() - _tp0
+
         # Verify the assignment.
-        num_assignments = {}
-        for job_id in new_worker_assignments:
-            for worker_id in new_worker_assignments[job_id]:
-                if worker_id not in num_assignments:
-                    num_assignments[worker_id] = 0
-                num_assignments[worker_id] += 1
-        for worker_id in num_assignments:
-            if num_assignments[worker_id] != 1:
-                raise RuntimeError(
-                    'Worker {0} was assigned {1} times!'.format(
-                        worker_id, num_assignments[worker_id]))
+        if self._enable_gpu_sharing:
+            # With GPU sharing, verify total capacity per worker <= 1.0
+            worker_gpu_used = {}
+            for job_id in new_worker_assignments:
+                single_id = job_id.singletons()[0]
+                gpu_req = 1.0
+                if single_id in self._jobs:
+                    gpu_req = self._jobs[single_id].gpu_request or 1.0
+                for worker_id in new_worker_assignments[job_id]:
+                    worker_gpu_used[worker_id] = (
+                        worker_gpu_used.get(worker_id, 0.0) + gpu_req)
+            for worker_id, total_used in worker_gpu_used.items():
+                if total_used > 1.0 + 1e-9:
+                    raise RuntimeError(
+                        'Worker {0} overcommitted: {1:.3f} GPUs assigned!'.format(
+                            worker_id, total_used))
+        else:
+            num_assignments = {}
+            for job_id in new_worker_assignments:
+                for worker_id in new_worker_assignments[job_id]:
+                    if worker_id not in num_assignments:
+                        num_assignments[worker_id] = 0
+                    num_assignments[worker_id] += 1
+            for worker_id in num_assignments:
+                if num_assignments[worker_id] != 1:
+                    raise RuntimeError(
+                        'Worker {0} was assigned {1} times!'.format(
+                            worker_id, num_assignments[worker_id]))
 
         return new_worker_assignments
 
@@ -1419,11 +1495,30 @@ class Scheduler:
         all_completion_times = collections.deque(maxlen=RATE_WINDOW_SIZE)
         last_total_completed_count = 0
 
+        # Profiling accumulators (wall-clock seconds per section)
+        _profile = {
+            'round_total': 0.0,
+            'telemetry': 0.0,
+            'exit_checks': 0.0,
+            'event_jump_and_completion': 0.0,
+            'job_arrivals': 0.0,
+            'scheduling': 0.0,
+        }
+        _profile_lp_count = 0
+        _profile_lp_total = 0.0
+        # Expose on self so _update_priorities / _schedule_jobs_on_workers
+        # can record sub-timers without passing extra args.
+        self._profile = _profile
+        self._profile_lp_count = 0
+        self._profile_lp_total = 0.0
+
         round_number = 0
         while True:
+            _t_round_start = time.perf_counter()
             if debug:
                 input('Press Enter to continue...')
             # --- Telemetry (emitted every round for all simulation modes) ---
+            _t0 = time.perf_counter()
             if jobs_to_complete is not None:
                 num_completed_jobs = \
                     len(jobs_to_complete.intersection(self._completed_jobs))
@@ -1484,8 +1579,10 @@ class Scheduler:
 
             self._logger.info('TELEMETRY ' + json.dumps(telemetry))
             round_number += 1
+            _profile['telemetry'] += time.perf_counter() - _t0
 
             # --- Exit conditions ---
+            _t0 = time.perf_counter()
             if jobs_to_complete is not None:
                 if self.is_done(jobs_to_complete):
                     break
@@ -1591,9 +1688,12 @@ class Scheduler:
                     if len(running_jobs) == 0:
                         self._last_reset_time = 0
 
+            _profile['exit_checks'] += time.perf_counter() - _t0
+
             # Jump to the next event's timestamp.
             # Find the time when the latest job completes, which signals
             # the finishing of the round.
+            _t0 = time.perf_counter()
             max_timestamp = 0
             if (len(running_jobs) > 0 and
                 -running_jobs[0][0] > max_timestamp):
@@ -1671,8 +1771,10 @@ class Scheduler:
             # Since we're scheduling in rounds, no jobs should be
             # running when scheduling the next round of jobs.
             assert(len(running_jobs) == 0)
+            _profile['event_jump_and_completion'] += time.perf_counter() - _t0
 
             # Dispatch any newly arrived jobs.
+            _t0 = time.perf_counter()
             last_added_job_id = None
             if from_trace:
                 while len(queued_jobs) > 0:
@@ -1752,8 +1854,11 @@ class Scheduler:
                         next_job_arrival_time is not None):
                     next_job_arrival_time = None
 
+            _profile['job_arrivals'] += time.perf_counter() - _t0
+
             # Schedule jobs until there are no available workers or no jobs
             # with non-zero allocations on available workers.
+            _t0 = time.perf_counter()
             if ideal:
                 time_to_next_event = next_job_arrival_time - self._current_timestamp
                 all_num_steps = {}
@@ -1819,18 +1924,20 @@ class Scheduler:
                     }
                     self._logger.debug('EVENT ' + json.dumps(schedule_event))
 
+                _debug_sched = self._logger.isEnabledFor(logging.DEBUG)
                 for (job_id, worker_ids) in scheduled_jobs.items():
                     worker_type = \
                         self._worker_id_to_worker_type_mapping[worker_ids[0]]
-                    worker_ids_str = ', '.join(str(w) for w in worker_ids)
-                    priority = self._priorities.get(
-                        worker_type, {}).get(job_id, 1.0)
-                    self._logger.debug(
-                        '[Micro-task scheduled]\tJob ID: %s\t'
-                        'Worker type: %s\tWorker ID(s): %s\t'
-                        'Priority: %.2f' % (
-                            job_id, worker_type, worker_ids_str,
-                            priority))
+                    if _debug_sched:
+                        worker_ids_str = ', '.join(str(w) for w in worker_ids)
+                        priority = self._priorities.get(
+                            worker_type, {}).get(job_id, 1.0)
+                        self._logger.debug(
+                            '[Micro-task scheduled]\tJob ID: %s\t'
+                            'Worker type: %s\tWorker ID(s): %s\t'
+                            'Priority: %.2f' % (
+                                job_id, worker_type, worker_ids_str,
+                                priority))
                     for worker_id in worker_ids:
                         self._remove_available_worker_id(worker_id)
                     all_num_steps, max_finish_time = \
@@ -1839,6 +1946,9 @@ class Scheduler:
                     heapq.heappush(running_jobs, (-max_finish_time, job_id,
                                                   worker_ids,
                                                   all_num_steps))
+
+            _profile['scheduling'] += time.perf_counter() - _t0
+            _profile['round_total'] += time.perf_counter() - _t_round_start
 
             if checkpoint_threshold is not None and last_added_job_id is not None \
                 and last_added_job_id[0] >= checkpoint_threshold \
@@ -1864,6 +1974,40 @@ class Scheduler:
         print('Total duration: %.3f seconds '
               '(%.2f hours)' % (self._current_timestamp,
                                 self._current_timestamp / 3600.0))
+
+        # Emit profiling summary
+        _profile_summary = dict(_profile)
+        _profile_summary['rounds'] = round_number
+        _profile_summary['lp_solve_count'] = self._profile_lp_count
+        _profile_summary['lp_solve_total'] = self._profile_lp_total
+        if self._profile_lp_count > 0:
+            _profile_summary['lp_solve_avg'] = (
+                self._profile_lp_total / self._profile_lp_count)
+        else:
+            _profile_summary['lp_solve_avg'] = 0.0
+        if round_number > 0:
+            _profile_summary['avg_round_time'] = (
+                _profile['round_total'] / round_number)
+        else:
+            _profile_summary['avg_round_time'] = 0.0
+        # Include sub-timers if present
+        for key in ('priorities', 'helper', 'worker_assignment', 'lp_solve',
+                     'fgd_skipped_rounds'):
+            if key in _profile:
+                _profile_summary[key] = _profile[key]
+        # Include FGD placement sub-timers if available
+        if hasattr(self, '_fgd_placement') and hasattr(self._fgd_placement, '_profile'):
+            fgd_p = self._fgd_placement._profile
+            _profile_summary['fgd_node_build'] = fgd_p['node_build']
+            _profile_summary['fgd_init'] = fgd_p['fgd_init']
+            _profile_summary['fgd_placement'] = fgd_p['placement']
+            _profile_summary['fgd_frag_calc'] = fgd_p['frag_calc']
+            _profile_summary['fgd_calls'] = fgd_p['calls']
+            _profile_summary['fgd_total_nodes'] = fgd_p['total_nodes']
+            _profile_summary['fgd_total_jobs_placed'] = fgd_p['total_jobs_placed']
+        self._logger.info('PROFILE ' + json.dumps(
+            {k: round(v, 4) if isinstance(v, float) else v
+             for k, v in _profile_summary.items()}))
 
     def _is_final_round(self):
         return (self._max_rounds is not None and
@@ -2431,6 +2575,13 @@ class Scheduler:
         state['throughputs'] = copy.deepcopy(self._throughputs)
         state['cluster_spec'] = copy.deepcopy(self._cluster_spec)
 
+        if self._enable_gpu_sharing:
+            state['gpu_demands'] = {
+                job_id: self._jobs[job_id].gpu_request
+                        or float(self._jobs[job_id].scale_factor)
+                for job_id in self._jobs
+            }
+
         if self._policy.name.startswith("ThroughputNormalizedByCostSum"):
             state['instance_costs'] = copy.deepcopy(self._per_worker_type_prices)
             if 'SLO' in self._policy.name:
@@ -2500,9 +2651,10 @@ class Scheduler:
             allocation = self._policy.get_allocation(
                 throughputs, scale_factors, cluster_spec)
         elif self._policy.name.startswith("MaxMinFairness"):
+            gpu_demands = state.get('gpu_demands')
             allocation = self._policy.get_allocation(
                 throughputs, scale_factors, priority_weights,
-                cluster_spec)
+                cluster_spec, gpu_demands=gpu_demands)
         elif self._policy.name.startswith("MinTotalDuration"):
             allocation = self._policy.get_allocation(
                 throughputs, scale_factors, num_steps_remaining,
@@ -2787,7 +2939,14 @@ class Scheduler:
             # In simulation mode, wait for allocation computation to complete
             # before proceeding.
             if self._simulate:
+                _tlp0 = time.perf_counter()
                 self._allocation = self._compute_allocation()
+                _tlp_elapsed = time.perf_counter() - _tlp0
+                if hasattr(self, '_profile'):
+                    self._profile.setdefault('lp_solve', 0.0)
+                    self._profile['lp_solve'] += _tlp_elapsed
+                    self._profile_lp_count += 1
+                    self._profile_lp_total += _tlp_elapsed
                 self._need_to_update_allocation = False
 
         # Account for time elapsed since job was dispatched if running on a
@@ -3410,7 +3569,7 @@ class Scheduler:
                 self._need_to_update_allocation = True
 
             else:
-                self._logger.info(
+                self._logger.debug(
                     '[Micro-task succeeded]\t'
                     'Job ID: {job_id}\tWorker type: {worker_type}\t'
                     'Worker ID(s): {worker_ids}'.format(
@@ -3472,14 +3631,23 @@ class Scheduler:
                 max_execution_time = np.max(all_execution_times)
                 # Job may be multi-GPU, and have already been marked complete
                 # by another worker.
+                # Scale worker time by gpu_request when GPU sharing is
+                # enabled. A 0.25-GPU job uses only 25% of a worker.
+                gpu_scale = 1.0
+                if self._enable_gpu_sharing:
+                    single_id = job_id.singletons()[0]
+                    if single_id in self._jobs:
+                        gr = self._jobs[single_id].gpu_request
+                        if gr is not None:
+                            gpu_scale = gr
                 if job_id in self._job_time_so_far:
                     self._job_time_so_far[job_id][worker_type] += \
                         max_execution_time
                     self._worker_time_so_far[worker_type] += \
-                        max_execution_time
+                        max_execution_time * gpu_scale
                 for worker_id in all_worker_ids:
                     self._cumulative_worker_time_so_far[worker_id] += \
-                        max_execution_time
+                        max_execution_time * gpu_scale
 
             self._update_throughput(job_id, worker_type,
                                     all_num_steps,

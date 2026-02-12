@@ -10,9 +10,10 @@ import job_id_pair
 # PAPER[§3.1|def] "effective throughput: throughput(m,X) = Σ_j T_mj * X_mj"
 class Policy:
 
-    def __init__(self, solver='ECOS'):
+    def __init__(self, solver='ECOS', solver_kwargs=None):
         self._name = None
         self._solver = solver
+        self._solver_kwargs = solver_kwargs or {}
         # Migration context: set by scheduler before each get_allocation()
         # call to enable switching penalty. When None, no penalty is applied.
         self._migration_times = None   # {job_id: seconds}
@@ -85,8 +86,8 @@ class Policy:
 
 class PolicyWithPacking(Policy):
 
-    def __init__(self, solver='ECOS'):
-        Policy.__init__(self, solver)
+    def __init__(self, solver='ECOS', solver_kwargs=None):
+        Policy.__init__(self, solver, solver_kwargs=solver_kwargs)
 
     def scale_factors_array(self, scale_factors, job_ids, m, n):
         scale_factors_array = np.zeros((m, n))

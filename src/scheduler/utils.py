@@ -544,7 +544,7 @@ def read_all_throughputs_json(throughputs_file):
     return throughputs
 
 def get_policy(policy_name, solver=None, seed=None,
-               priority_reweighting_policies=None):
+               priority_reweighting_policies=None, solver_kwargs=None):
     if policy_name.startswith('allox'):
         if policy_name == 'allox':
             alpha = 1.0
@@ -571,12 +571,22 @@ def get_policy(policy_name, solver=None, seed=None,
     elif policy_name == 'isolated':
         policy = isolated.IsolatedPolicy()
     elif policy_name == 'max_min_fairness':
-        policy = max_min_fairness.MaxMinFairnessPolicy(solver=solver)
+        policy = max_min_fairness.MaxMinFairnessPolicy(
+            solver=solver, solver_kwargs=solver_kwargs)
     elif policy_name == 'max_min_fairness_perf':
-        policy = max_min_fairness.MaxMinFairnessPolicyWithPerf(solver=solver)
+        policy = max_min_fairness.MaxMinFairnessPolicyWithPerf(
+            solver=solver, solver_kwargs=solver_kwargs)
     elif policy_name == 'max_min_fairness_packed':
-        policy = \
-            max_min_fairness.MaxMinFairnessPolicyWithPacking(solver=solver)
+        policy = max_min_fairness.MaxMinFairnessPolicyWithPacking(
+            solver=solver, solver_kwargs=solver_kwargs)
+    elif policy_name == 'max_min_fairness_waterfill':
+        import max_min_fairness_waterfill
+        policy = max_min_fairness_waterfill.MaxMinFairnessWaterfillPolicy(
+            solver=solver, solver_kwargs=solver_kwargs)
+    elif policy_name == 'max_min_fairness_single_type':
+        import max_min_fairness_single_type
+        policy = max_min_fairness_single_type.MaxMinFairnessSingleTypePolicy(
+            solver=solver, solver_kwargs=solver_kwargs)
     elif policy_name == 'max_min_fairness_water_filling':
         policy = max_min_fairness_water_filling.MaxMinFairnessWaterFillingPolicy(
             priority_reweighting_policies=priority_reweighting_policies)

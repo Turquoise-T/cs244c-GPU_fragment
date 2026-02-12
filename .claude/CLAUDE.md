@@ -54,7 +54,7 @@ ssh farmshare "cd ~/gavel/cluster && sbatch submit_benchmark.sbatch"
 
 **Alternative solvers** - Tested Direct ECOS (+12% slower), Gurobi (+2% slower), Greedy heuristic (+45% slower). All performed worse than baseline cvxpy+ECOS.
 
-**Root cause** - LP solver is only 8% of runtime. The bottleneck is the simulation loop itself (80% in event processing). Optimizing the solver doesn't help.
+**Root cause (Philly scale only)** - At Philly scale (108 GPUs, 50 jobs), LP solver is only 8% of runtime. But at Alibaba scale (6200 GPUs, ~1700 active jobs), LP is **48% of runtime** (3.0s/solve). The bottleneck shifts with scale. See `docs/2026-02-10-alibaba-profile-results.md`.
 
 **What works** - Saturation detection via completion rate in `scheduler.simulate()`:
 - `utilization_threshold=0.99` - Only check when cluster utilization > 99%

@@ -85,6 +85,9 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
     mode = config.get('mode', 'fixed_jobs')
     time_per_iteration = config.get('time_per_iteration', 600)
     enable_migration_penalty = config.get('enable_migration_penalty', False)
+    solver = config.get('solver', 'ECOS')
+    solver_kwargs = config.get('solver_kwargs', {})
+    enable_gpu_sharing = config.get('enable_gpu_sharing', False)
 
     print(f"\n{'='*70}")
     print(f"Experiment: {name}")
@@ -98,6 +101,9 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
     else:
         print(f"  Mode: fixed_jobs, Jobs: {num_total_jobs}")
     print(f"  Lambda: {lam}, Seed: {seed}, Round: {time_per_iteration}s")
+    print(f"  Solver: {solver}, kwargs: {solver_kwargs}")
+    if enable_gpu_sharing:
+        print(f"  GPU sharing: ENABLED")
     print(f"{'='*70}")
 
     # Select throughputs file based on workload mode
@@ -108,8 +114,8 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
         else:
             throughputs_filename = 'simulation_throughputs.json'
     throughputs_file = os.path.join(SCHEDULER_DIR, throughputs_filename)
-
-    policy = utils.get_policy(policy_name, solver='ECOS', seed=seed)
+    policy = utils.get_policy(policy_name, solver=solver, seed=seed,
+                              solver_kwargs=solver_kwargs)
 
     sched = scheduler.Scheduler(
         policy,
@@ -123,6 +129,7 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
         fgd_placement_mode=fgd_placement_mode,
         fgd_workload_mode=fgd_workload_mode,
         enable_migration_penalty=enable_migration_penalty,
+        enable_gpu_sharing=enable_gpu_sharing,
         log_level=log_level,
     )
 

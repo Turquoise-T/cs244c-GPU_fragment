@@ -12,10 +12,12 @@ Data mapping:
     each inner list = one server's worker IDs.
   - Each server becomes one FGD Node.
   - GPU capacity = 1.0 if worker ID is free, 0.0 if assigned.
+  - When enable_gpu_sharing=True, capacity is fractional (0.0 to 1.0).
 """
 
 import sys
 import os
+import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'fgd_src'))
 
 from fgd import FGDScheduler, FragmentationCalculator, Node, Task, Workload
@@ -68,17 +70,30 @@ class GavelFGDPlacement:
     4. Translate back to Gavel worker IDs.
     """
 
-    def __init__(self, workload=None, placement_mode='fgd'):
+    def __init__(self, workload=None, placement_mode='fgd',
+                 enable_gpu_sharing=False):
         """
         Args:
             workload: FGD Workload for fragmentation calculation.
             placement_mode: 'fgd', 'bestfit', or 'firstfit'.
+            enable_gpu_sharing: When True, support fractional GPU placement.
         """
         if workload is None:
             workload = build_fgd_workload('philly')
         self.workload = workload
         self.placement_mode = placement_mode
+        self.enable_gpu_sharing = enable_gpu_sharing
         self._round_metrics = []
+        # Sub-timers for profiling FGD internals
+        self._profile = {
+            'node_build': 0.0,
+            'fgd_init': 0.0,
+            'placement': 0.0,
+            'frag_calc': 0.0,
+            'calls': 0,
+            'total_nodes': 0,
+            'total_jobs_placed': 0,
+        }
 
     def assign_workers_for_round(
         self,
@@ -95,15 +110,18 @@ class GavelFGDPlacement:
                 _schedule_jobs_on_workers_helper().
             worker_ids_by_server: List-of-lists of worker IDs (one list per server).
                 This is a deep copy from _worker_type_to_worker_id_mapping[type].
-            assigned_worker_ids: Set of worker IDs already assigned this round
-                (from lease extensions).
+            assigned_worker_ids: Set (or dict when gpu_sharing enabled) of
+                worker IDs already assigned this round (from lease extensions).
             worker_assignments: OrderedDict being populated with job_id -> worker_id tuple.
             jobs_dict: Scheduler's _jobs dict for looking up job properties.
 
         Returns:
             Fragmentation metric for this worker type this round.
         """
+        self._profile['calls'] += 1
+
         # Build FGD nodes from Gavel server topology
+        _t0 = time.perf_counter()
         nodes = []
         # Map: node_id -> (server_index, list of worker_ids for that server)
         node_to_server = {}
@@ -112,13 +130,21 @@ class GavelFGDPlacement:
             gpus = []
             available_worker_ids = []
             for wid in server_worker_ids:
-                if wid in assigned_worker_ids:
-                    gpus.append(0.0)
+                if self.enable_gpu_sharing:
+                    used = assigned_worker_ids.get(wid, 0.0)
+                    gpus.append(max(0.0, 1.0 - used))
                 else:
-                    gpus.append(1.0)
+                    if wid in assigned_worker_ids:
+                        gpus.append(0.0)
+                    else:
+                        gpus.append(1.0)
                 available_worker_ids.append(wid)
 
             if not server_worker_ids:
+                continue
+
+            # Pre-filter: skip servers where all GPUs are fully assigned.
+            if all(g < 1e-9 for g in gpus):
                 continue
 
             node_id = f'server-{server_idx}'
@@ -130,17 +156,21 @@ class GavelFGDPlacement:
                 gpu_type='generic',
             )
             # Set allocated CPU/memory proportionally
-            allocated_count = sum(1 for g in gpus if g == 0.0)
+            allocated_count = sum(1 for g in gpus if g < 1e-9)
             node.allocated_cpu = allocated_count * 10.0
             node.allocated_memory = allocated_count * 10.0
             nodes.append(node)
             node_to_server[node_id] = (server_idx, server_worker_ids)
+
+        self._profile['node_build'] += time.perf_counter() - _t0
+        self._profile['total_nodes'] += len(nodes)
 
         if not nodes:
             return 0.0
 
         # Create FGD scheduler or baseline placer for this round.
         # All modes enforce single-node placement (FGD paper semantics).
+        _t0 = time.perf_counter()
         if self.placement_mode == 'fgd':
             fgd = FGDScheduler(nodes, self.workload)
         elif self.placement_mode == 'bestfit':
@@ -155,6 +185,8 @@ class GavelFGDPlacement:
         else:
             raise ValueError(f"Unknown placement mode: {self.placement_mode}")
 
+        self._profile['fgd_init'] += time.perf_counter() - _t0
+
         # Sort jobs by scale factor (largest first) for better packing
         jobs_to_place = []
         for (job_id, scale_factor) in scheduled_jobs_for_type:
@@ -164,17 +196,22 @@ class GavelFGDPlacement:
         jobs_to_place.sort(key=lambda x: x[1], reverse=True)
 
         # Place each job
+        _t0 = time.perf_counter()
         for (job_id, scale_factor) in jobs_to_place:
-            # For FGD placement purposes, each job needs `scale_factor` full
-            # GPU slots (worker IDs). Fractional GPU sharing is handled by
-            # Gavel's JobIdPair mechanism at a higher level, not here.
-            # The FGD workload model still includes fractional task types for
-            # accurate fragmentation calculation, but the actual placement
-            # request must match the number of worker IDs needed.
+            # Determine actual GPU demand for this job
+            if self.enable_gpu_sharing:
+                single_id = job_id.singletons()[0]
+                job = jobs_dict.get(single_id)
+                actual_gpu = (job.gpu_request
+                              if (job and job.gpu_request is not None)
+                              else float(scale_factor))
+            else:
+                actual_gpu = float(scale_factor)
+
             fgd_task = Task(
                 id=str(job_id),
-                cpu_request=scale_factor * 10.0,
-                gpu_request=float(scale_factor),
+                cpu_request=actual_gpu * 10.0,
+                gpu_request=actual_gpu,
             )
 
             # Use FGD to pick placement
@@ -189,7 +226,8 @@ class GavelFGDPlacement:
                     best_node.allocated_cpu += fgd_task.cpu_request
                     best_node.allocated_memory += fgd_task.memory_request
                     for idx in gpu_indices:
-                        best_node.gpus[idx] = 0.0
+                        best_node.gpus[idx] = max(0.0,
+                                                  best_node.gpus[idx] - actual_gpu)
 
             # Single-node placement only: if the job can't fit on one node,
             # it's a placement failure (fragmentation). This matches the FGD
@@ -203,15 +241,24 @@ class GavelFGDPlacement:
             for gpu_idx in gpu_indices:
                 wid = server_worker_ids[gpu_idx]
                 worker_ids_for_job.append(wid)
-                assigned_worker_ids.add(wid)
+                if self.enable_gpu_sharing:
+                    assigned_worker_ids[wid] = (
+                        assigned_worker_ids.get(wid, 0.0) + actual_gpu)
+                else:
+                    assigned_worker_ids.add(wid)
 
             if len(worker_ids_for_job) == scale_factor:
                 worker_assignments[job_id] = tuple(worker_ids_for_job)
 
+        self._profile['placement'] += time.perf_counter() - _t0
+        self._profile['total_jobs_placed'] += len(jobs_to_place)
+
         # Compute fragmentation metric for this round
+        _t0 = time.perf_counter()
         frag = FragmentationCalculator.compute_cluster_fragmentation(
             nodes, self.workload
         )
+        self._profile['frag_calc'] += time.perf_counter() - _t0
         return frag
 
     def get_round_fragmentation(self, scheduler):
@@ -221,14 +268,31 @@ class GavelFGDPlacement:
         """
         total_frag = 0.0
         for worker_type, servers in scheduler._worker_type_to_worker_id_mapping.items():
+            # Build capacity map from current assignments
+            if self.enable_gpu_sharing:
+                worker_gpu_used = {}
+                for job_id, worker_ids in scheduler._current_worker_assignments.items():
+                    single_id = job_id.singletons()[0]
+                    job = scheduler._jobs.get(single_id)
+                    gpu_req = (job.gpu_request
+                               if (job and job.gpu_request is not None)
+                               else 1.0)
+                    for wid in worker_ids:
+                        worker_gpu_used[wid] = (
+                            worker_gpu_used.get(wid, 0.0) + gpu_req)
+
             nodes = []
             for server_idx, server_wids in enumerate(servers):
                 gpus = []
                 for wid in server_wids:
-                    if wid in scheduler._current_worker_assignments.values():
-                        gpus.append(0.0)
+                    if self.enable_gpu_sharing:
+                        used = worker_gpu_used.get(wid, 0.0)
+                        gpus.append(max(0.0, 1.0 - used))
                     else:
-                        gpus.append(1.0)
+                        if wid in scheduler._current_worker_assignments.values():
+                            gpus.append(0.0)
+                        else:
+                            gpus.append(1.0)
                 node = Node(
                     id=f'{worker_type}-{server_idx}',
                     total_cpu=1000.0, total_memory=1000.0,
