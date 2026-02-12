@@ -1,0 +1,18 @@
+{
+  "description": "Quick local test: GPU sharing visualization with Alibaba workload on small 6-type cluster.",
+  "common": {
+    "cluster_spec": {"G2": 40, "T4": 20, "G3": 10, "P100": 10, "V100M32": 10, "V100M16": 10},
+    "num_gpus_per_server": 4,
+    "workload_mode": "alibaba",
+    "fgd_workload_mode": "alibaba",
+    "generate_multi_gpu_jobs": true,
+    "enable_gpu_sharing": true,
+    "mode": "fixed_jobs",
+    "num_total_jobs": 100,
+    "max_jct": 360000,
+    "time_per_iteration": 360
+  },
+  "experiments": [
+    {"name": "sharing_test_s0", "policy": "max_min_fairness_perf", "enable_fgd": true, "fgd_placement_mode": "bestfit", "lam": 900.0, "seed": 0}
+  ]
+}

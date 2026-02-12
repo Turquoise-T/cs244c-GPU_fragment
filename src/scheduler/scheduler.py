@@ -553,6 +553,7 @@ class Scheduler:
                 'job_id': str(job_id),
                 'job_type': job_type,
                 'scale_factor': scale_factor,
+                'gpu_request': job.gpu_request or 1.0,
                 'total_steps': job.total_steps,
                 'arrival_time': timestamp,
                 'sim_time': self._current_timestamp,
@@ -844,6 +845,10 @@ class Scheduler:
         worker_ids = worker_state['worker_ids']
         assigned_worker_ids = worker_state['assigned_worker_ids']
         server_id_ptr = worker_state['server_id_ptr']
+        sharing = isinstance(assigned_worker_ids, dict)
+        if sharing:
+            gpu_request = (
+                self._jobs[job_id.singletons()[0]].gpu_request or 1.0)
 
         if job_id in worker_assignments:
             worker_ids_for_job = list(worker_assignments[job_id])
@@ -855,12 +860,32 @@ class Scheduler:
                 server_id_ptr += 1
                 continue
             worker_id_to_assign = worker_ids[server_id_ptr][0]
-            if worker_id_to_assign not in assigned_worker_ids:
-                worker_ids_for_job.append(worker_id_to_assign)
-                assigned_worker_ids.add(worker_id_to_assign)
-            worker_ids[server_id_ptr].pop(0)
+            if sharing:
+                remaining = 1.0 - assigned_worker_ids.get(
+                    worker_id_to_assign, 0.0)
+                if remaining >= gpu_request - 1e-9:
+                    worker_ids_for_job.append(worker_id_to_assign)
+                    new_used = (assigned_worker_ids.get(
+                        worker_id_to_assign, 0.0) + gpu_request)
+                    assigned_worker_ids[worker_id_to_assign] = new_used
+                    # Only remove from pool when fully used
+                    if new_used >= 1.0 - 1e-9:
+                        worker_ids[server_id_ptr].pop(0)
+                else:
+                    # No room on this GPU, remove and try next
+                    worker_ids[server_id_ptr].pop(0)
+            else:
+                if worker_id_to_assign not in assigned_worker_ids:
+                    worker_ids_for_job.append(worker_id_to_assign)
+                    assigned_worker_ids.add(worker_id_to_assign)
+                worker_ids[server_id_ptr].pop(0)
 
         if len(worker_ids_for_job) != scale_factor:
+            if sharing:
+                # Bin-packing gap: fractional demand fits but discrete
+                # placement doesn't. Skip this job for this round.
+                worker_state['server_id_ptr'] = server_id_ptr
+                return
             raise RuntimeError(
                 'Could not assign workers to job %s!' % (job_id))
 
@@ -1037,7 +1062,17 @@ class Scheduler:
         for worker_type in worker_types:
             # Sort jobs by the scale factor: want to assign jobs from largest
             # to smallest to minimize fragmentation.
-            scheduled_jobs[worker_type].sort(key=lambda x: x[1], reverse=True)
+            # With GPU sharing, secondary sort by gpu_request desc so full-GPU
+            # jobs get fresh workers and sub-GPU jobs pack into remaining space.
+            if self._enable_gpu_sharing:
+                scheduled_jobs[worker_type].sort(
+                    key=lambda x: (
+                        x[1],
+                        self._jobs[x[0].singletons()[0]].gpu_request or 1.0),
+                    reverse=True)
+            else:
+                scheduled_jobs[worker_type].sort(
+                    key=lambda x: x[1], reverse=True)
             worker_ids = copy.deepcopy(
                 self._worker_type_to_worker_id_mapping[worker_type])
             worker_state[worker_type] = {
@@ -1923,6 +1958,17 @@ class Scheduler:
                         'assignments': {str(jid): len(wids) for jid, wids in scheduled_jobs.items()},
                     }
                     self._logger.debug('EVENT ' + json.dumps(schedule_event))
+
+                    # Compact allocation line for viz tool heatmap.
+                    # One INFO line per round instead of N DEBUG lines.
+                    if scheduled_jobs:
+                        alloc_map = {
+                            str(jid): [int(w) for w in wids]
+                            for jid, wids in scheduled_jobs.items()
+                        }
+                        self._logger.info(
+                            'ALLOCATION ' + json.dumps(alloc_map,
+                                                       separators=(',', ':')))
 
                 _debug_sched = self._logger.isEnabledFor(logging.DEBUG)
                 for (job_id, worker_ids) in scheduled_jobs.items():
