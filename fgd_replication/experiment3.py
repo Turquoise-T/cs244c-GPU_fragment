@@ -457,7 +457,8 @@ def plot_sensitivity(results: Dict[float, List[SensitivityResult]],
     ax.set_ylabel('Unallocated GPU (%)')
     ax.set_title(f"Figure {figure_num}: {config['name']}")
     ax.legend(fontsize=8, ncol=3, loc='upper left')
-    ax.set_ylim(0)
+    ax.set_ylim(0, 25)
+    ax.set_yticks(range(0, 26, 5))
     ax.grid(True, alpha=0.3, axis='y')
     plt.tight_layout()
 
