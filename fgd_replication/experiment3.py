@@ -488,6 +488,36 @@ def save_results_to_csv(results: Dict[float, List[SensitivityResult]],
     print(f"  CSV saved to {path}")
 
 
+def load_results_from_csv(csv_path: str
+                          ) -> Tuple[int, Dict[float, List[SensitivityResult]]]:
+    """Load results from a CSV file produced by save_results_to_csv.
+
+    Returns (figure_num, results_dict).
+    figure_num is inferred from the filename (e.g. figure12_results.csv -> 12).
+    """
+    import csv
+    import re
+
+    basename = os.path.basename(csv_path)
+    m = re.search(r'figure(\d+)', basename)
+    figure_num = int(m.group(1)) if m else 0
+
+    results: Dict[float, List[SensitivityResult]] = {}
+    with open(csv_path, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            pct = float(row['proportion'])
+            if pct not in results:
+                results[pct] = []
+            results[pct].append(SensitivityResult(
+                scheduler_name=row['scheduler'],
+                proportion=pct,
+                unalloc_gpu_pct=float(row['unalloc_gpu_pct']),
+                unalloc_std=float(row.get('std', 0))))
+
+    return figure_num, results
+
+
 def format_summary(results: Dict[float, List[SensitivityResult]],
                    figure_num: int) -> str:
     config = FIGURE_CONFIG[figure_num]
@@ -535,8 +565,26 @@ if __name__ == "__main__":
                         help='Monte-Carlo runs per configuration (default: 10)')
     parser.add_argument('--seed', type=int, default=42,
                         help='Base random seed (default: 42)')
+    parser.add_argument('--plot-csv', type=str, nargs='+', default=None,
+                        help='Plot from existing CSV file(s) instead of '
+                             'running experiments. '
+                             'e.g. --plot-csv result/exp3/figure11_results.csv')
     args = parser.parse_args()
 
+    # ---- Plot-only mode ----
+    if args.plot_csv:
+        for csv_path in args.plot_csv:
+            fig_num, results = load_results_from_csv(csv_path)
+            if fig_num == 0:
+                print(f"Warning: could not infer figure number from {csv_path}")
+                continue
+            output_dir = os.path.dirname(csv_path) or '.'
+            summary = format_summary(results, fig_num)
+            print(summary)
+            plot_sensitivity(results, fig_num, output_dir)
+        exit(0)
+
+    # ---- Full experiment mode ----
     figures = [int(x) for x in args.figures.split(',')]
 
     data_dir = os.path.join(os.path.dirname(__file__), '..',
