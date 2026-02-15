@@ -18,8 +18,11 @@ Replicate Gavel (OSDI 2020) experiments, then extend with FGD's fragmentation-aw
 | `src/scheduler/policies/*.py` | Scheduling policies - READ to understand, create NEW files for new policies |
 | `src/scheduler/utils.py` | Policy registry - ADD new policies here |
 | `src/scheduler/simulation_throughputs.json` | DO NOT MODIFY |
-| `cluster/experiments_*.json` | Experiment configs |
-| `cluster/run_benchmark.py` | Experiment runner |
+| `experiments/gavel-replication/configs/` | Gavel replication experiment configs |
+| `experiments/gavel-replication/scripts/run_benchmark.py` | Gavel replication experiment runner |
+| `src/fgd/` | FGD core algorithm (fragmentation-aware placement) |
+| `experiments/combined/run_fgd_experiments.py` | FGD+Gavel integrated experiment runner |
+| `experiments/fgd-standalone/` | Standalone FGD evaluation |
 
 ## Existing Documentation
 
@@ -39,13 +42,13 @@ SSH multiplexing: User keeps `ssh farmshare` running in separate terminal. Claud
 ```bash
 # Sync code
 rsync -avz src/scheduler/ farmshare:~/gavel/src/scheduler/
-rsync -avz cluster/ farmshare:~/gavel/cluster/
+rsync -avz experiments/ farmshare:~/gavel/experiments/
 
 # Run experiment
-ssh farmshare "cd ~/gavel/cluster && python3 run_benchmark.py --index 0 --experiments-file experiments_benchmark.json"
+ssh farmshare "cd ~/gavel/experiments/gavel-replication && python3 scripts/run_benchmark.py --index 0 --experiments-file configs/experiments_full.json"
 
 # Submit batch
-ssh farmshare "cd ~/gavel/cluster && sbatch submit_benchmark.sbatch"
+ssh farmshare "cd ~/gavel/experiments/gavel-replication && sbatch slurm/submit_full.sbatch"
 ```
 
 ## Lessons Learned (Do Not Retry)

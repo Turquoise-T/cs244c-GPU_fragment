@@ -35,20 +35,20 @@ rsync $RSYNC_OPTS \
 
 # 2. FGD library
 echo ""
-echo "[2/3] Syncing fgd_src/..."
+echo "[2/3] Syncing src/fgd/..."
 rsync $RSYNC_OPTS \
-    "$GAVEL_DIR/fgd_src/" "$REMOTE/fgd_src/"
+    "$GAVEL_DIR/src/fgd/" "$REMOTE/src/fgd/"
 
 # 3. FGD experiments (runner, configs, slurm scripts)
 echo ""
-echo "[3/3] Syncing experiments/fgd/..."
+echo "[3/3] Syncing experiments/combined/..."
 rsync $RSYNC_OPTS \
     --exclude='results_*' \
     --exclude='results/' \
     --exclude='logs/' \
     --exclude='*.log' \
     --exclude='slurm_logs/' \
-    "$GAVEL_DIR/experiments/fgd/" "$REMOTE/experiments/fgd/"
+    "$GAVEL_DIR/experiments/combined/" "$REMOTE/experiments/combined/"
 
 echo ""
 echo "========================================"
@@ -56,6 +56,6 @@ echo "Sync complete!"
 echo ""
 echo "Next steps on FarmShare:"
 echo "  ssh farmshare"
-echo "  cd ~/gavel/experiments/fgd/slurm"
+echo "  cd ~/gavel/experiments/combined/slurm"
 echo "  sbatch submit_alibaba.sbatch"
 echo "========================================"

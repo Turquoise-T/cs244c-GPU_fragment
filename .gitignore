@@ -1,10 +1,10 @@
 # Large data
 data/
-experiments/fgd/telemetry/*.log
-experiments/replication/results/results_full/*/simulation.log
+experiments/combined/telemetry/*.log
+experiments/gavel-replication/results/results_full/*/simulation.log
 cluster/viz/
-fgd_src/results/
-fgd_src/figures/
+src/fgd/results/
+src/fgd/figures/
 
 # Python
 __pycache__/

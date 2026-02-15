@@ -6,8 +6,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 GAVEL_DIR="$(dirname "$SCRIPT_DIR")"
-LOCAL_FGD="$GAVEL_DIR/experiments/fgd"
-REMOTE="farmshare:~/gavel/experiments/fgd"
+LOCAL_FGD="$GAVEL_DIR/experiments/combined"
+REMOTE="farmshare:~/gavel/experiments/combined"
 
 echo "========================================"
 echo "Syncing FGD results from FarmShare"

@@ -11,7 +11,7 @@ Replication of Figures 9, 10, and 11 from the Gavel paper (OSDI 2020).
 ## Directory Structure
 
 ```
-replication/
+gavel-replication/
 ├── configs/          # Experiment configurations (JSON)
 │   ├── experiments_full.json      # Main 312 experiments
 │   ├── experiments_lowrate.json   # Low-rate experiments (scaled windows)
@@ -33,7 +33,7 @@ replication/
 │   ├── extract_telemetry.py       # Log parser for visualization
 │   ├── telemetry_viewer.html      # Interactive telemetry dashboard
 │   └── 2025-01-27-ecos-solver-failures-research.md
-└── legacy/           # Earlier experiment versions (preserved for history)
+└── README.md         # This file
 ```
 
 ## Key Findings
@@ -52,22 +52,22 @@ replication/
 
 ### Local Testing
 ```bash
-cd experiments/replication/scripts
+cd experiments/gavel-replication/scripts
 python run_benchmark.py --index 0 --experiments-file ../configs/experiments_full.json --output-dir ../results/test
 ```
 
 ### FarmShare (SLURM)
 ```bash
 # Sync to FarmShare
-rsync -avz experiments/replication/ farmshare:~/gavel/experiments/replication/
+rsync -avz experiments/gavel-replication/ farmshare:~/gavel/experiments/gavel-replication/
 
 # Submit batch job
-ssh farmshare "cd ~/gavel/experiments/replication && sbatch slurm/submit_full.sbatch"
+ssh farmshare "cd ~/gavel/experiments/gavel-replication && sbatch slurm/submit_full.sbatch"
 ```
 
 ## Regenerating Plots
 ```bash
-cd experiments/replication/scripts
+cd experiments/gavel-replication/scripts
 python plot_results.py
 # Output: ../figures/gavel_replication_figures.png
 ```
