@@ -212,6 +212,32 @@ rsync -avz --exclude='simulation.log' \
 | `experiments/combined/` | FGD+Gavel integrated experiments (Alibaba traces) |
 | `experiments/fgd-standalone/` | Standalone FGD evaluation |
 
+## Paper Reference Data
+
+OCR'd reference curves from the original paper figures are stored as JSON:
+
+| Paper | Reference Data |
+|-------|---------------|
+| Gavel (Figs 9/10/11) | `experiments/gavel-replication/scripts/paper_reference_curves.json` |
+| FGD | `experiments/fgd-standalone/paper_reference_curves.json` |
+
+These are used by the respective `plot_results.py` scripts to overlay our replication results against the published figures.
+
+## Adding New Experiments
+
+Follow the paper-centric structure. Core algorithm code lives in `src/`, experiment drivers and results live in `experiments/`:
+
+| What | Where |
+|------|-------|
+| New scheduling policy | `src/scheduler/policies/` |
+| New FGD algorithm change | `src/fgd/` |
+| New experiment config | `experiments/<paper>/configs/` |
+| New experiment script | `experiments/<paper>/scripts/` |
+| New SLURM job | `experiments/<paper>/slurm/` |
+| Results, logs, telemetry | `experiments/<paper>/results/`, `logs/`, `telemetry/` |
+
+Do **not** put experiment scripts or results in `src/`. Do **not** create new top-level directories.
+
 ## Contributing
 
 ### Branch Naming

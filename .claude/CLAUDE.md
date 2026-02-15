@@ -24,6 +24,27 @@ Replicate Gavel (OSDI 2020) experiments, then extend with FGD's fragmentation-aw
 | `experiments/combined/run_fgd_experiments.py` | FGD+Gavel integrated experiment runner |
 | `experiments/fgd-standalone/` | Standalone FGD evaluation |
 
+## Paper Reference Data (OCR'd from Graphs)
+
+| Paper | File | Used By |
+|-------|------|---------|
+| Gavel (Figs 9/10/11) | `experiments/gavel-replication/scripts/paper_reference_curves.json` | `experiments/gavel-replication/scripts/plot_results.py` |
+| FGD (standalone eval) | `experiments/fgd-standalone/paper_reference_curves.json` | `experiments/fgd-standalone/plot_results.py` |
+| FGD (duplicate in data/) | `src/fgd/data/paper_reference_curves.json` | Legacy -- same content as fgd-standalone copy |
+
+## Directory Structure Rules
+
+The repo is organized by paper: `src/` for core algorithms, `experiments/` for per-paper drivers and results. **Preserve this structure when adding new work:**
+
+- **New experiment configs** go in `experiments/<paper>/configs/`
+- **New experiment scripts** go in `experiments/<paper>/scripts/` (or `experiments/<paper>/` root for entry points)
+- **New SLURM jobs** go in `experiments/<paper>/slurm/`
+- **Experiment results/logs/telemetry** go in `experiments/<paper>/results/`, `logs/`, `telemetry/`
+- **New core algorithm code** goes in `src/scheduler/` (Gavel) or `src/fgd/` (FGD)
+- **Never put experiment scripts or results in `src/`** -- `src/` is only for importable library code
+- **Never create new top-level directories** without discussion -- use the existing `src/`, `experiments/`, `scripts/`, `docs/` structure
+- **Never put results, figures, or logs in `src/fgd/`** -- those belong in `experiments/fgd-standalone/`
+
 ## Existing Documentation
 
 - `docs/paper-to-code-mapping.md` - How paper concepts map to code
