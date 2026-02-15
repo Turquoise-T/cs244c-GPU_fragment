@@ -15,6 +15,9 @@ import copy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'src', 'fgd'))
+
 from fgd import FGDScheduler, FragmentationCalculator, Node, Task, Workload
 from baselines import (
     BaselinePlacer, BestFitPlacer, FirstFitPlacer, RandomPlacer,

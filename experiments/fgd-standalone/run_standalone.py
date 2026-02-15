@@ -19,7 +19,7 @@ import os
 import sys
 
 # Add parent for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'src', 'fgd'))
 
 from fgd import Task, Workload
 from simulator import FGDSimulator
@@ -166,7 +166,7 @@ def main():
                         choices=ALL_PLACEMENTS + ['all'],
                         default='fgd', help='Placement strategy')
     parser.add_argument('--config', default=os.path.join(
-        os.path.dirname(__file__), 'configs', 'cluster_h.json'),
+        os.path.dirname(__file__), '..', '..', 'src', 'fgd', 'configs', 'cluster_h.json'),
                         help='Cluster config JSON')
     parser.add_argument('--trace-dir', default=None,
                         help='Directory containing Alibaba trace CSVs')

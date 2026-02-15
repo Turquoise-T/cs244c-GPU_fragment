@@ -24,7 +24,7 @@ import sys
 import time
 from multiprocessing import Pool
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'src', 'fgd'))
 
 from fgd import Node, Task, Workload
 from simulator import FGDSimulator
