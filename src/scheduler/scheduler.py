@@ -24,7 +24,6 @@ import logging
 from job import Job
 import job_id_pair
 from job_table import JobTable
-from runtime.rpc import scheduler_server, scheduler_client
 import set_queue
 from custom_logging import SchedulerAdapter
 from throughput_estimator import ThroughputEstimator
@@ -334,6 +333,7 @@ class Scheduler:
             self._allocation_thread.daemon = True
             self._allocation_thread.start()
 
+            from runtime.rpc import scheduler_server
             self.server_thread = threading.Thread(
                 target=scheduler_server.serve,
                 args=(port, callbacks))
@@ -3145,6 +3145,7 @@ class Scheduler:
 
         # Share a single RPC client for each GPU on the worker.
         if not self._simulate:
+            from runtime.rpc import scheduler_client
             rpc_client = scheduler_client.SchedulerRpcClient(ip_addr, port)
             self._all_rpc_clients.append(rpc_client)
 
