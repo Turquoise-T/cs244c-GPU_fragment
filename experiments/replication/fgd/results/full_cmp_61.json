@@ -1,0 +1,19 @@
+[
+  {
+    "name": "gavelfgd_210jph_s1",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 1,
+    "lam": 17.14,
+    "avg_jct": 112137.77700890618,
+    "wall_time_seconds": 28217.80853319168,
+    "num_completed_jobs": 136211,
+    "num_failed_jobs": 5,
+    "fragmentation_samples": 22618,
+    "saturated": true,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 6.863991511185781
+  }
+]

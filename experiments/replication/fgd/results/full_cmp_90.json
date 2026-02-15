@@ -1,0 +1,18 @@
+[
+  {
+    "name": "gavel_310jph_s0",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": false,
+    "fgd_placement_mode": "strided",
+    "seed": 0,
+    "lam": 11.61,
+    "avg_jct": 109720.17664115633,
+    "wall_time_seconds": 28206.286994695663,
+    "num_completed_jobs": 194050,
+    "num_failed_jobs": 8,
+    "fragmentation_samples": 0,
+    "saturated": true,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true
+  }
+]

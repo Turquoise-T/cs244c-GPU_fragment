@@ -1,0 +1,19 @@
+[
+  {
+    "name": "gavelfgd_310jph",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 250,
+    "lam": 310.0,
+    "avg_jct": 114032.3879186867,
+    "wall_time_seconds": 707.8649101257324,
+    "num_completed_jobs": 10549,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 944,
+    "saturated": false,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 49.01625529661017
+  }
+]

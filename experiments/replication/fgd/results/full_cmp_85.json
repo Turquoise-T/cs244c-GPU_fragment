@@ -1,0 +1,19 @@
+[
+  {
+    "name": "fgd_285jph_s1",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 1,
+    "lam": 12.63,
+    "avg_jct": 85749.23911123286,
+    "wall_time_seconds": 28216.116900920868,
+    "num_completed_jobs": 73522,
+    "num_failed_jobs": 1,
+    "fragmentation_samples": 10004,
+    "saturated": true,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 2.5610020991603357
+  }
+]

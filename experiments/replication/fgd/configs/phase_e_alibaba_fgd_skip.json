@@ -1,0 +1,30 @@
+{
+  "description": "FGD skip optimization benchmark: ECOS no-penalty with allocation-unchanged detection at 60 jph Alibaba scale. Compare against previous Job 1428182 exp 2 (ecos_no_penalty, 1162 rounds/20min).",
+  "common": {
+    "cluster_spec": {
+      "G2": 4392, "T4": 840, "G3": 312,
+      "P100": 264, "V100M32": 200, "V100M16": 192
+    },
+    "num_gpus_per_server": 8,
+    "workload_mode": "alibaba",
+    "fgd_workload_mode": "alibaba",
+    "generate_multi_gpu_jobs": true,
+    "mode": "steady_state",
+    "window_start": 4000,
+    "window_end": 5000,
+    "max_jct": 360000,
+    "enable_migration_penalty": false,
+    "time_per_iteration": 600,
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "lam": 60.0,
+    "seed": 0
+  },
+  "experiments": [
+    {
+      "name": "ecos_no_penalty_fgd_skip",
+      "policy": "max_min_fairness_perf",
+      "solver": "ECOS"
+    }
+  ]
+}
