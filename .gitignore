@@ -5,6 +5,7 @@ experiments/gavel-replication/results/results_full/*/simulation.log
 cluster/viz/
 src/fgd/results/
 src/fgd/figures/
+experiments/fgd-standalone/figures/
 
 # Python
 __pycache__/
