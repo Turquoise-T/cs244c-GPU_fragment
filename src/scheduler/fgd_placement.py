@@ -18,7 +18,7 @@ Data mapping:
 import sys
 import os
 import time
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'fgd_src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'fgd'))
 
 from fgd import FGDScheduler, FragmentationCalculator, Node, Task, Workload
 
