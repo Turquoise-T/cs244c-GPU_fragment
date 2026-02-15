@@ -8,10 +8,10 @@
 #SBATCH --partition=normal
 
 # FGD skip optimization benchmark: ECOS no-penalty with allocation-unchanged detection
-# Usage: cd ~/gavel/experiments/fgd/slurm && sbatch submit_fgd_skip_bench.sbatch
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_fgd_skip_bench.sbatch
 
 GAVEL_DIR="$HOME/gavel"
-FGD_DIR="$GAVEL_DIR/experiments/fgd"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
 RESULTS_DIR="$FGD_DIR/results"
 
 mkdir -p "$(dirname "$0")/slurm_logs"

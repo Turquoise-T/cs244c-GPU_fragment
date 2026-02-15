@@ -11,10 +11,10 @@
 # Philly FGD + Migration Penalty Sweep (27 experiments)
 # {strided, bestfit, fgd} x {60, 180, 360 jph} x 3 seeds
 # Philly cluster (36:36:36), 10-min rounds, migration penalty enabled
-# Usage: cd ~/gavel/experiments/fgd/slurm && sbatch submit_philly_migration.sbatch
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_philly_migration.sbatch
 
 GAVEL_DIR="$HOME/gavel"
-FGD_DIR="$GAVEL_DIR/experiments/fgd"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
 RESULTS_DIR="$FGD_DIR/results"
 
 # Create output directories

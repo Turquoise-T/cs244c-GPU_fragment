@@ -9,10 +9,10 @@
 #SBATCH --array=0-2
 
 # Single-type benchmark: ECOS+penalty (0) vs single-type (1) vs ECOS no penalty (2)
-# Usage: cd ~/gavel/experiments/fgd/slurm && sbatch submit_single_type_bench.sbatch
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_single_type_bench.sbatch
 
 GAVEL_DIR="$HOME/gavel"
-FGD_DIR="$GAVEL_DIR/experiments/fgd"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
 RESULTS_DIR="$FGD_DIR/results"
 
 mkdir -p "$(dirname "$0")/slurm_logs"

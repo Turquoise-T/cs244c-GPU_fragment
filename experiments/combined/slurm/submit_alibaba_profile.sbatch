@@ -10,10 +10,10 @@
 # Bounded profiling run: 60 jph Alibaba experiment with 20-min wall limit.
 # Captures ~200-400 rounds of per-section timing data.
 # No -q flag so PROFILE summary is emitted to stderr.
-# Usage: cd ~/gavel/experiments/fgd/slurm && sbatch submit_alibaba_profile.sbatch
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_alibaba_profile.sbatch
 
 GAVEL_DIR="$HOME/gavel"
-FGD_DIR="$GAVEL_DIR/experiments/fgd"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
 RESULTS_DIR="$FGD_DIR/results"
 
 mkdir -p "$(dirname "$0")/slurm_logs"

@@ -10,10 +10,10 @@
 
 # A/B test: GPU sharing with fractional-aware LP vs no sharing.
 # 6 experiments: 3 seeds x 2 arms (noshare, share), 60 jph Alibaba.
-# Usage: cd ~/gavel/experiments/fgd/slurm && sbatch submit_gpu_sharing.sbatch
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_gpu_sharing.sbatch
 
 GAVEL_DIR="$HOME/gavel"
-FGD_DIR="$GAVEL_DIR/experiments/fgd"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
 RESULTS_DIR="$FGD_DIR/results"
 
 mkdir -p "$(dirname "$0")/slurm_logs"

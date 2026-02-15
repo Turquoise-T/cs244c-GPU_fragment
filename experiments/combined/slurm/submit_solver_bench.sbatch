@@ -11,10 +11,10 @@
 # Solver benchmark: ECOS (0) vs SCS (1) vs HiGHS (2) at 60 jph Alibaba scale.
 # Each experiment runs with --max-wall-time 1200 (20 min).
 # No -q flag so PROFILE lines are captured in stderr.
-# Usage: cd ~/gavel/experiments/fgd/slurm && sbatch submit_solver_bench.sbatch
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_solver_bench.sbatch
 
 GAVEL_DIR="$HOME/gavel"
-FGD_DIR="$GAVEL_DIR/experiments/fgd"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
 RESULTS_DIR="$FGD_DIR/results"
 
 mkdir -p "$(dirname "$0")/slurm_logs"

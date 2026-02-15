@@ -18,10 +18,10 @@
 # SLURM processes lowest array index first, so load levels run in order:
 #   0-8: 60 jph, 9-17: 85 jph, ..., 108-116: 360 jph
 #
-# Usage: cd ~/gavel/experiments/fgd/slurm && sbatch submit_load_sweep.sbatch
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_load_sweep.sbatch
 
 GAVEL_DIR="$HOME/gavel"
-FGD_DIR="$GAVEL_DIR/experiments/fgd"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
 RESULTS_DIR="$FGD_DIR/results"
 
 mkdir -p "$(dirname "$0")/slurm_logs"

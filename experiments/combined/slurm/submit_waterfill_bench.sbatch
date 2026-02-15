@@ -10,10 +10,10 @@
 
 # Water-filling benchmark: ECOS baseline (0) vs waterfill (1) at 60 jph.
 # Migration penalty disabled for fair comparison.
-# Usage: cd ~/gavel/experiments/fgd/slurm && sbatch submit_waterfill_bench.sbatch
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_waterfill_bench.sbatch
 
 GAVEL_DIR="$HOME/gavel"
-FGD_DIR="$GAVEL_DIR/experiments/fgd"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
 RESULTS_DIR="$FGD_DIR/results"
 
 mkdir -p "$(dirname "$0")/slurm_logs"

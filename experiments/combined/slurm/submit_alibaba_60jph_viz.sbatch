@@ -9,10 +9,10 @@
 
 # Single 60jph FGD experiment with FULL logging (no -q) for viz data.
 # Produces INFO-level output: TELEMETRY, EVENT, [Micro-task scheduled].
-# Usage: cd ~/gavel/experiments/fgd/slurm && sbatch submit_alibaba_60jph_viz.sbatch
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_alibaba_60jph_viz.sbatch
 
 GAVEL_DIR="$HOME/gavel"
-FGD_DIR="$GAVEL_DIR/experiments/fgd"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
 RESULTS_DIR="$FGD_DIR/results"
 
 mkdir -p slurm_logs

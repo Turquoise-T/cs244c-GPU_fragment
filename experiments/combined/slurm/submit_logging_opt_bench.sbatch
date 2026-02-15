@@ -8,10 +8,10 @@
 #SBATCH --partition=normal
 
 # Logging optimization benchmark: demoted [Micro-task scheduled/succeeded] to DEBUG
-# Usage: cd ~/gavel/experiments/fgd/slurm && sbatch submit_logging_opt_bench.sbatch
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_logging_opt_bench.sbatch
 
 GAVEL_DIR="$HOME/gavel"
-FGD_DIR="$GAVEL_DIR/experiments/fgd"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
 RESULTS_DIR="$FGD_DIR/results"
 
 mkdir -p "$(dirname "$0")/slurm_logs"
