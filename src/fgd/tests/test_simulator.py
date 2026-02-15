@@ -19,6 +19,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'experiments', 'fgd-standalone'))
 
 from fgd import FGDScheduler, FragmentationCalculator, Node, Task, Workload
 from baselines import (
