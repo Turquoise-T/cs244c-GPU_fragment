@@ -1,33 +1,27 @@
 {
-  "_description": "Reference data extracted from FGD ATC'23 paper Figures 7 and 9. Values are approximate readings from the published plots. X-axis 'demand_pct' = Arrived workloads in % of cluster GPU capacity.",
+  "_description": "Reference data from FGD ATC'23 paper. Figs 7a, 7b, 9b manually traced (random/clustering/fgd only). Others are approximate OCR readings. X-axis 'demand_pct' = Arrived workloads in % of cluster GPU capacity.",
   "_source": "Weng et al., 'Beware of Fragmentation: Scheduling GPU-Sharing Workloads with Fragmentation Gradient Descent', ATC'23",
   "_cluster": "Cluster H: 1213 nodes, 6212 GPUs (T4, P100, V100, G2, G3, A10)",
   "_workload": "openb_pod_list_default (8152 pods), tune_ratio=1.3, 10 seeds (42-51)",
 
   "fig7a_frag_rate_pct": {
-    "_description": "Frag Rate (%) - percentage of unallocated GPUs that are fragmented. Rises to ~100% as cluster fills.",
+    "_description": "Frag Rate (%) - manually traced (random, clustering, fgd). null = point not clearly readable.",
     "_x_axis": "Arrived workloads (% of cluster GPU capacity)",
     "_y_axis": "Frag Rate (%)",
-    "demand_pct": [0, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90, 95, 100, 105, 110, 120],
-    "random":     [15, 15, 16, 18, 20, 25, 32, 42, 58, 72, 90, 97, 98, 98, 98, 98],
-    "dotprod":    [15, 15, 15, 17, 18, 22, 28, 37, 52, 67, 85, 95, 97, 98, 98, 98],
-    "clustering": [15, 15, 15, 15, 16, 18, 22, 30, 42, 58, 80, 93, 97, 97, 97, 97],
-    "packing":    [15, 15, 15, 15, 15, 17, 19, 24, 32, 45, 72, 92, 97, 97, 97, 97],
-    "bestfit":    [15, 15, 15, 14, 15, 16, 18, 22, 30, 42, 68, 90, 96, 97, 97, 97],
-    "fgd":        [14, 14, 14, 14, 14, 14, 15, 17, 20, 27, 37, 55, 82, 92, 96, 97]
+    "demand_pct": [0, 10, 20, 30, 35, 40, 50, 60, 70, 75, 80, 85, 90, 95, 100, 105, 110, 120],
+    "random":     [15, 15, 16, 23, 25, 26, 31, 37, 48, 62, 76, 94, null, 99, 98, 98, 98, 98],
+    "clustering": [15, 15, 15, 15, null, 21, 24, 27, 33, null, 45, 58, 98, null, 99, 99, 97, 97],
+    "fgd":        [14, 14, 14, 14, null, 16, 18, 19, 24, null, 30, 37, 48, 100, null, null, 99, 97]
   },
 
   "fig7b_frag_over_total_pct": {
-    "_description": "Frag/Total (%) - fragmented GPUs as percentage of TOTAL cluster GPUs. This is the key metric for comparing policies early on. Our code calls this 'frag_ratio'.",
+    "_description": "Frag/Total (%) - manually traced (random, clustering, fgd). null = point not clearly readable.",
     "_x_axis": "Arrived workloads (% of cluster GPU capacity)",
     "_y_axis": "Frag / Total (%)",
-    "demand_pct": [0, 10, 20, 30, 40, 50, 60, 70, 80, 85, 90, 95, 100, 110, 120],
-    "random":     [14.5, 14.5, 14.5, 14.5, 14.0, 13.5, 13.5, 14.0, 15.0, 15.5, 16.0, 14.0, 10.0, 10.0, 10.0],
-    "dotprod":    [15.0, 15.0, 15.0, 15.0, 15.0, 14.8, 14.5, 15.0, 16.0, 16.0, 16.0, 13.5, 10.0, 9.5, 9.5],
-    "clustering": [15.0, 15.0, 14.5, 14.0, 13.5, 13.0, 12.5, 12.0, 12.0, 11.5, 11.0, 9.5, 8.0, 8.0, 8.5],
-    "packing":    [15.0, 15.0, 14.5, 14.0, 13.5, 12.5, 11.5, 10.5, 10.0, 9.5, 9.0, 8.5, 8.0, 7.5, 7.5],
-    "bestfit":    [15.0, 15.0, 14.5, 14.0, 13.0, 12.5, 11.5, 10.5, 10.0, 9.5, 9.0, 8.5, 8.0, 8.0, 8.5],
-    "fgd":        [14.0, 14.0, 13.5, 13.0, 12.0, 11.0, 10.0, 8.5, 7.0, 6.5, 6.0, 5.5, 5.0, 5.0, 5.0]
+    "demand_pct": [0, 10, 20, 30, 40, 45, 50, 55, 60, 65, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120],
+    "random":     [14.5, 14.5, 14.5, 14.8, 14.9, null, 15, null, 15.4, 15.8, 15.8, null, 15.5, 14.6, 14, 13.5, 13.4, null, 12.6, 12.7],
+    "clustering": [15, 15, 14.5, 13.7, 13, null, 12, 11.5, null, 10.7, 10, 9.3, 9, 8.4, null, 8, null, 8, null, 8.1],
+    "fgd":        [14, 12.8, 11.8, 11.1, 10.1, 9.2, null, 8.4, null, 7.3, 6.7, 5.7, null, 5.2, 4.5, 4.6, null, 4.6, null, 4.7]
   },
 
   "fig9a_unalloc_gpu_pct": {
@@ -45,16 +39,13 @@
   },
 
   "fig9b_occupied_nodes": {
-    "_description": "Number of GPU nodes with at least one allocated GPU. All policies asymptote to ~1200 by ~90% demand.",
+    "_description": "Occupied GPU nodes - manually traced (random, clustering, fgd).",
     "_x_axis": "Arrived workloads (% of cluster GPU capacity)",
     "_y_axis": "Occupied nodes (count, max ~1213)",
-    "demand_pct": [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-    "random":     [0, 350, 620, 810, 950, 1050, 1110, 1150, 1180, 1200, 1200],
-    "dotprod":    [0, 200, 400, 580, 730, 860, 960, 1050, 1120, 1180, 1200],
-    "clustering": [0, 300, 500, 650, 780, 880, 960, 1040, 1100, 1170, 1200],
-    "packing":    [0, 120, 240, 360, 480, 590, 700, 810, 940, 1100, 1200],
-    "bestfit":    [0, 120, 240, 360, 480, 590, 700, 810, 940, 1100, 1200],
-    "fgd":        [0, 120, 240, 350, 470, 580, 690, 800, 920, 1080, 1200]
+    "demand_pct": [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95],
+    "random":     [0, 520, 849, 1075, 1177, 1204, 1211, 1225, 1225, 1200, 1201],
+    "clustering": [0, 351, 604, 699, 780, 880, 960, 1040, 1100, 1170, 1208],
+    "fgd":        [0, 120, 258, 402, 525, 661, 771, 907, 1017, 1146, 1208]
   },
 
   "fig9c_pending_gpus_at_96pct": {

@@ -318,6 +318,8 @@ def main():
                         help='Output directory for figures')
     parser.add_argument('--ref-json', default=None,
                         help='Path to paper_reference_curves.json')
+    parser.add_argument('--policies', default=None,
+                        help='Comma-separated list of policies to plot (default: all)')
 
     args = parser.parse_args()
 
@@ -342,6 +344,14 @@ def main():
 
     os.makedirs(args.output_dir, exist_ok=True)
     by_policy = group_by_policy(results)
+
+    # Filter policies if requested
+    global POLICY_ORDER
+    if args.policies:
+        allowed = [p.strip() for p in args.policies.split(',')]
+        POLICY_ORDER = [p for p in POLICY_ORDER if p in allowed]
+        by_policy = {k: v for k, v in by_policy.items() if k in allowed}
+        print(f"Filtering to policies: {POLICY_ORDER}")
 
     # ---- Fig 7a: Frag Rate (%) ----
     def frag_rate_func(pt):
