@@ -1,0 +1,222 @@
+# FGD Replication — Experiment Scripts
+
+Replication of *"Beware of Fragmentation: Scheduling GPU-Sharing Workloads with
+Fragmentation Gradient Descent"* (USENIX ATC '23).
+
+All scripts are run from `fgd_replication/` and read trace data from
+`../alibaba_traces/cluster-trace-gpu-v2023/`.
+
+---
+
+## Result Directory Mapping
+
+Every script writes results into `result/<name>/` where `<name>` encodes the
+script, figure, and key parameters. The table below shows the mapping from
+command to result directory and the files produced inside it.
+
+| Command | Result directory | Files |
+|---|---|---|
+| `python exp_fig7a.py --num-runs 10 --seed 42` | `result/fig7a-runs10-seed42/` | `figure7a_results.csv`, `figure7a.png`, `experiment_summary.log` |
+| `python exp_fig9.py --num-runs 10 --seed 42` | `result/fig9-runs10-seed42/` | `figure9a_unalloc.csv`, `figure9b_occupied.csv`, `figure9c_failed.csv`, `figure9d_breakdown.csv`, `figure9.png`, `experiment_summary.log` |
+| `python exp_fig11_14.py --figures 11 --num-runs 10 --seed 42` | `result/fig11-runs10-seed42/` | `figure11_results.csv`, `figure11.png`, `experiment_summary.log` |
+| `python exp_fig11_14.py --figures 12 --num-runs 10 --seed 42` | `result/fig12-runs10-seed42/` | `figure12_results.csv`, `figure12.png`, `experiment_summary.log` |
+| `python exp_fig11_14.py --figures 13 --num-runs 10 --seed 42` | `result/fig13-runs10-seed42/` | `figure13_results.csv`, `figure13.png`, `experiment_summary.log` |
+| `python exp_fig11_14.py --figures 14 --num-runs 10 --seed 42` | `result/fig14-runs10-seed42/` | `figure14_results.csv`, `figure14.png`, `experiment_summary.log` |
+
+**Key naming rules:**
+- `fig7a` and `fig9` are fixed prefixes for their scripts.
+- `fig11_14` uses `fig{N}` for a single figure or `fig{A}-{B}-...` when
+  multiple figures are run together in one invocation.
+- Changing `--num-runs` or `--seed` produces a separate directory, so results
+  from different runs never overwrite each other.
+
+**Plot-only mode** (`--plot-csv`) reads from an existing directory and writes
+the updated PNG back into the same directory. It does not create a new directory.
+
+---
+
+## Scripts
+
+### `exp_fig7a.py` — Figure 7(a): Fragmentation rate vs arrived workload
+
+Runs Monte-Carlo workload inflation using the default trace
+(`openb_pod_list_default.csv`) and plots fragmentation rate (%) as a function
+of arrived GPU workload (%).
+
+**Arguments**
+
+| Argument | Default | Description |
+|---|---|---|
+| `--num-runs` | 3 | Runs per scheduler (paper uses 10) |
+| `--seed` | 42 | Base random seed |
+| `--max-workload` | 120.0 | Stop when arrived workload reaches this % of GPU capacity |
+| `--sample-interval` | 5.0 | Record fragmentation every this many % of arrived workload |
+| `--schedulers` | `all` | Comma-separated subset to run, e.g. `FGD,Packing` |
+| `--plot-csv` | — | Path to existing result CSV; skips experiment and plots only |
+
+**Result directory:** `result/fig7a-runs{N}-seed{S}/`
+
+**Output files:**
+- `figure7a_results.csv` — columns: `scheduler, arrived_pct, frag_rate, run`
+- `figure7a.png`
+- `experiment_summary.log`
+
+**Examples**
+```bash
+# Full run (paper settings)
+python exp_fig7a.py --num-runs 10 --seed 42
+
+# Quick test
+python exp_fig7a.py --num-runs 1
+
+# Run only FGD and Packing
+python exp_fig7a.py --schedulers FGD,Packing
+
+# Plot from saved CSV
+python exp_fig7a.py --plot-csv result/fig7a-runs10-seed42/figure7a_results.csv
+```
+
+---
+
+### `exp_fig9.py` — Figure 9: Multi-metric evaluation (4 sub-figures)
+
+Monte-Carlo workload inflation producing four sub-figures:
+- **(a)** Unallocated GPU % vs arrived workload (80–120% range)
+- **(b)** Occupied nodes vs arrived workload (0–100% range)
+- **(c)** Failed task GPU demand by category at 96% arrival (bar chart)
+- **(d)** Fragmentation breakdown by cause at end of run (bar chart)
+
+**Arguments**
+
+| Argument | Default | Description |
+|---|---|---|
+| `--num-runs` | 10 | Monte-Carlo runs per scheduler |
+| `--seed` | 42 | Base random seed |
+| `--sample-interval` | 2.0 | Record metrics every this many % of arrived workload |
+| `--max-arrival` | 120.0 | Stop when arrived workload reaches this % of GPU capacity |
+| `--schedulers` | `all` | Comma-separated subset to run, e.g. `FGD,Packing` |
+| `--plot-csv` | — | Path to result directory containing all 4 CSVs; plots only |
+
+**Result directory:** `result/fig9-runs{N}-seed{S}/`
+
+**Output files:**
+- `figure9a_unalloc.csv` — columns: `scheduler, arrived_pct, unalloc_gpu_pct, run`
+- `figure9b_occupied.csv` — columns: `scheduler, arrived_pct, occupied_nodes, run`
+- `figure9c_failed.csv` — columns: `scheduler, gpu_category, sum_gpu_demand, run`
+- `figure9d_breakdown.csv` — columns: `scheduler, cause, pct, run`
+- `figure9.png`
+- `experiment_summary.log`
+
+**Examples**
+```bash
+# Full run
+python exp_fig9.py --num-runs 10 --seed 42
+
+# Quick test
+python exp_fig9.py --num-runs 1
+
+# Run only FGD and Packing
+python exp_fig9.py --schedulers FGD,Packing
+
+# Plot from saved CSVs
+python exp_fig9.py --plot-csv result/fig9-runs10-seed42/
+```
+
+---
+
+### `exp_fig11_14.py` — Figures 11–14: Sensitivity analysis
+
+Evaluates schedulers as workload composition varies. Each figure loads a
+different set of pre-built trace files; no synthetic sampling is performed.
+
+**Arguments**
+
+| Argument | Default | Description |
+|---|---|---|
+| `--figures` | `11,12,13,14` | Comma-separated list of figures to run |
+| `--num-runs` | 10 | Monte-Carlo runs per (proportion, scheduler) combination |
+| `--seed` | 42 | Base random seed |
+| `--schedulers` | `all` | Comma-separated subset to run, e.g. `FGD,Packing` |
+| `--plot-csv` | — | One or more CSV paths; plots only. Accepts multiple files |
+
+**Result directory:** `result/fig{X}-runs{N}-seed{S}/`
+(e.g., `fig11-12-runs10-seed42` when running figures 11 and 12 together)
+
+**Output files** (one per figure):
+- `figure{N}_results.csv` — columns: `proportion, scheduler, unalloc_gpu_pct, std`
+- `figure{N}.png`
+- `experiment_summary.log`
+
+**Trace files used**
+
+| Figure | x-axis | Trace files |
+|---|---|---|
+| 11 | GPU-sharing % of GPU requests | `openb_pod_list_gpushare{40,60,80,100}.csv` |
+| 12 | Multi-GPU % of GPU requests | `openb_pod_list_multigpu{20,30,40,50}.csv` |
+| 13 | GPU-type-constrained % of GPU requests | `openb_pod_list_gpuspec{10,20,25,33}.csv` |
+| 14 | Non-GPU % of task count | `openb_pod_list_cpu{050,100,200,250}.csv` |
+
+**Examples**
+```bash
+# Run all four figures
+python exp_fig11_14.py
+
+# Run single figure
+python exp_fig11_14.py --figures 11
+
+# Run subset of figures
+python exp_fig11_14.py --figures 11,12 --num-runs 10
+
+# Run only FGD and Packing across all figures
+python exp_fig11_14.py --schedulers FGD,Packing
+
+# Plot from saved CSVs
+python exp_fig11_14.py --plot-csv result/fig11-runs10-seed42/figure11_results.csv
+python exp_fig11_14.py --plot-csv result/fig11-runs10-seed42/figure11_results.csv \
+                                   result/fig12-runs10-seed42/figure12_results.csv
+```
+
+---
+
+## Configuration Assumptions
+
+### Task type representation (all experiments)
+
+FGD needs a discrete task-type distribution to compute fragmentation gradients.
+Continuous CPU/GPU demands are bucketed as follows:
+
+| Resource | Bucketing rule | Rationale |
+|---|---|---|
+| CPU | Round to nearest multiple of 4 cores | Reduces ~hundreds of unique values to ~20 types |
+| GPU (fractional, < 1) | Round to 2 decimal places | Preserves GPU-sharing granularity |
+| GPU (integer, ≥ 1) | Use exact integer | Multi-GPU tasks are already discrete |
+
+This bucketing is applied in `trace_loader._bucket_cpu()` and consistently
+throughout all scripts.
+
+### Per-figure assumptions
+
+**Figure 7(a) — `exp_fig7a.py`**
+- Trace: `openb_pod_list_default.csv` (8,152 tasks, 13.3% non-GPU)
+- FGD distribution: computed from the full default trace (oracle knowledge)
+- Fragmentation snapshot: every 5% of arrived workload
+
+**Figure 9 — `exp_fig9.py`**
+- Trace: `openb_pod_list_default.csv`
+- FGD distribution: computed from the full default trace (oracle knowledge)
+- Snapshot for 9(c) failed-task breakdown: taken at exactly 96% arrival
+- Snapshot interval for 9(a)/(b) curves: every 2% of arrived workload
+- Occupied node criterion: `allocated_cpu > 0` OR any GPU slot `< 1.0`
+- Fragmentation breakdown (9d): computed at end of run using per-node,
+  per-task-type fragmentation decomposed into *deficient*, *stranded*, *non-GPU*
+
+**Figures 11–14 — `exp_fig11_14.py`**
+- Each (figure, proportion) pair loads its own dedicated trace file; no
+  synthetic reweighting is applied
+- FGD distribution: computed from whichever trace file is loaded for that
+  proportion — FGD has oracle knowledge of the current workload mix
+- Figure 13 uses `GpuTypeAwareCluster`: tasks with a non-empty `gpu_spec`
+  field can only be placed on nodes whose `gpu_model` matches
+- Figure 12 trace files (`multigpu*.csv`) have a shorter column format
+  (no `gpu_spec`, `qos`, or timestamp columns); the loader handles this
+  gracefully with optional field access
