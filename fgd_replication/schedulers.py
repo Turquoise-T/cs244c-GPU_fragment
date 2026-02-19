@@ -459,6 +459,133 @@ class WindowedFGDScheduler(FGDScheduler):
         self._cache_dirty = True
 
 
+class BayesianFGDScheduler(FGDScheduler):
+    """
+    Bayesian FGD: Starts with a uniform prior over a (cpu, gpu) grid derived
+    from cluster specs, then performs Bayesian updates as tasks arrive.
+
+    Grid: CPU bucketed by 4 ({0, 4, 8, ..., max_cpu}),
+          GPU bucketed by 0.1 ({0.0, 0.1, 0.2, ..., max_gpu}).
+    Prior: uniform weight across all grid cells, total = prior_strength.
+    Update: each observed task adds 1 count to its bucket.
+
+    Equivalent to Dirichlet-Multinomial posterior:
+        p_m = (prior_count_m + observed_count_m) / total_count
+    """
+
+    def __init__(self, prior_strength: float = 10.0, min_gpu_tasks: int = 50,
+                 num_workers: int = None):
+        super().__init__(num_workers=num_workers)
+        self.name = "B-FGD"
+        self.prior_strength = prior_strength
+        self.min_gpu_tasks = min_gpu_tasks  # Use Packing until this many GPU tasks observed
+        self._type_counts: Counter = Counter()
+        self._total_count: float = 0.0
+        self._gpu_task_count: int = 0  # Number of GPU-demanding tasks observed
+        self._cached_task_types = None
+        self._cache_dirty = True
+        self._fallback = PackingScheduler()
+
+    def set_uniform_prior(self, max_cpu: int, max_gpu: int):
+        """Initialize uniform prior over (cpu, gpu) grid from cluster specs.
+
+        Grid: cpu in {0, 4, 8, ..., max_cpu}
+              gpu in {0.0, 0.1, 0.2, ..., 1.0, 2.0, 3.0, ..., max_gpu}
+        Each cell gets equal weight, total pseudo-counts = prior_strength.
+        """
+        self._type_counts.clear()
+        max_cpu = int(max_cpu)
+        max_gpu = int(max_gpu)
+        cpu_values = list(range(0, max_cpu + 1, 4))
+        # GPU: 0.0-1.0 by 0.1, then 2.0-max_gpu by 1.0
+        gpu_values = [round(i * 0.1, 1) for i in range(11)]  # 0.0..1.0
+        gpu_values += list(range(2, max_gpu + 1))              # 2, 3, ..., max_gpu
+
+        n_types = len(cpu_values) * len(gpu_values)
+        weight_per_type = self.prior_strength / n_types
+
+        for cpu in cpu_values:
+            for gpu in gpu_values:
+                self._type_counts[(cpu, gpu)] = weight_per_type
+
+        self._total_count = self.prior_strength
+        self._cache_dirty = True
+        print(f"  B-FGD uniform prior: {len(cpu_values)} CPU x {len(gpu_values)} GPU = "
+              f"{n_types} types, prior_strength={self.prior_strength}, "
+              f"weight/type={weight_per_type:.6f}")
+
+    def observe_task(self, task: Task):
+        """Bayesian update: bucket task by cpu/4 and gpu (0.1 for <1, 1.0 for >=1)."""
+        if task.gpu_demand >= 1.0:
+            gpu_bucketed = round(task.gpu_demand)
+        else:
+            gpu_bucketed = round(round(task.gpu_demand / 0.1) * 0.1, 1)
+        cpu_bucket = round(task.cpu_demand / 4) * 4
+        self._type_counts[(cpu_bucket, gpu_bucketed)] += 1
+        self._total_count += 1
+        if task.gpu_demand > 0:
+            self._gpu_task_count += 1
+        self._cache_dirty = True
+
+    def _get_bayesian_task_types(self) -> List[Tuple[Tuple[float, float], float]]:
+        """Compute task distribution from accumulated counts."""
+        if not self._cache_dirty and self._cached_task_types is not None:
+            return self._cached_task_types
+
+        if self._total_count == 0:
+            return []
+
+        self._cached_task_types = [
+            ((cpu, gpu), count / self._total_count)
+            for (cpu, gpu), count in self._type_counts.items()
+        ]
+        self._cache_dirty = False
+        return self._cached_task_types
+
+    def select_node(self, task: Task, cluster: Cluster) -> Optional[int]:
+        # Fall back to Packing until enough GPU tasks observed
+        if self._gpu_task_count < self.min_gpu_tasks:
+            return self._fallback.select_node(task, cluster)
+
+        eligible = cluster.get_eligible_nodes(task)
+        if not eligible:
+            return None
+
+        task_types = self._get_bayesian_task_types()
+
+        if not task_types:
+            return self._fallback.select_node(task, cluster)
+
+        args_list = [
+            (
+                node.node_id, node.remaining_cpu,
+                tuple(node.gpu_remaining), node.num_gpus, node.total_cpu,
+                task.cpu_demand, task.gpu_demand, task_types
+            )
+            for node in eligible
+        ]
+
+        pool = self._get_pool()
+        results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
+
+        best_node_id = None
+        best_delta = float('inf')
+        for node_id, delta in results:
+            if delta < best_delta:
+                best_delta = delta
+                best_node_id = node_id
+
+        return best_node_id
+
+    def reset(self):
+        """Reset all counts and cache."""
+        self._type_counts.clear()
+        self._total_count = 0.0
+        self._gpu_task_count = 0
+        self._cached_task_types = None
+        self._cache_dirty = True
+
+
 def get_scheduler(name: str) -> Scheduler:
     """Factory function to get scheduler by name"""
     schedulers = {

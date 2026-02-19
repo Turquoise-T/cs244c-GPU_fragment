@@ -13,9 +13,24 @@ from collections import Counter
 from simulator import Task, Node, Cluster, TaskDistribution
 from schedulers import (
     Scheduler, get_all_schedulers, get_scheduler,
-    ClusteringScheduler, FGDScheduler, WindowedFGDScheduler
+    ClusteringScheduler, FGDScheduler, WindowedFGDScheduler,
+    BayesianFGDScheduler
 )
 from trace_loader import AlibabaTraceLoader
+
+
+def build_uniform_task_types(nodes) -> List[Tuple[Tuple[float, float], float]]:
+    """Build uniform distribution over (cpu, gpu) grid from cluster node specs."""
+    max_cpu = int(max(n.total_cpu for n in nodes))
+    max_gpu = int(max(n.num_gpus for n in nodes))
+    cpu_values = list(range(0, max_cpu + 1, 4))
+    gpu_values = [round(i * 0.1, 1) for i in range(11)]  # 0.0..1.0
+    gpu_values += list(range(2, max_gpu + 1))              # 2, 3, ..., max_gpu
+    n_types = len(cpu_values) * len(gpu_values)
+    weight = 1.0 / n_types
+    task_types = [((cpu, gpu), weight) for cpu in cpu_values for gpu in gpu_values]
+    print(f"  U-FGD uniform grid: {len(cpu_values)} CPU x {len(gpu_values)} GPU = {n_types} types")
+    return task_types
 
 
 @dataclass
@@ -233,6 +248,12 @@ class Figure7aExperiment:
             # Pre-populate window with first N tasks
             for t in tasks[:scheduler.window_size]:
                 scheduler.observe_task(t)
+        if isinstance(scheduler, BayesianFGDScheduler):
+            scheduler.reset()
+            # Uniform prior from cluster specs
+            max_cpu = max(n.total_cpu for n in self.loader.nodes)
+            max_gpu = max(n.num_gpus for n in self.loader.nodes)
+            scheduler.set_uniform_prior(max_cpu, max_gpu)
 
         cumulative_gpu_demand = 0.0
         next_sample_pct = sample_interval_pct
@@ -249,8 +270,10 @@ class Figure7aExperiment:
             cumulative_gpu_demand += task.gpu_demand
             arrived_pct = (cumulative_gpu_demand / self.total_gpu_capacity) * 100
 
-            # Feed task to windowed scheduler before scheduling
+            # Feed task to adaptive schedulers before scheduling
             if isinstance(scheduler, WindowedFGDScheduler):
+                scheduler.observe_task(task)
+            if isinstance(scheduler, BayesianFGDScheduler):
                 scheduler.observe_task(task)
 
             # Try to schedule
@@ -339,7 +362,11 @@ def plot_figure7a(results: Dict[str, List[ExperimentResult]], output_path: str =
             y_vals = [p[1] for p in curve]
 
             # Match known styles
-            if name.startswith('W-FGD'):
+            if name == 'U-FGD':
+                style = {'color': 'teal', 'linestyle': '-', 'marker': 'h'}
+            elif name.startswith('B-FGD'):
+                style = {'color': 'darkorange', 'linestyle': '-', 'marker': 'D'}
+            elif name.startswith('W-FGD'):
                 style = {'color': 'darkgreen', 'linestyle': '-', 'marker': '*'}
             elif name.startswith('FGD-') and name != 'FGD-Full':
                 style = {'color': 'crimson', 'linestyle': '--', 'marker': 'P'}
@@ -458,6 +485,13 @@ if __name__ == "__main__":
                         help='Cluster size as %% of original (e.g., 50 keeps 50%% of each node type)')
     parser.add_argument('--tier-order', type=str, default='0,1,2,3,4',
                         help='Tier order for phased mode (comma-separated, e.g., 3,2,1,4,0)')
+    parser.add_argument('--prior-strength', type=float, default=10.0,
+                        help='Prior strength for B-FGD (pseudo-count total, default: 10)')
+    parser.add_argument('--min-gpu-tasks', type=int, default=50,
+                        help='B-FGD uses Packing fallback until this many GPU tasks observed (default: 50)')
+    parser.add_argument('--schedulers', type=str, default='all',
+                        help='Comma-separated scheduler names to run (default: all). '
+                             'Available: Random,BestFit,DotProd,Packing,Clustering,FGD-Full,FGD-N,W-FGD,B-FGD')
     args = parser.parse_args()
 
     # Parse tier order
@@ -470,6 +504,7 @@ if __name__ == "__main__":
     print("Figure 7(a) Replication - Trace Replay")
     print(f"  mode=replay, interval={args.sample_interval}%")
     print(f"  window_size={args.window_size}")
+    print(f"  prior_strength={args.prior_strength}")
     print(f"  task_order={args.task_order}")
     if args.task_order == 'phased':
         print(f"  tier_order={args.tier_order}")
@@ -482,18 +517,10 @@ if __name__ == "__main__":
         tier_order=args.tier_order_list
     )
 
-    # Build schedulers:
-    # - Baselines: don't use FGD, distribution irrelevant
-    # - FGD-Full: original FGD, schedules with full trace distribution (perfect knowledge)
-    # - FGD-N: penalized FGD, schedules with first-N distribution only
-    # - W-FGD-N: windowed FGD, schedules with sliding window of last N tasks
-    # All evaluated with full distribution (cluster always has full dist)
-
-    # FGD-Full: no override → uses cluster's full distribution for scheduling
+    # Build all available schedulers
     fgd_full = FGDScheduler()
     fgd_full.name = "FGD-Full"
 
-    # FGD-N: override scheduling distribution to first-N only
     fgd_n = FGDScheduler(
         scheduling_task_types=experiment.first_n_distribution.get_task_types()
     )
@@ -501,10 +528,37 @@ if __name__ == "__main__":
 
     w_fgd = WindowedFGDScheduler(window_size=args.window_size)
 
-    # Non-FGD baselines only (exclude FGD from get_all_schedulers)
+    b_fgd = BayesianFGDScheduler(prior_strength=args.prior_strength,
+                                  min_gpu_tasks=args.min_gpu_tasks)
+
+    # U-FGD: static uniform distribution, no updates
+    uniform_types = build_uniform_task_types(experiment.loader.nodes)
+    u_fgd = FGDScheduler(scheduling_task_types=uniform_types)
+    u_fgd.name = "U-FGD"
+
     baselines = [s for s in get_all_schedulers() if not isinstance(s, FGDScheduler)]
 
-    schedulers = baselines + [fgd_full, fgd_n, w_fgd]
+    all_schedulers = {s.name: s for s in baselines}
+    all_schedulers["FGD-Full"] = fgd_full
+    all_schedulers[fgd_n.name] = fgd_n
+    all_schedulers[w_fgd.name] = w_fgd
+    all_schedulers[b_fgd.name] = b_fgd
+    all_schedulers[u_fgd.name] = u_fgd
+
+    # Filter schedulers
+    if args.schedulers == 'all':
+        schedulers = baselines + [fgd_full, fgd_n, w_fgd, b_fgd, u_fgd]
+    else:
+        selected = [s.strip() for s in args.schedulers.split(',')]
+        schedulers = []
+        for name in selected:
+            if name in all_schedulers:
+                schedulers.append(all_schedulers[name])
+            else:
+                print(f"WARNING: Unknown scheduler '{name}'. Available: {list(all_schedulers.keys())}")
+        if not schedulers:
+            print("No valid schedulers selected. Exiting.")
+            exit(1)
 
     # Run trace replay
     results = experiment.run_experiment(
@@ -532,6 +586,7 @@ if __name__ == "__main__":
         f.write(f"Mode: replay\n")
         f.write(f"Sample interval: {args.sample_interval}%\n")
         f.write(f"Window size (W-FGD): {args.window_size}\n")
+        f.write(f"Prior strength (B-FGD): {args.prior_strength}\n")
         f.write(f"Task order: {args.task_order}\n")
         if args.task_order == 'phased':
             f.write(experiment.phase_info + "\n")
