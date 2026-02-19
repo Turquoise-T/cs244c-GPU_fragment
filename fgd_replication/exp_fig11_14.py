@@ -46,7 +46,8 @@ class GpuTypeAwareCluster(Cluster):
     def get_eligible_nodes(self, task: Task) -> List[Node]:
         eligible = super().get_eligible_nodes(task)
         if task.gpu_spec:
-            eligible = [n for n in eligible if n.gpu_model == task.gpu_spec]
+            allowed = set(task.gpu_spec.split('|'))
+            eligible = [n for n in eligible if n.gpu_model in allowed]
         return eligible
 
 
@@ -169,6 +170,25 @@ class SensitivityExperiment:
             dist.add_task_type(cpu, gpu, count / total)
         return dist
 
+    def _compute_task_distribution_typed(self, tasks: List[Task]) -> List:
+        """Compute task type distribution with gpu_spec included.
+
+        Returns a list of ((cpu, gpu, gpu_spec), popularity) tuples suitable
+        for GPU-type-aware FGD fragmentation computation.  Tasks with no
+        gpu_spec get an empty string, meaning they are compatible with any
+        node type.
+        """
+        from collections import Counter
+        type_counts: Counter = Counter()
+        for t in tasks:
+            gpu_rounded = round(t.gpu_demand, 2)
+            cpu_bucket = round(t.cpu_demand / 4) * 4
+            gpu_spec = t.gpu_spec or ''
+            type_counts[(cpu_bucket, gpu_rounded, gpu_spec)] += 1
+        total = sum(type_counts.values())
+        return [((cpu, gpu, spec), count / total)
+                for (cpu, gpu, spec), count in type_counts.items()]
+
     def create_fresh_cluster(self, gpu_type_aware: bool = False) -> Cluster:
         cls = GpuTypeAwareCluster if gpu_type_aware else Cluster
         cluster = cls()
@@ -239,6 +259,14 @@ class SensitivityExperiment:
             tasks = self.load_tasks(filename)
             dist = self._compute_task_distribution(tasks)
             print(f"\n  [{figure_num}] {pct}% — {filename} ({len(tasks)} tasks)")
+
+            # For GPU-type-constrained figure, give FGD a typed distribution
+            # so it can account for GPU type compatibility in its gradient.
+            typed_dist = (self._compute_task_distribution_typed(tasks)
+                          if gpu_type_aware else None)
+            for s in schedulers:
+                if isinstance(s, FGDScheduler):
+                    s.typed_task_types = typed_dist
 
             results[pct] = []
 

@@ -262,6 +262,8 @@ class FGDScheduler(Scheduler):
         self._pool = None
         # If set, use this for scheduling decisions instead of cluster's distribution
         self.scheduling_task_types = scheduling_task_types
+        # If set, use GPU-type-aware distribution: [((cpu, gpu, gpu_spec), popularity)]
+        self.typed_task_types = None
 
     @staticmethod
     def _compute_frag_delta_for_node(args: Tuple) -> Tuple[int, float]:
@@ -271,13 +273,16 @@ class FGDScheduler(Scheduler):
 
         Args:
             args: (node_id, remaining_cpu, gpu_remaining, num_gpus, total_cpu,
-                   task_cpu, task_gpu, task_types)
+                   task_cpu, task_gpu, task_types, node_gpu_model)
+                  task_types entries may be ((cpu, gpu), popularity) or
+                  ((cpu, gpu, gpu_spec), popularity) — the latter enables
+                  GPU-type-aware fragmentation computation.
 
         Returns:
             (node_id, fragmentation_delta)
         """
         (node_id, remaining_cpu, gpu_remaining, num_gpus, total_cpu,
-         task_cpu, task_gpu, task_types) = args
+         task_cpu, task_gpu, task_types, node_gpu_model) = args
 
         # Reconstruct node state
         node = Node(
@@ -290,20 +295,31 @@ class FGDScheduler(Scheduler):
 
         task = Task(task_id=-1, cpu_demand=task_cpu, gpu_demand=task_gpu)
 
+        def _frag_for_types(node_state):
+            frag = 0.0
+            for type_key, popularity in task_types:
+                cpu, gpu = type_key[0], type_key[1]
+                gpu_spec = type_key[2] if len(type_key) > 2 else ''
+                # GPU type compatibility: if task requires a specific type and
+                # this node's GPU model is incompatible, all unallocated GPUs
+                # on this node are fragmented from that task's perspective.
+                if gpu_spec and node_gpu_model:
+                    allowed = set(gpu_spec.split('|'))
+                    if node_gpu_model not in allowed:
+                        frag += popularity * node_state.total_unallocated_gpu
+                        continue
+                dummy = Task(task_id=-1, cpu_demand=cpu, gpu_demand=gpu)
+                frag += popularity * node_state.get_fragmentation_for_task(dummy)
+            return frag
+
         # Compute fragmentation before (only for this node)
-        frag_before = 0.0
-        for (cpu, gpu), popularity in task_types:
-            dummy = Task(task_id=-1, cpu_demand=cpu, gpu_demand=gpu)
-            frag_before += popularity * node.get_fragmentation_for_task(dummy)
+        frag_before = _frag_for_types(node)
 
         # Hypothetically allocate
         node.allocate_task(task)
 
         # Compute fragmentation after
-        frag_after = 0.0
-        for (cpu, gpu), popularity in task_types:
-            dummy = Task(task_id=-1, cpu_demand=cpu, gpu_demand=gpu)
-            frag_after += popularity * node.get_fragmentation_for_task(dummy)
+        frag_after = _frag_for_types(node)
 
         return (node_id, frag_after - frag_before)
 
@@ -320,8 +336,10 @@ class FGDScheduler(Scheduler):
         if not eligible:
             return None
 
-        # Use override distribution for scheduling if set, otherwise cluster's
-        if self.scheduling_task_types is not None:
+        # Priority: typed (GPU-type-aware) > explicit override > cluster distribution
+        if self.typed_task_types is not None:
+            task_types = self.typed_task_types
+        elif self.scheduling_task_types is not None:
             task_types = self.scheduling_task_types
         else:
             task_types = cluster.task_distribution.get_task_types()
@@ -336,7 +354,8 @@ class FGDScheduler(Scheduler):
                 node.total_cpu,
                 task.cpu_demand,
                 task.gpu_demand,
-                task_types
+                task_types,
+                node.gpu_model,
             )
             for node in eligible
         ]
@@ -433,7 +452,8 @@ class WindowedFGDScheduler(FGDScheduler):
                 node.total_cpu,
                 task.cpu_demand,
                 task.gpu_demand,
-                task_types
+                task_types,
+                node.gpu_model,
             )
             for node in eligible
         ]
@@ -560,7 +580,8 @@ class BayesianFGDScheduler(FGDScheduler):
             (
                 node.node_id, node.remaining_cpu,
                 tuple(node.gpu_remaining), node.num_gpus, node.total_cpu,
-                task.cpu_demand, task.gpu_demand, task_types
+                task.cpu_demand, task.gpu_demand, task_types,
+                node.gpu_model,
             )
             for node in eligible
         ]
