@@ -421,9 +421,9 @@ if __name__ == "__main__":
         sample_interval_pct=args.sample_interval
     )
 
-    # Create timestamped result directory
-    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-    result_dir = os.path.join(os.path.dirname(__file__), 'result', timestamp)
+    # Create result directory
+    result_name = f"fig7a-runs{args.num_runs}-seed{args.seed}"
+    result_dir = os.path.join(os.path.dirname(__file__), 'result', result_name)
     os.makedirs(result_dir, exist_ok=True)
 
     # Print summary

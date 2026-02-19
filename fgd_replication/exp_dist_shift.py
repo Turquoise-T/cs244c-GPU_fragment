@@ -571,7 +571,7 @@ if __name__ == "__main__":
     order_str = args.task_order
     if args.task_order == 'phased':
         order_str = f"phased-{''.join(str(x) for x in args.tier_order_list)}"
-    result_name = f"exp1-{args.window_size}-{order_str}-{scale_str}"
+    result_name = f"dist-shift-fig7a-{args.window_size}-{order_str}-{scale_str}"
     result_dir = os.path.join(os.path.dirname(__file__), 'result', result_name)
     os.makedirs(result_dir, exist_ok=True)
 
