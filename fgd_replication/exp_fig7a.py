@@ -442,7 +442,6 @@ if __name__ == "__main__":
     log_path = os.path.join(result_dir, 'experiment_summary.log')
     with open(log_path, 'w') as f:
         f.write(f"Experiment: Figure 7(a) Replication\n")
-        f.write(f"Timestamp: {timestamp}\n")
         f.write(f"Seed: {args.seed}\n")
         f.write(f"Num runs: {args.num_runs}\n")
         f.write(f"Max workload: {args.max_workload}%\n")
