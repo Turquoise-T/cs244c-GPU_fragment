@@ -6,8 +6,14 @@ Figure 12 (Section 6.4): Varying multi-GPU task proportion
 Figure 13 (Section 6.5): Varying GPU-type constrained task proportion
 Figure 14 (Section 6.6): Varying non-GPU task proportion
 
+Each figure loads pre-built trace files from the Alibaba cluster-trace-gpu-v2023
+dataset that already encode the desired workload mix:
+  Fig 11: openb_pod_list_gpushare{40,60,80,100}.csv
+  Fig 12: openb_pod_list_multigpu{20,30,40,50}.csv
+  Fig 13: openb_pod_list_gpuspec{10,20,25,33}.csv
+  Fig 14: openb_pod_list_cpu{050,100,200,250}.csv  (5/10/20/25% non-GPU)
+
 All figures use Monte-Carlo workload inflation:
-- Modify task distribution by adjusting sampling weights
 - Sample tasks with replacement until GPU requests reach 100% of cluster capacity
 - Measure unallocated GPU %
 - Repeat N runs, average results
@@ -17,7 +23,6 @@ import os
 import random
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass, field
-from collections import Counter, defaultdict
 
 from simulator import Task, Node, Cluster, TaskDistribution
 from schedulers import (
@@ -46,46 +51,35 @@ class GpuTypeAwareCluster(Cluster):
 
 
 # ---------------------------------------------------------------------------
-# Data classes
+# File mapping
 # ---------------------------------------------------------------------------
 
-@dataclass
-class SensitivityResult:
-    """Result for one (scheduler, proportion) combination, averaged over runs."""
-    scheduler_name: str
-    proportion: float
-    unalloc_gpu_pct: float
-    unalloc_std: float = 0.0
-
-
-# ---------------------------------------------------------------------------
-# Weighted two-pool sampler
-# ---------------------------------------------------------------------------
-
-class TaskSampler:
-    """Two-pool weighted sampler for modified task distributions.
-
-    Samples from group_a with probability p_a, from group_b with (1 - p_a).
-    """
-
-    def __init__(self, group_a: List[Task], group_b: List[Task], p_a: float):
-        self.group_a = group_a
-        self.group_b = group_b
-        self.p_a = max(0.0, min(1.0, p_a))
-
-    def sample(self, rng: random.Random) -> Task:
-        if self.group_a and rng.random() < self.p_a:
-            return rng.choice(self.group_a)
-        elif self.group_b:
-            return rng.choice(self.group_b)
-        elif self.group_a:
-            return rng.choice(self.group_a)
-        raise ValueError("Both task groups are empty")
-
-
-# ---------------------------------------------------------------------------
-# Main experiment class
-# ---------------------------------------------------------------------------
+FIGURE_FILES: Dict[int, Dict[int, str]] = {
+    11: {
+        40:  'openb_pod_list_gpushare40.csv',
+        60:  'openb_pod_list_gpushare60.csv',
+        80:  'openb_pod_list_gpushare80.csv',
+        100: 'openb_pod_list_gpushare100.csv',
+    },
+    12: {
+        20: 'openb_pod_list_multigpu20.csv',
+        30: 'openb_pod_list_multigpu30.csv',
+        40: 'openb_pod_list_multigpu40.csv',
+        50: 'openb_pod_list_multigpu50.csv',
+    },
+    13: {
+        10: 'openb_pod_list_gpuspec10.csv',
+        20: 'openb_pod_list_gpuspec20.csv',
+        25: 'openb_pod_list_gpuspec25.csv',
+        33: 'openb_pod_list_gpuspec33.csv',
+    },
+    14: {
+        5:  'openb_pod_list_cpu050.csv',
+        10: 'openb_pod_list_cpu100.csv',
+        20: 'openb_pod_list_cpu200.csv',
+        25: 'openb_pod_list_cpu250.csv',
+    },
+}
 
 FIGURE_CONFIG = {
     11: {
@@ -119,95 +113,61 @@ FIGURE_CONFIG = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Data classes
+# ---------------------------------------------------------------------------
+
+@dataclass
+class SensitivityResult:
+    """Result for one (scheduler, proportion) combination, averaged over runs."""
+    scheduler_name: str
+    proportion: float
+    unalloc_gpu_pct: float
+    unalloc_std: float = 0.0
+
+
+# ---------------------------------------------------------------------------
+# Main experiment class
+# ---------------------------------------------------------------------------
+
 class SensitivityExperiment:
     """Runs sensitivity experiments for Figures 11-14."""
 
     def __init__(self, data_dir: str):
         self.data_dir = data_dir
+        self.csv_dir = os.path.join(data_dir, 'csv')
+
+        # Load nodes once (shared across all figures)
         self.loader = AlibabaTraceLoader(data_dir)
         self.loader.load_nodes()
-        self.loader.load_tasks()
 
-        self.task_distribution = self.loader.compute_task_distribution()
         self.total_gpu_capacity = sum(n.num_gpus for n in self.loader.nodes)
 
-        self.all_tasks = self.loader.tasks
-
-        # ---- Categorise tasks ----
-        self.sharing_tasks = [t for t in self.all_tasks if 0 < t.gpu_demand < 1]
-        self.nonsharing_tasks = [t for t in self.all_tasks
-                                  if t.gpu_demand == 0 or t.gpu_demand >= 1]
-        self.multigpu_tasks = [t for t in self.all_tasks if t.gpu_demand >= 2]
-        self.nonmultigpu_tasks = [t for t in self.all_tasks if t.gpu_demand < 2]
-        self.nogpu_tasks = [t for t in self.all_tasks if t.gpu_demand == 0]
-        self.gpu_tasks = [t for t in self.all_tasks if t.gpu_demand > 0]
-
-        self.total_gpu_demand = sum(t.gpu_demand for t in self.all_tasks)
-
-        # ---- Synthetic GPU-type constrained tasks (Figure 13) ----
-        # The public Alibaba trace has empty gpu_spec for all tasks.
-        # We synthetically assign gpu_spec proportional to cluster GPU-model
-        # distribution so that Figure 13 can vary the constrained fraction.
-        self.constrained_tasks, self.unconstrained_tasks = \
-            self._build_gpu_type_pools()
-
-        # ---- Print summary ----
-        print(f"Loaded trace: {len(self.loader.nodes)} nodes, "
+        print(f"Loaded cluster: {len(self.loader.nodes)} nodes, "
               f"{self.total_gpu_capacity} GPUs")
-        print(f"Tasks: {len(self.all_tasks)} total")
-        print(f"  GPU-sharing (0<gpu<1): {len(self.sharing_tasks)} "
-              f"({self._gpu_pct(self.sharing_tasks):.1f}% of GPU reqs)")
-        print(f"  Multi-GPU (gpu>=2):    {len(self.multigpu_tasks)} "
-              f"({self._gpu_pct(self.multigpu_tasks):.1f}% of GPU reqs)")
-        print(f"  1-GPU:                 "
-              f"{len([t for t in self.all_tasks if t.gpu_demand == 1])} "
-              f"({self._gpu_pct([t for t in self.all_tasks if t.gpu_demand == 1]):.1f}%"
-              f" of GPU reqs)")
-        print(f"  No-GPU:                {len(self.nogpu_tasks)} "
-              f"({100 * len(self.nogpu_tasks) / len(self.all_tasks):.1f}% of tasks)")
-        print(f"  Constrained (synth):   {len(self.constrained_tasks)} "
-              f"({self._gpu_pct(self.constrained_tasks):.1f}% of GPU reqs)")
 
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
 
-    def _gpu_pct(self, tasks: List[Task]) -> float:
-        if self.total_gpu_demand == 0:
-            return 0.0
-        return sum(t.gpu_demand for t in tasks) / self.total_gpu_demand * 100
+    def load_tasks(self, filename: str) -> List[Task]:
+        """Load tasks from a specific trace CSV file."""
+        self.loader.load_tasks(filename=filename)
+        return self.loader.tasks
 
-    def _build_gpu_type_pools(self):
-        """Create constrained / unconstrained task copies for Figure 13.
-
-        Every GPU task gets a copy with gpu_spec assigned (sampled from the
-        cluster's GPU-model distribution, weighted by GPU count per model).
-        Non-GPU tasks go into the unconstrained pool only.
-        """
-        model_gpus: Counter = Counter()
-        for node in self.loader.nodes:
-            if node.gpu_model:
-                model_gpus[node.gpu_model] += node.num_gpus
-        models = list(model_gpus.keys())
-        weights = [model_gpus[m] for m in models]
-
-        rng = random.Random(0)  # deterministic
-        constrained: List[Task] = []
-        unconstrained: List[Task] = []
-
-        for t in self.all_tasks:
-            # unconstrained copy (always)
-            unconstrained.append(Task(
-                task_id=t.task_id, cpu_demand=t.cpu_demand,
-                gpu_demand=t.gpu_demand, gpu_spec=''))
-            # constrained copy (GPU tasks only)
-            if t.gpu_demand > 0:
-                spec = rng.choices(models, weights=weights, k=1)[0]
-                constrained.append(Task(
-                    task_id=t.task_id, cpu_demand=t.cpu_demand,
-                    gpu_demand=t.gpu_demand, gpu_spec=spec))
-
-        return constrained, unconstrained
+    def _compute_task_distribution(self, tasks: List[Task]) -> TaskDistribution:
+        """Compute task type distribution from a task list."""
+        from collections import Counter
+        type_counts: Counter = Counter()
+        for t in tasks:
+            gpu_rounded = round(t.gpu_demand, 2)
+            cpu_bucket = round(t.cpu_demand / 4) * 4
+            type_counts[(cpu_bucket, gpu_rounded)] += 1
+        total = sum(type_counts.values())
+        dist = TaskDistribution()
+        for (cpu, gpu), count in type_counts.items():
+            dist.add_task_type(cpu, gpu, count / total)
+        return dist
 
     def create_fresh_cluster(self, gpu_type_aware: bool = False) -> Cluster:
         cls = GpuTypeAwareCluster if gpu_type_aware else Cluster
@@ -220,111 +180,29 @@ class SensitivityExperiment:
         return cluster
 
     # ------------------------------------------------------------------
-    # Task distribution from sampler (for FGD)
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _compute_sampler_distribution(sampler: TaskSampler) -> TaskDistribution:
-        """Compute effective task distribution from the sampler's weighted pools."""
-        type_counts: Counter = Counter()
-
-        if sampler.group_a and sampler.p_a > 0:
-            w = sampler.p_a / len(sampler.group_a)
-            for t in sampler.group_a:
-                key = (round(t.cpu_demand / 4) * 4, round(t.gpu_demand, 2))
-                type_counts[key] += w
-
-        if sampler.group_b and sampler.p_a < 1:
-            w = (1 - sampler.p_a) / len(sampler.group_b)
-            for t in sampler.group_b:
-                key = (round(t.cpu_demand / 4) * 4, round(t.gpu_demand, 2))
-                type_counts[key] += w
-
-        total = sum(type_counts.values())
-        dist = TaskDistribution()
-        for (cpu, gpu), weight in type_counts.items():
-            dist.add_task_type(cpu, gpu, weight / total if total > 0 else 0)
-        return dist
-
-    # ------------------------------------------------------------------
-    # Pool builders
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _solve_p_a(group_a: List[Task], group_b: List[Task],
-                   target_pct: float) -> float:
-        """Compute sampling probability p_a so that GPU-request proportion
-        from group_a equals target_pct (0-100).
-
-        Derivation:
-          target = p_a * avg_a / (p_a * avg_a + (1-p_a) * avg_b)
-          =>  p_a = target * avg_b / (target * avg_b + (1-target) * avg_a)
-        """
-        target = target_pct / 100.0
-        if target >= 1.0:
-            return 1.0
-        if target <= 0.0:
-            return 0.0
-        if not group_a or not group_b:
-            return 1.0 if group_a else 0.0
-
-        avg_a = sum(t.gpu_demand for t in group_a) / len(group_a)
-        avg_b = sum(t.gpu_demand for t in group_b) / len(group_b)
-
-        denom = target * avg_b + (1 - target) * avg_a
-        if denom <= 0:
-            return 0.5
-        return target * avg_b / denom
-
-    def build_sharing_sampler(self, target_gpu_pct: float) -> TaskSampler:
-        """Figure 11: GPU-sharing tasks as target % of GPU requests."""
-        p_a = self._solve_p_a(
-            self.sharing_tasks, self.nonsharing_tasks, target_gpu_pct)
-        return TaskSampler(self.sharing_tasks, self.nonsharing_tasks, p_a)
-
-    def build_multigpu_sampler(self, target_gpu_pct: float) -> TaskSampler:
-        """Figure 12: Multi-GPU tasks as target % of GPU requests."""
-        p_a = self._solve_p_a(
-            self.multigpu_tasks, self.nonmultigpu_tasks, target_gpu_pct)
-        return TaskSampler(self.multigpu_tasks, self.nonmultigpu_tasks, p_a)
-
-    def build_gpu_type_sampler(self, target_gpu_pct: float) -> TaskSampler:
-        """Figure 13: GPU-type-constrained tasks as target % of GPU requests."""
-        p_a = self._solve_p_a(
-            self.constrained_tasks, self.unconstrained_tasks, target_gpu_pct)
-        return TaskSampler(self.constrained_tasks, self.unconstrained_tasks, p_a)
-
-    def build_nogpu_sampler(self, target_task_pct: float) -> TaskSampler:
-        """Figure 14: Non-GPU tasks as target % of task count."""
-        # Task-count proportion: p_a = target directly
-        return TaskSampler(
-            self.nogpu_tasks, self.gpu_tasks, target_task_pct / 100.0)
-
-    # ------------------------------------------------------------------
     # Run methods
     # ------------------------------------------------------------------
 
-    def run_single(self, scheduler: Scheduler, sampler: TaskSampler,
-                   seed: int, gpu_type_aware: bool = False) -> float:
+    def run_single(self, scheduler: Scheduler, tasks: List[Task],
+                   dist: TaskDistribution, seed: int,
+                   gpu_type_aware: bool = False) -> float:
         """Run single Monte-Carlo inflation until 100% GPU arrival.
 
         Returns unallocated GPU % at that point.
         """
         rng = random.Random(seed)
         cluster = self.create_fresh_cluster(gpu_type_aware=gpu_type_aware)
-
-        dist = self._compute_sampler_distribution(sampler)
         cluster.set_task_distribution(dist)
 
         if isinstance(scheduler, ClusteringScheduler):
             scheduler.reset()
 
         cumulative_gpu = 0.0
-        max_gpu = float(self.total_gpu_capacity)  # 100% arrival
+        max_gpu = float(self.total_gpu_capacity)
         task_count = 0
 
         while cumulative_gpu < max_gpu:
-            orig = sampler.sample(rng)
+            orig = rng.choice(tasks)
             task = Task(
                 task_id=task_count,
                 cpu_demand=orig.cpu_demand,
@@ -349,12 +227,7 @@ class SensitivityExperiment:
         if proportions is None:
             proportions = config['proportions']
 
-        builder = {
-            11: self.build_sharing_sampler,
-            12: self.build_multigpu_sampler,
-            13: self.build_gpu_type_sampler,
-            14: self.build_nogpu_sampler,
-        }[figure_num]
+        file_map = FIGURE_FILES[figure_num]
 
         results: Dict[float, List[SensitivityResult]] = {}
         total_runs = len(proportions) * len(schedulers) * num_runs
@@ -362,7 +235,11 @@ class SensitivityExperiment:
                     disable=not show_progress, ncols=90)
 
         for pct in proportions:
-            sampler = builder(pct)
+            filename = file_map[pct]
+            tasks = self.load_tasks(filename)
+            dist = self._compute_task_distribution(tasks)
+            print(f"\n  [{figure_num}] {pct}% — {filename} ({len(tasks)} tasks)")
+
             results[pct] = []
 
             for scheduler in schedulers:
@@ -370,7 +247,7 @@ class SensitivityExperiment:
                 for run_idx in range(num_runs):
                     run_seed = seed + run_idx
                     val = self.run_single(
-                        scheduler, sampler, run_seed,
+                        scheduler, tasks, dist, run_seed,
                         gpu_type_aware=gpu_type_aware)
                     unallocs.append(val)
                     pbar.update(1)
@@ -407,12 +284,12 @@ def plot_sensitivity(results: Dict[float, List[SensitivityResult]],
     config = FIGURE_CONFIG[figure_num]
 
     colors = {
-        'FGD': '#e15759', 'BestFit': '#9467bd', 'Packing': '#ff7f0e',
-        'Clustering': '#2ca02c', 'DotProd': '#1f77b4', 'Random': '#7f7f7f',
+        'FGD': '#1f77b4', 'BestFit': '#ff7f0e', 'Packing': '#2ca02c',
+        'Clustering': '#d62728', 'DotProd': '#9467bd', 'Random': '#8c564b',
     }
     hatches = {
-        'FGD': '', 'BestFit': '//', 'Packing': '\\\\',
-        'Clustering': 'xx', 'DotProd': '..', 'Random': '--',
+        'FGD': '//', 'BestFit': '//', 'Packing': '//',
+        'Clustering': '//', 'DotProd': '//', 'Random': '//',
     }
     sched_order = ['FGD', 'BestFit', 'Packing', 'Clustering',
                    'DotProd', 'Random']
@@ -441,7 +318,7 @@ def plot_sensitivity(results: Dict[float, List[SensitivityResult]],
                       label=name,
                       color=colors.get(name, 'gray'),
                       hatch=hatches.get(name, ''),
-                      edgecolor='white', linewidth=0.5)
+                      edgecolor='black', linewidth=0.5)
 
         # Annotate FGD bars with values
         if name == 'FGD':
@@ -635,9 +512,7 @@ if __name__ == "__main__":
         f.write(f"Runs: {args.num_runs}\n")
         f.write(f"Seed: {args.seed}\n")
         f.write(f"Nodes: {len(experiment.loader.nodes)}\n")
-        f.write(f"GPUs: {experiment.total_gpu_capacity}\n")
-        f.write(f"Tasks in trace: {len(experiment.all_tasks)}\n")
-        f.write(f"Total GPU demand: {experiment.total_gpu_demand:.1f}\n\n")
+        f.write(f"GPUs: {experiment.total_gpu_capacity}\n\n")
         for s in all_summaries:
             f.write(s + "\n\n")
     print(f"\nSummary log saved to {log_path}")

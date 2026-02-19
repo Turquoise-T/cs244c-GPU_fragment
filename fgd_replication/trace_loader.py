@@ -91,11 +91,11 @@ class AlibabaTraceLoader:
                     task_id=i,
                     cpu_demand=int(row['cpu_milli']) / 1000.0,
                     gpu_demand=gpu_demand,
-                    name=row['name'],
-                    creation_time=int(row['creation_time']) if row['creation_time'] else 0,
-                    scheduled_time=int(row['scheduled_time']) if row['scheduled_time'] else 0,
-                    deletion_time=int(row['deletion_time']) if row['deletion_time'] else 0,
-                    gpu_spec=row['gpu_spec'] if row['gpu_spec'] else ''
+                    name=row.get('name', ''),
+                    creation_time=int(row['creation_time']) if row.get('creation_time') else 0,
+                    scheduled_time=int(row['scheduled_time']) if row.get('scheduled_time') else 0,
+                    deletion_time=int(row['deletion_time']) if row.get('deletion_time') else 0,
+                    gpu_spec=row.get('gpu_spec', '') or ''
                 )
                 self.tasks.append(task)
 
