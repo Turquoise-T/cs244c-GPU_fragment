@@ -446,6 +446,9 @@ if __name__ == "__main__":
                         help='Plot from existing CSV file(s) instead of '
                              'running experiments. '
                              'e.g. --plot-csv result/exp3/figure11_results.csv')
+    parser.add_argument('--schedulers', type=str, default='all',
+                        help='Comma-separated scheduler names to run (default: all). '
+                             'Available: Random,BestFit,DotProd,Packing,Clustering,FGD')
     args = parser.parse_args()
 
     # ---- Plot-only mode ----
@@ -475,7 +478,21 @@ if __name__ == "__main__":
     print("=" * 60)
 
     experiment = SensitivityExperiment(data_dir)
-    schedulers = get_all_schedulers()
+
+    all_sched_map = {s.name: s for s in get_all_schedulers()}
+    if args.schedulers == 'all':
+        schedulers = get_all_schedulers()
+    else:
+        selected = [s.strip() for s in args.schedulers.split(',')]
+        schedulers = []
+        for name in selected:
+            if name in all_sched_map:
+                schedulers.append(all_sched_map[name])
+            else:
+                print(f"WARNING: Unknown scheduler '{name}'. Available: {list(all_sched_map.keys())}")
+        if not schedulers:
+            print("No valid schedulers selected. Exiting.")
+            exit(1)
 
     # Result directory
     fig_str = '-'.join(str(f) for f in figures)

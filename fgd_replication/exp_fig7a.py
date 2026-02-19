@@ -401,6 +401,9 @@ if __name__ == "__main__":
     parser.add_argument('--sample-interval', type=float, default=5.0, help='Fragmentation sampling interval %% (default: 5)')
     parser.add_argument('--plot-csv', type=str, default=None,
                         help='Plot from existing CSV file instead of running experiment')
+    parser.add_argument('--schedulers', type=str, default='all',
+                        help='Comma-separated scheduler names to run (default: all). '
+                             'Available: Random,BestFit,DotProd,Packing,Clustering,FGD')
     args = parser.parse_args()
 
     # Plot-only mode
@@ -423,8 +426,24 @@ if __name__ == "__main__":
 
     experiment = Figure7aExperiment(data_dir, seed=args.seed)
 
-    # Run with all schedulers
+    # Filter schedulers
+    all_sched_map = {s.name: s for s in get_all_schedulers()}
+    if args.schedulers == 'all':
+        schedulers = get_all_schedulers()
+    else:
+        selected = [s.strip() for s in args.schedulers.split(',')]
+        schedulers = []
+        for name in selected:
+            if name in all_sched_map:
+                schedulers.append(all_sched_map[name])
+            else:
+                print(f"WARNING: Unknown scheduler '{name}'. Available: {list(all_sched_map.keys())}")
+        if not schedulers:
+            print("No valid schedulers selected. Exiting.")
+            exit(1)
+
     results = experiment.run_experiment(
+        schedulers=schedulers,
         num_runs=args.num_runs,
         max_workload_pct=args.max_workload,
         sample_interval_pct=args.sample_interval

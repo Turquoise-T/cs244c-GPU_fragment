@@ -599,6 +599,9 @@ if __name__ == "__main__":
     parser.add_argument('--max-arrival', type=float, default=120.0, help='Max arrival %% (default: 120)')
     parser.add_argument('--plot-csv', type=str, default=None,
                         help='Plot from existing CSV directory instead of running experiment')
+    parser.add_argument('--schedulers', type=str, default='all',
+                        help='Comma-separated scheduler names to run (default: all). '
+                             'Available: Random,BestFit,DotProd,Packing,Clustering,FGD')
     args = parser.parse_args()
 
     # Plot-only mode
@@ -618,7 +621,21 @@ if __name__ == "__main__":
     print("=" * 60)
 
     experiment = Figure9Experiment(data_dir)
-    schedulers = get_all_schedulers()
+
+    all_sched_map = {s.name: s for s in get_all_schedulers()}
+    if args.schedulers == 'all':
+        schedulers = get_all_schedulers()
+    else:
+        selected = [s.strip() for s in args.schedulers.split(',')]
+        schedulers = []
+        for name in selected:
+            if name in all_sched_map:
+                schedulers.append(all_sched_map[name])
+            else:
+                print(f"WARNING: Unknown scheduler '{name}'. Available: {list(all_sched_map.keys())}")
+        if not schedulers:
+            print("No valid schedulers selected. Exiting.")
+            exit(1)
 
     results = experiment.run_experiment(
         schedulers=schedulers,
