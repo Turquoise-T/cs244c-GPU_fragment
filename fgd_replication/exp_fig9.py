@@ -372,7 +372,7 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
     # --- 9(c): Failed tasks by GPU category (stacked bar) ---
     ax = axes[1, 0]
     categories = ['<1', '1', '2', '8']
-    cat_colors = {'<1': '#4e79a7', '1': '#f28e2b', '2': '#e15759', '8': '#76b7b2'}
+    cat_colors = {'<1': 'orange', '1': 'green', '2': 'red', '8': '#8c564b'}
 
     bottoms = np.zeros(len(scheduler_names))
     for cat in categories:
@@ -393,7 +393,7 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
     # --- 9(d): Fragmentation breakdown (stacked bar) ---
     ax = axes[1, 1]
     causes = ['deficient', 'stranded', 'non_gpu']
-    cause_colors = {'deficient': '#4e79a7', 'stranded': '#f28e2b', 'non_gpu': '#e15759'}
+    cause_colors = {'deficient': 'blue', 'stranded': 'orange', 'non_gpu': 'green'}
     cause_labels = {'deficient': 'Deficient', 'stranded': 'Stranded', 'non_gpu': 'Non-GPU'}
 
     bottoms = np.zeros(len(scheduler_names))
