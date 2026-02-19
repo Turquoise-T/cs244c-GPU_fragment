@@ -346,12 +346,18 @@ def plot_figure7a(results: Dict[str, List[ExperimentResult]], output_path: str =
 
     # Color and style mapping to match paper
     styles = {
-        'Random': {'color': 'gray', 'linestyle': '--', 'marker': 'o'},
-        'DotProd': {'color': 'blue', 'linestyle': '-.', 'marker': 's'},
-        'Clustering': {'color': 'green', 'linestyle': ':', 'marker': '^'},
-        'Packing': {'color': 'orange', 'linestyle': '-', 'marker': 'D'},
-        'BestFit': {'color': 'purple', 'linestyle': '--', 'marker': 'v'},
-        'FGD-Full': {'color': 'red', 'linestyle': '-', 'marker': 'x'},
+        'Random': {'color': 'brown', 'linestyle': '-.'},
+        'DotProd': {'color': 'purple', 'linestyle': '--'},
+        'Clustering': {'color': 'red', 'linestyle': '--'},
+        'Packing': {'color': 'darkgreen', 'linestyle': ':'},
+        'BestFit': {'color': 'orange', 'linestyle': '--'},
+        'FGD-Full': {'color': 'blue', 'linestyle': '-'},
+    }
+
+    # Styles for distribution-shift variants
+    variant_styles = {
+        'U-FGD': {'color': 'teal', 'linestyle': '-'},
+        'B-FGD': {'color': 'darkorange', 'linestyle': '-'},
     }
 
     for name, result_list in results.items():
@@ -362,22 +368,18 @@ def plot_figure7a(results: Dict[str, List[ExperimentResult]], output_path: str =
             y_vals = [p[1] for p in curve]
 
             # Match known styles
-            if name == 'U-FGD':
-                style = {'color': 'teal', 'linestyle': '-', 'marker': 'h'}
-            elif name.startswith('B-FGD'):
-                style = {'color': 'darkorange', 'linestyle': '-', 'marker': 'D'}
+            if name in variant_styles:
+                style = variant_styles[name]
             elif name.startswith('W-FGD'):
-                style = {'color': 'darkgreen', 'linestyle': '-', 'marker': '*'}
+                style = {'color': 'magenta', 'linestyle': '--'}
             elif name.startswith('FGD-') and name != 'FGD-Full':
-                style = {'color': 'crimson', 'linestyle': '--', 'marker': 'P'}
+                style = {'color': 'crimson', 'linestyle': '--'}
             else:
-                style = styles.get(name, {'color': 'black', 'linestyle': '-', 'marker': '.'})
+                style = styles.get(name, {'color': 'black', 'linestyle': '-'})
             plt.plot(x_vals, y_vals, label=name,
                     color=style['color'],
                     linestyle=style['linestyle'],
-                    marker=style['marker'],
-                    markersize=4,
-                    markevery=2)
+                    linewidth=2)
 
     plt.xlabel('Arrived workloads (in % of cluster GPU capacity)', fontsize=12)
     plt.ylabel('Frag Rate (%)', fontsize=12)
@@ -491,8 +493,19 @@ if __name__ == "__main__":
                         help='B-FGD uses Packing fallback until this many GPU tasks observed (default: 50)')
     parser.add_argument('--schedulers', type=str, default='all',
                         help='Comma-separated scheduler names to run (default: all). '
-                             'Available: Random,BestFit,DotProd,Packing,Clustering,FGD-Full,FGD-N,W-FGD,B-FGD')
+                             'Available: Random,BestFit,DotProd,Packing,Clustering,FGD-Full,FGD-N,W-FGD,B-FGD,U-FGD')
+    parser.add_argument('--plot-csv', type=str, default=None,
+                        help='Plot from existing CSV file instead of running experiment')
     args = parser.parse_args()
+
+    # Plot-only mode
+    if args.plot_csv:
+        results = load_results_from_csv(args.plot_csv)
+        print(f"Loaded {len(results)} schedulers from {args.plot_csv}")
+        plot_dir = os.path.dirname(args.plot_csv)
+        plot_path = os.path.join(plot_dir, 'figure7a.png')
+        plot_figure7a(results, plot_path)
+        exit(0)
 
     # Parse tier order
     args.tier_order_list = [int(x) for x in args.tier_order.split(',')]

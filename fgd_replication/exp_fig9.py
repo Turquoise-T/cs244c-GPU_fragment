@@ -300,12 +300,12 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
         return
 
     styles = {
-        'Random': {'color': 'gray', 'linestyle': '--', 'marker': 'o'},
-        'DotProd': {'color': 'blue', 'linestyle': '-.', 'marker': 's'},
-        'Clustering': {'color': 'green', 'linestyle': ':', 'marker': '^'},
-        'Packing': {'color': 'orange', 'linestyle': '-', 'marker': 'D'},
-        'BestFit': {'color': 'purple', 'linestyle': '--', 'marker': 'v'},
-        'FGD': {'color': 'red', 'linestyle': '-', 'marker': 'x'},
+        'Random': {'color': 'brown', 'linestyle': '-.'},
+        'DotProd': {'color': 'purple', 'linestyle': '--'},
+        'Clustering': {'color': 'red', 'linestyle': '--'},
+        'Packing': {'color': 'darkgreen', 'linestyle': ':'},
+        'BestFit': {'color': 'orange', 'linestyle': '--'},
+        'FGD': {'color': 'blue', 'linestyle': '-'},
     }
 
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -327,10 +327,10 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
             # Filter to 80-120% range
             filtered = [(x, y) for x, y in zip(x_vals, y_vals) if 80 <= x <= 120]
             if filtered:
-                style = styles.get(name, {'color': 'black', 'linestyle': '-', 'marker': '.'})
+                style = styles.get(name, {'color': 'black', 'linestyle': '-'})
                 ax.plot([p[0] for p in filtered], [p[1] for p in filtered],
                         label=name, color=style['color'], linestyle=style['linestyle'],
-                        marker=style['marker'], markersize=4, markevery=2)
+                        linewidth=2)
 
     ax.set_xlabel('Arrived workloads (% of GPU capacity)')
     ax.set_ylabel('Unalloc. GPU (%)')
@@ -350,17 +350,18 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
             y_vals = [p[1] for p in avg]
             filtered = [(x, y) for x, y in zip(x_vals, y_vals) if x <= 100]
             if filtered:
-                style = styles.get(name, {'color': 'black', 'linestyle': '-', 'marker': '.'})
+                style = styles.get(name, {'color': 'black', 'linestyle': '-'})
                 ax.plot([p[0] for p in filtered], [p[1] for p in filtered],
                         label=name, color=style['color'], linestyle=style['linestyle'],
-                        marker=style['marker'], markersize=4, markevery=2)
+                        linewidth=2)
 
     ax.set_xlabel('Arrived workloads (% of GPU capacity)')
     ax.set_ylabel('Occupied nodes')
     ax.set_title('(b) Occupied Nodes')
     ax.legend(fontsize=8)
     ax.set_xlim(0, 100)
-    ax.set_ylim(0, total_nodes + 50)
+    if total_nodes > 0:
+        ax.set_ylim(0, total_nodes + 50)
     ax.grid(True, alpha=0.3)
 
     # Fixed scheduler order for bar charts (9c, 9d)
@@ -482,6 +483,71 @@ def save_results_to_csv(results: Dict[str, List[Figure9Result]], output_dir: str
     print(f"CSV files saved to {output_dir}")
 
 
+def load_results_from_csv(csv_dir: str) -> Dict[str, List[Figure9Result]]:
+    """Load Figure 9 results from CSV files in a directory."""
+    import csv
+    from collections import defaultdict
+
+    results: Dict[str, List[Figure9Result]] = {}
+
+    # Helper to load curve data
+    def load_curve_csv(filename, x_col, y_col):
+        path = os.path.join(csv_dir, filename)
+        if not os.path.exists(path):
+            return {}
+        data = defaultdict(lambda: defaultdict(list))
+        with open(path, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                name = row['scheduler']
+                run = int(row['run'])
+                data[name][run].append((float(row[x_col]), float(row[y_col])))
+        return data
+
+    # Helper to load category data
+    def load_cat_csv(filename, cat_col, val_col):
+        path = os.path.join(csv_dir, filename)
+        if not os.path.exists(path):
+            return {}
+        data = defaultdict(lambda: defaultdict(dict))
+        with open(path, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                name = row['scheduler']
+                run = int(row['run'])
+                data[name][run][row[cat_col]] = float(row[val_col])
+        return data
+
+    # Load all sub-figure data
+    unalloc = load_curve_csv('figure9a_unalloc.csv', 'arrived_pct', 'unalloc_gpu_pct')
+    occupied = load_curve_csv('figure9b_occupied.csv', 'arrived_pct', 'occupied_nodes')
+    failed = load_cat_csv('figure9c_failed.csv', 'gpu_category', 'sum_gpu_demand')
+    breakdown = load_cat_csv('figure9d_breakdown.csv', 'cause', 'pct')
+
+    # Merge into Figure9Result objects
+    all_names = set(unalloc) | set(occupied) | set(failed) | set(breakdown)
+    for name in all_names:
+        # Determine number of runs
+        runs_set = set()
+        for d in [unalloc, occupied, failed, breakdown]:
+            if name in d:
+                runs_set |= set(d[name].keys())
+        results[name] = []
+        for run_idx in sorted(runs_set):
+            r = Figure9Result(scheduler_name=name)
+            if name in unalloc and run_idx in unalloc[name]:
+                r.unalloc_curve = sorted(unalloc[name][run_idx])
+            if name in occupied and run_idx in occupied[name]:
+                r.occupied_curve = sorted(occupied[name][run_idx])
+            if name in failed and run_idx in failed[name]:
+                r.failed_by_category = failed[name][run_idx]
+            if name in breakdown and run_idx in breakdown[name]:
+                r.frag_breakdown = breakdown[name][run_idx]
+            results[name].append(r)
+
+    return results
+
+
 def format_summary(results: Dict[str, List[Figure9Result]]) -> str:
     """Format summary statistics"""
     lines = []
@@ -531,7 +597,17 @@ if __name__ == "__main__":
     parser.add_argument('--seed', type=int, default=42, help='Base random seed (default: 42)')
     parser.add_argument('--sample-interval', type=float, default=2.0, help='Sampling interval %% (default: 2)')
     parser.add_argument('--max-arrival', type=float, default=120.0, help='Max arrival %% (default: 120)')
+    parser.add_argument('--plot-csv', type=str, default=None,
+                        help='Plot from existing CSV directory instead of running experiment')
     args = parser.parse_args()
+
+    # Plot-only mode
+    if args.plot_csv:
+        csv_dir = args.plot_csv
+        results = load_results_from_csv(csv_dir)
+        print(f"Loaded {len(results)} schedulers from {csv_dir}")
+        plot_figure9(results, total_nodes=0, total_gpu=0, output_dir=csv_dir)
+        exit(0)
 
     data_dir = os.path.join(os.path.dirname(__file__), '..', 'alibaba_traces', 'cluster-trace-gpu-v2023')
 

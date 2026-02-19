@@ -276,12 +276,12 @@ def plot_figure7a(results: Dict[str, List[ExperimentResult]], output_path: str =
 
     # Color and style mapping to match paper
     styles = {
-        'Random': {'color': 'gray', 'linestyle': '--', 'marker': 'o'},
-        'DotProd': {'color': 'blue', 'linestyle': '-.', 'marker': 's'},
-        'Clustering': {'color': 'green', 'linestyle': ':', 'marker': '^'},
-        'Packing': {'color': 'orange', 'linestyle': '-', 'marker': 'D'},
-        'BestFit': {'color': 'purple', 'linestyle': '--', 'marker': 'v'},
-        'FGD': {'color': 'red', 'linestyle': '-', 'marker': 'x'},
+        'Random': {'color': 'brown', 'linestyle': '-.'},
+        'DotProd': {'color': 'purple', 'linestyle': '--'},
+        'Clustering': {'color': 'red', 'linestyle': '--'},
+        'Packing': {'color': 'darkgreen', 'linestyle': ':'},
+        'BestFit': {'color': 'orange', 'linestyle': '--'},
+        'FGD': {'color': 'blue', 'linestyle': '-'},
     }
 
     for name, result_list in results.items():
@@ -290,13 +290,11 @@ def plot_figure7a(results: Dict[str, List[ExperimentResult]], output_path: str =
             x_vals = [p[0] for p in avg_curve]
             y_vals = [p[1] for p in avg_curve]
 
-            style = styles.get(name, {'color': 'black', 'linestyle': '-', 'marker': '.'})
+            style = styles.get(name, {'color': 'black', 'linestyle': '-'})
             plt.plot(x_vals, y_vals, label=name,
                     color=style['color'],
                     linestyle=style['linestyle'],
-                    marker=style['marker'],
-                    markersize=4,
-                    markevery=2)
+                    linewidth=2)
 
     plt.xlabel('Arrived workloads (in % of cluster GPU capacity)', fontsize=12)
     plt.ylabel('Frag Rate (%)', fontsize=12)
@@ -401,7 +399,18 @@ if __name__ == "__main__":
     parser.add_argument('--num-runs', type=int, default=3, help='Number of runs per scheduler (default: 3, paper uses 10)')
     parser.add_argument('--max-workload', type=float, default=120.0, help='Max arrived workload %% (default: 120)')
     parser.add_argument('--sample-interval', type=float, default=5.0, help='Fragmentation sampling interval %% (default: 5)')
+    parser.add_argument('--plot-csv', type=str, default=None,
+                        help='Plot from existing CSV file instead of running experiment')
     args = parser.parse_args()
+
+    # Plot-only mode
+    if args.plot_csv:
+        results = load_results_from_csv(args.plot_csv)
+        print(f"Loaded {len(results)} schedulers from {args.plot_csv}")
+        plot_dir = os.path.dirname(args.plot_csv)
+        plot_path = os.path.join(plot_dir, 'figure7a.png')
+        plot_figure7a(results, plot_path)
+        exit(0)
 
     # Run the experiment
     data_dir = os.path.join(os.path.dirname(__file__), '..', 'alibaba_traces', 'cluster-trace-gpu-v2023')
