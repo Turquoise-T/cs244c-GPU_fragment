@@ -1,0 +1,23 @@
+Experiment: Distribution-Shift - Trace Replay
+Result: dist-shift-descending-100
+Mode: replay
+Task order: descending
+Cluster: 1213 nodes -> 1213 nodes (100.0%)
+Full distribution: 55 task types
+First-2000 distribution (FGD-2000): 12 task types
+
+============================================================================
+EXPERIMENT SUMMARY
+============================================================================
+
+Scheduler         Avg Frag%   Avg Alloc%    Scheduled     Failed    Time(s)
+----------------------------------------------------------------------------
+Random                 99.4         93.7         7459        693        5.5
+BestFit                99.2         90.6         7014       1138        5.9
+DotProd                99.2         91.9         7169        983        6.3
+Packing                99.3         91.5         7123       1029        7.4
+Clustering             99.2         91.5         7123       1029        5.4
+FGD-Full               99.2         94.2         7496        656       67.5
+FGD-2000               99.1         94.2         7490        662       41.2
+W-FGD-2000             99.2         93.9         7433        719       45.0
+U-FGD                  99.2         91.8         7158        994      348.5

@@ -1,0 +1,29 @@
+Experiment: Distribution-Shift - Trace Replay
+Result: dist-shift-phased-01234-100
+Mode: replay
+Task order: phased
+Tier order: [0, 1, 2, 3, 4]
+  Phase 0: Tier 0 - 1088 tasks (gpu range: 0.00-0.00)
+  Phase 1: Tier 1 - 1600 tasks (gpu range: 0.05-0.48)
+  Phase 2: Tier 2 - 1478 tasks (gpu range: 0.55-0.81)
+  Phase 3: Tier 3 - 3911 tasks (gpu range: 1.00-1.00)
+  Phase 4: Tier 4 - 75 tasks (gpu range: 2.00-8.00)
+Cluster: 1213 nodes -> 1213 nodes (100.0%)
+Full distribution: 55 task types
+First-2000 distribution (FGD-2000): 32 task types
+
+============================================================================
+EXPERIMENT SUMMARY
+============================================================================
+
+Scheduler         Avg Frag%   Avg Alloc%    Scheduled     Failed    Time(s)
+----------------------------------------------------------------------------
+Random                 95.7         79.9         7393        759        5.0
+BestFit                98.7         69.9         6776       1376        5.4
+DotProd                98.8         67.4         6620       1532        5.7
+Packing                98.1         84.2         7667        485        7.8
+Clustering             98.1         84.2         7667        485        4.8
+FGD-Full               92.1         91.0         8081         71      107.6
+FGD-2000               95.4         71.5         6873       1279       61.9
+W-FGD-2000             96.0         73.2         6982       1170       66.5
+U-FGD                  97.9         86.2         7787        365      524.5
