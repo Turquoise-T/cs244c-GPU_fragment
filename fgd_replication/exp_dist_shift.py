@@ -1,13 +1,12 @@
 """
-Experiment Runner for FGD Replication
+Distribution-Shift Experiment Runner for FGD Replication
 
-Replicates Figure 7(a): Fragmentation rate vs arrived workloads
-Using Monte-Carlo workload inflation approach from Section 6.1
+Processes tasks in trace order and measures fragmentation under distribution shift.
 """
 
 import os
 from typing import List, Dict, Tuple
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from collections import Counter
 
 from simulator import Task, Node, Cluster, TaskDistribution
@@ -17,6 +16,63 @@ from schedulers import (
     BayesianFGDScheduler
 )
 from trace_loader import AlibabaTraceLoader
+
+
+def build_scheduler(name: str, experiment,
+                    prior_strength: float = 10.0,
+                    min_gpu_tasks: int = 50) -> 'Scheduler':
+    """Create a scheduler instance by name, parsing N/M from FGD-N / W-FGD-M.
+
+    Supported names:
+      Random, BestFit, DotProd, Packing, Clustering — baseline schedulers
+      FGD-Full  — FGD with full trace distribution
+      FGD-N     — FGD with first-N-task distribution  (N any positive int)
+      W-FGD-M   — Windowed FGD with sliding window size M
+      B-FGD     — Bayesian FGD
+      U-FGD     — FGD with uniform grid distribution
+
+    Returns None if the name is not recognised.
+    """
+    import re
+
+    # FGD-N: static first-N distribution (N encoded in the name)
+    m = re.fullmatch(r'FGD-(\d+)', name)
+    if m:
+        n = int(m.group(1))
+        dist = experiment._compute_initial_distribution(n)
+        sched = FGDScheduler(scheduling_task_types=dist.get_task_types())
+        sched.name = name
+        return sched
+
+    # W-FGD-M: sliding window with size M encoded in the name
+    m = re.fullmatch(r'W-FGD-(\d+)', name)
+    if m:
+        window_size = int(m.group(1))
+        return WindowedFGDScheduler(window_size=window_size)
+
+    # Fixed-name variants
+    if name == 'FGD-Full':
+        sched = FGDScheduler()
+        sched.name = 'FGD-Full'
+        return sched
+
+    if name == 'U-FGD':
+        uniform_types = build_uniform_task_types(experiment.loader.nodes)
+        sched = FGDScheduler(scheduling_task_types=uniform_types)
+        sched.name = 'U-FGD'
+        return sched
+
+    if name == 'B-FGD':
+        return BayesianFGDScheduler(prior_strength=prior_strength,
+                                    min_gpu_tasks=min_gpu_tasks)
+
+    # Baseline schedulers (non-FGD)
+    baselines = {s.name: s for s in get_all_schedulers()
+                 if not isinstance(s, FGDScheduler)}
+    if name in baselines:
+        return baselines[name]
+
+    return None
 
 
 def build_uniform_task_types(nodes) -> List[Tuple[Tuple[float, float], float]]:
@@ -37,20 +93,17 @@ def build_uniform_task_types(nodes) -> List[Tuple[Tuple[float, float], float]]:
 class ExperimentResult:
     """Results from a single experiment run"""
     scheduler_name: str
-    # List of (arrived_workload_pct, fragmentation_rate) tuples
-    fragmentation_curve: List[Tuple[float, float]] = field(default_factory=list)
-    # Final metrics
     final_frag_rate: float = 0.0
     final_gpu_alloc_rate: float = 0.0
     tasks_scheduled: int = 0
     tasks_failed: int = 0
+    elapsed_sec: float = 0.0
 
 
-class Figure7aExperiment:
+class DistShiftExperiment:
     """
-    Replicates Figure 7(a): Fragmentation rate grows to 100% as more resources are allocated.
-
-    Trace Replay mode: processes tasks in creation_time order from the trace.
+    Distribution-Shift Experiment: processes tasks in creation_time order from the trace
+    and measures fragmentation under various scheduling policies.
     """
 
     def __init__(self, data_dir: str, window_size: int = 500, task_order: str = 'trace',
@@ -94,8 +147,6 @@ class Figure7aExperiment:
         print(f"Tasks in trace: {len(self.loader.tasks)}")
         print(f"Task order: {task_order}")
         print(f"Full distribution: {len(self.full_task_distribution.get_task_types())} task types")
-        print(f"First-{window_size} distribution: {len(self.first_n_distribution.get_task_types())} task types")
-        print("\n" + self.format_distribution_comparison() + "\n")
 
     def _compute_initial_distribution(self, n: int) -> TaskDistribution:
         """Compute task distribution from first N tasks of the trace"""
@@ -223,7 +274,6 @@ class Figure7aExperiment:
     def run_single(
         self,
         scheduler: Scheduler,
-        sample_interval_pct: float = 5.0,
         show_progress: bool = True
     ) -> ExperimentResult:
         """
@@ -233,6 +283,7 @@ class Figure7aExperiment:
         Cluster always uses full distribution for evaluation.
         Schedulers carry their own scheduling distribution if needed.
         """
+        import time
         from tqdm import tqdm
 
         cluster = self.create_fresh_cluster()
@@ -255,9 +306,6 @@ class Figure7aExperiment:
             max_gpu = max(n.num_gpus for n in self.loader.nodes)
             scheduler.set_uniform_prior(max_cpu, max_gpu)
 
-        cumulative_gpu_demand = 0.0
-        next_sample_pct = sample_interval_pct
-
         pbar = tqdm(
             total=len(tasks),
             desc=f"{scheduler.name:16}",
@@ -266,10 +314,8 @@ class Figure7aExperiment:
             ncols=90
         )
 
+        t_start = time.monotonic()
         for task in tasks:
-            cumulative_gpu_demand += task.gpu_demand
-            arrived_pct = (cumulative_gpu_demand / self.total_gpu_capacity) * 100
-
             # Feed task to adaptive schedulers before scheduling
             if isinstance(scheduler, WindowedFGDScheduler):
                 scheduler.observe_task(task)
@@ -282,17 +328,12 @@ class Figure7aExperiment:
             else:
                 result.tasks_failed += 1
 
-            # Record fragmentation at intervals
-            if arrived_pct >= next_sample_pct:
-                frag_rate = cluster.compute_fragmentation_rate()
-                result.fragmentation_curve.append((next_sample_pct, frag_rate))
-                next_sample_pct += sample_interval_pct
-
             pbar.update(1)
 
         pbar.close()
 
         # Record final metrics
+        result.elapsed_sec = time.monotonic() - t_start
         result.final_frag_rate = cluster.compute_fragmentation_rate()
         result.final_gpu_alloc_rate = cluster.gpu_allocation_rate
 
@@ -301,7 +342,6 @@ class Figure7aExperiment:
     def run_experiment(
         self,
         schedulers: List[Scheduler] = None,
-        sample_interval_pct: float = 5.0,
         show_progress: bool = True
     ) -> Dict[str, List[ExperimentResult]]:
         """
@@ -316,7 +356,6 @@ class Figure7aExperiment:
         for scheduler in schedulers:
             result = self.run_single(
                 scheduler,
-                sample_interval_pct=sample_interval_pct,
                 show_progress=show_progress
             )
             results[scheduler.name].append(result)
@@ -328,144 +367,24 @@ class Figure7aExperiment:
         return results
 
 
-def plot_figure7a(results: Dict[str, List[ExperimentResult]], output_path: str = None):
-    """
-    Plot Figure 7(a): Fragmentation rate vs arrived workloads.
-
-    Args:
-        results: Dict mapping scheduler name to list of results
-        output_path: Path to save the plot (optional)
-    """
-    try:
-        import matplotlib.pyplot as plt
-    except ImportError:
-        print("matplotlib not installed. Skipping plot.")
-        return
-
-    plt.figure(figsize=(10, 6))
-
-    # Color and style mapping to match paper
-    styles = {
-        'Random': {'color': 'brown', 'linestyle': '-.'},
-        'DotProd': {'color': 'purple', 'linestyle': '--'},
-        'Clustering': {'color': 'red', 'linestyle': '--'},
-        'Packing': {'color': 'darkgreen', 'linestyle': ':'},
-        'BestFit': {'color': 'orange', 'linestyle': '--'},
-        'FGD-Full': {'color': 'blue', 'linestyle': '-'},
-    }
-
-    # Styles for distribution-shift variants
-    variant_styles = {
-        'U-FGD': {'color': 'teal', 'linestyle': '-'},
-        'B-FGD': {'color': 'darkorange', 'linestyle': '-'},
-    }
-
-    for name, result_list in results.items():
-        # Single run in replay mode, just use its curve directly
-        curve = result_list[0].fragmentation_curve if result_list else []
-        if curve:
-            x_vals = [p[0] for p in curve]
-            y_vals = [p[1] for p in curve]
-
-            # Match known styles
-            if name in variant_styles:
-                style = variant_styles[name]
-            elif name.startswith('W-FGD'):
-                style = {'color': 'magenta', 'linestyle': '--'}
-            elif name.startswith('FGD-') and name != 'FGD-Full':
-                style = {'color': 'crimson', 'linestyle': '--'}
-            else:
-                style = styles.get(name, {'color': 'black', 'linestyle': '-'})
-            plt.plot(x_vals, y_vals, label=name,
-                    color=style['color'],
-                    linestyle=style['linestyle'],
-                    linewidth=2)
-
-    plt.xlabel('Arrived workloads (in % of cluster GPU capacity)', fontsize=12)
-    plt.ylabel('Frag Rate (%)', fontsize=12)
-    plt.title('Figure 7(a): Fragmentation Rate vs Arrived Workloads', fontsize=14)
-    plt.legend(loc='upper left')
-    plt.grid(True, alpha=0.3)
-    plt.xlim(0, 120)
-    plt.ylim(0, 100)
-
-    if output_path:
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        print(f"Plot saved to {output_path}")
-
-    plt.show()
-
-
-def save_results_to_csv(results: Dict[str, List[ExperimentResult]], output_path: str):
-    """
-    Save experiment results to CSV file.
-
-    CSV format: scheduler,arrived_workload_pct,frag_rate,run
-    """
-    import csv
-
-    with open(output_path, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(['scheduler', 'arrived_workload_pct', 'frag_rate', 'run'])
-
-        for scheduler_name, result_list in results.items():
-            for run_idx, result in enumerate(result_list):
-                for arrived_pct, frag_rate in result.fragmentation_curve:
-                    writer.writerow([scheduler_name, arrived_pct, frag_rate, run_idx])
-
-    print(f"Results saved to {output_path}")
-
-
-def load_results_from_csv(csv_path: str) -> Dict[str, List[ExperimentResult]]:
-    """
-    Load experiment results from CSV file.
-
-    Returns:
-        Dict mapping scheduler name to list of ExperimentResult
-    """
-    import csv
-    from collections import defaultdict
-
-    # Temporary storage: scheduler -> run -> [(x, y), ...]
-    data = defaultdict(lambda: defaultdict(list))
-
-    with open(csv_path, 'r') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            scheduler = row['scheduler']
-            run = int(row['run'])
-            x = float(row['arrived_workload_pct'])
-            y = float(row['frag_rate'])
-            data[scheduler][run].append((x, y))
-
-    # Convert to ExperimentResult objects
-    results = {}
-    for scheduler, runs in data.items():
-        results[scheduler] = []
-        for run_idx in sorted(runs.keys()):
-            result = ExperimentResult(scheduler_name=scheduler)
-            result.fragmentation_curve = sorted(runs[run_idx], key=lambda p: p[0])
-            results[scheduler].append(result)
-
-    return results
-
 
 def format_summary(results: Dict[str, List[ExperimentResult]]) -> str:
     """Format summary statistics as a string"""
     lines = []
-    lines.append("=" * 60)
+    lines.append("=" * 76)
     lines.append("EXPERIMENT SUMMARY")
-    lines.append("=" * 60)
-    lines.append(f"\n{'Scheduler':<16} {'Avg Frag%':>10} {'Avg Alloc%':>12} {'Scheduled':>12} {'Failed':>10}")
-    lines.append("-" * 64)
+    lines.append("=" * 76)
+    lines.append(f"\n{'Scheduler':<16} {'Avg Frag%':>10} {'Avg Alloc%':>12} {'Scheduled':>12} {'Failed':>10} {'Time(s)':>10}")
+    lines.append("-" * 76)
 
     for name, result_list in results.items():
         avg_frag = sum(r.final_frag_rate for r in result_list) / len(result_list)
         avg_alloc = sum(r.final_gpu_alloc_rate for r in result_list) / len(result_list)
         total_scheduled = sum(r.tasks_scheduled for r in result_list) / len(result_list)
         total_failed = sum(r.tasks_failed for r in result_list) / len(result_list)
+        avg_elapsed = sum(r.elapsed_sec for r in result_list) / len(result_list)
 
-        lines.append(f"{name:<16} {avg_frag:>10.1f} {avg_alloc:>12.1f} {total_scheduled:>12.0f} {total_failed:>10.0f}")
+        lines.append(f"{name:<16} {avg_frag:>10.1f} {avg_alloc:>12.1f} {total_scheduled:>12.0f} {total_failed:>10.0f} {avg_elapsed:>10.1f}")
 
     return "\n".join(lines)
 
@@ -478,9 +397,7 @@ def print_summary(results: Dict[str, List[ExperimentResult]]):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Figure 7(a) Replication - Trace Replay")
-    parser.add_argument('--sample-interval', type=float, default=5.0, help='Fragmentation sampling interval %% (default: 5)')
-    parser.add_argument('--window-size', type=int, default=500, help='Sliding window size for W-FGD (default: 500)')
+    parser = argparse.ArgumentParser(description="Distribution-Shift Experiment - Trace Replay")
     parser.add_argument('--task-order', choices=['trace', 'ascending', 'descending', 'phased'], default='trace',
                         help='Task arrival order: trace (original), ascending/descending (sorted by GPU type), phased (GPU tier phases)')
     parser.add_argument('--cluster-scale', type=float, default=100.0,
@@ -493,19 +410,11 @@ if __name__ == "__main__":
                         help='B-FGD uses Packing fallback until this many GPU tasks observed (default: 50)')
     parser.add_argument('--schedulers', type=str, default='all',
                         help='Comma-separated scheduler names to run (default: all). '
-                             'Available: Random,BestFit,DotProd,Packing,Clustering,FGD-Full,FGD-N,W-FGD,B-FGD,U-FGD')
-    parser.add_argument('--plot-csv', type=str, default=None,
-                        help='Plot from existing CSV file instead of running experiment')
+                             'Baselines: Random,BestFit,DotProd,Packing,Clustering. '
+                             'FGD variants: FGD-Full, FGD-<N> (first-N distribution, e.g. FGD-500), '
+                             'W-FGD-<M> (sliding window size M, e.g. W-FGD-200), B-FGD, U-FGD. '
+                             'For FGD-<N>/W-FGD-<M>, N/M are parsed from the name.')
     args = parser.parse_args()
-
-    # Plot-only mode
-    if args.plot_csv:
-        results = load_results_from_csv(args.plot_csv)
-        print(f"Loaded {len(results)} schedulers from {args.plot_csv}")
-        plot_dir = os.path.dirname(args.plot_csv)
-        plot_path = os.path.join(plot_dir, 'figure7a.png')
-        plot_figure7a(results, plot_path)
-        exit(0)
 
     # Parse tier order
     args.tier_order_list = [int(x) for x in args.tier_order.split(',')]
@@ -514,77 +423,71 @@ if __name__ == "__main__":
     data_dir = os.path.join(os.path.dirname(__file__), '..', 'alibaba_traces', 'cluster-trace-gpu-v2023')
 
     print("=" * 60)
-    print("Figure 7(a) Replication - Trace Replay")
-    print(f"  mode=replay, interval={args.sample_interval}%")
-    print(f"  window_size={args.window_size}")
-    print(f"  prior_strength={args.prior_strength}")
+    print("Distribution-Shift Experiment - Trace Replay")
     print(f"  task_order={args.task_order}")
     if args.task_order == 'phased':
         print(f"  tier_order={args.tier_order}")
     print(f"  cluster_scale={args.cluster_scale}%")
     print("=" * 60)
 
-    experiment = Figure7aExperiment(
-        data_dir, window_size=args.window_size,
+    experiment = DistShiftExperiment(
+        data_dir,
         task_order=args.task_order, cluster_scale=args.cluster_scale,
         tier_order=args.tier_order_list
     )
 
-    # Build all available schedulers
-    fgd_full = FGDScheduler()
-    fgd_full.name = "FGD-Full"
-
-    fgd_n = FGDScheduler(
-        scheduling_task_types=experiment.first_n_distribution.get_task_types()
-    )
-    fgd_n.name = f"FGD-{args.window_size}"
-
-    w_fgd = WindowedFGDScheduler(window_size=args.window_size)
-
-    b_fgd = BayesianFGDScheduler(prior_strength=args.prior_strength,
-                                  min_gpu_tasks=args.min_gpu_tasks)
-
-    # U-FGD: static uniform distribution, no updates
-    uniform_types = build_uniform_task_types(experiment.loader.nodes)
-    u_fgd = FGDScheduler(scheduling_task_types=uniform_types)
-    u_fgd.name = "U-FGD"
-
-    baselines = [s for s in get_all_schedulers() if not isinstance(s, FGDScheduler)]
-
-    all_schedulers = {s.name: s for s in baselines}
-    all_schedulers["FGD-Full"] = fgd_full
-    all_schedulers[fgd_n.name] = fgd_n
-    all_schedulers[w_fgd.name] = w_fgd
-    all_schedulers[b_fgd.name] = b_fgd
-    all_schedulers[u_fgd.name] = u_fgd
-
-    # Filter schedulers
+    # Build scheduler list
     if args.schedulers == 'all':
+        fgd_full = FGDScheduler()
+        fgd_full.name = "FGD-Full"
+        fgd_n = FGDScheduler(
+            scheduling_task_types=experiment.first_n_distribution.get_task_types()
+        )
+        fgd_n.name = f"FGD-{experiment.window_size}"
+        w_fgd = WindowedFGDScheduler(window_size=experiment.window_size)
+        b_fgd = BayesianFGDScheduler(prior_strength=args.prior_strength,
+                                      min_gpu_tasks=args.min_gpu_tasks)
+        uniform_types = build_uniform_task_types(experiment.loader.nodes)
+        u_fgd = FGDScheduler(scheduling_task_types=uniform_types)
+        u_fgd.name = "U-FGD"
+        baselines = [s for s in get_all_schedulers() if not isinstance(s, FGDScheduler)]
         schedulers = baselines + [fgd_full, fgd_n, w_fgd, b_fgd, u_fgd]
     else:
+        # For explicit names, N/M are parsed directly from the scheduler name.
         selected = [s.strip() for s in args.schedulers.split(',')]
         schedulers = []
         for name in selected:
-            if name in all_schedulers:
-                schedulers.append(all_schedulers[name])
+            sched = build_scheduler(name, experiment,
+                                    args.prior_strength, args.min_gpu_tasks)
+            if sched is not None:
+                schedulers.append(sched)
             else:
-                print(f"WARNING: Unknown scheduler '{name}'. Available: {list(all_schedulers.keys())}")
+                print(f"WARNING: Unknown scheduler '{name}'. "
+                      f"Available: Random, BestFit, DotProd, Packing, Clustering, "
+                      f"FGD-Full, FGD-<N>, W-FGD-<M>, B-FGD, U-FGD")
         if not schedulers:
             print("No valid schedulers selected. Exiting.")
             exit(1)
 
+    import re as _re
+    for s in schedulers:
+        m = _re.fullmatch(r'FGD-(\d+)', s.name)
+        if m:
+            n = int(m.group(1))
+            n_types = len(experiment._compute_initial_distribution(n).get_task_types())
+            print(f"First-{n} distribution ({s.name}): {n_types} task types")
+    if any(isinstance(s, BayesianFGDScheduler) for s in schedulers):
+        print(f"  prior_strength={args.prior_strength}, min_gpu_tasks={args.min_gpu_tasks}")
+
     # Run trace replay
-    results = experiment.run_experiment(
-        schedulers=schedulers,
-        sample_interval_pct=args.sample_interval
-    )
+    results = experiment.run_experiment(schedulers=schedulers)
 
     # Create result directory
     scale_str = f"{args.cluster_scale:g}"
     order_str = args.task_order
     if args.task_order == 'phased':
         order_str = f"phased-{''.join(str(x) for x in args.tier_order_list)}"
-    result_name = f"dist-shift-fig7a-{args.window_size}-{order_str}-{scale_str}"
+    result_name = f"dist-shift-{order_str}-{scale_str}"
     result_dir = os.path.join(os.path.dirname(__file__), 'result', result_name)
     os.makedirs(result_dir, exist_ok=True)
 
@@ -594,26 +497,24 @@ if __name__ == "__main__":
     # Save summary log
     log_path = os.path.join(result_dir, 'experiment_summary.log')
     with open(log_path, 'w') as f:
-        f.write(f"Experiment: Figure 7(a) Replication - Trace Replay\n")
+        f.write(f"Experiment: Distribution-Shift - Trace Replay\n")
         f.write(f"Result: {result_name}\n")
         f.write(f"Mode: replay\n")
-        f.write(f"Sample interval: {args.sample_interval}%\n")
-        f.write(f"Window size (W-FGD): {args.window_size}\n")
-        f.write(f"Prior strength (B-FGD): {args.prior_strength}\n")
+        if any(isinstance(s, BayesianFGDScheduler) for s in schedulers):
+            f.write(f"Prior strength (B-FGD): {args.prior_strength}\n")
+            f.write(f"Min GPU tasks (B-FGD): {args.min_gpu_tasks}\n")
         f.write(f"Task order: {args.task_order}\n")
         if args.task_order == 'phased':
             f.write(experiment.phase_info + "\n")
         f.write(f"Cluster: {experiment.original_node_count} nodes -> {experiment.scaled_node_count} nodes ({args.cluster_scale}%)\n")
         f.write(f"Full distribution: {len(experiment.full_task_distribution.get_task_types())} task types\n")
-        f.write(f"First-{args.window_size} distribution: {len(experiment.first_n_distribution.get_task_types())} task types\n\n")
-        f.write(experiment.format_distribution_comparison() + "\n\n")
+        import re as _re
+        for s in schedulers:
+            m = _re.fullmatch(r'FGD-(\d+)', s.name)
+            if m:
+                n = int(m.group(1))
+                n_types = len(experiment._compute_initial_distribution(n).get_task_types())
+                f.write(f"First-{n} distribution ({s.name}): {n_types} task types\n")
+        f.write("\n")
         f.write(format_summary(results) + "\n")
     print(f"Summary log saved to {log_path}")
-
-    # Save results to CSV
-    csv_path = os.path.join(result_dir, 'figure7a_results.csv')
-    save_results_to_csv(results, csv_path)
-
-    # Plot results
-    plot_path = os.path.join(result_dir, 'figure7a.png')
-    plot_figure7a(results, plot_path)
