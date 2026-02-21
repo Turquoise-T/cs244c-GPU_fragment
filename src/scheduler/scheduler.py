@@ -85,12 +85,22 @@ class Scheduler:
         self._enable_gpu_sharing = enable_gpu_sharing
         self._fgd_placement = None
         self._fgd_fragmentation_history = []
+        self._round_metrics_history = []
         if enable_fgd:
             from fgd_placement import GavelFGDPlacement, build_fgd_workload
             self._fgd_placement = GavelFGDPlacement(
                 workload=build_fgd_workload(fgd_workload_mode),
                 placement_mode=fgd_placement_mode,
                 enable_gpu_sharing=enable_gpu_sharing)
+
+        # For metrics recording: always have a workload + frag calculator,
+        # even when FGD placement is disabled (strided mode).
+        self._metrics_workload = None
+        if enable_fgd:
+            self._metrics_workload = self._fgd_placement.workload
+        else:
+            from fgd_placement import build_fgd_workload
+            self._metrics_workload = build_fgd_workload(fgd_workload_mode)
 
         # Initial timestamp.
         if self._simulate:
@@ -724,6 +734,84 @@ class Scheduler:
         if not utilizations:
             return None
         return sum(utilizations) / len(utilizations)
+
+    def _record_round_metrics(self, cluster_spec, num_gpus_per_server):
+        """Record fragmentation and utilization metrics for the current round.
+
+        Computes:
+        - utilization: allocated GPUs / total GPUs
+        - frag_rate: F_N(M) / unallocated_gpus * 100
+        - frag_total: F_N(M) / total_gpus * 100
+        - unalloc_pct: unallocated / total * 100
+        - occupied_nodes: servers with >= 1 GPU allocated
+        """
+        if self._metrics_workload is None:
+            return
+
+        import sys as _sys
+        import os as _os
+        _sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), '..', 'fgd'))
+        from fgd import FragmentationCalculator, Node
+
+        total_gpus = sum(cluster_spec.values())
+        allocated_gpus = 0
+        occupied_nodes = 0
+        all_nodes = []
+
+        # Build set of assigned worker IDs from current assignments
+        assigned_wids = set()
+        for job_id, worker_ids in self._current_worker_assignments.items():
+            for wid in worker_ids:
+                assigned_wids.add(wid)
+
+        for worker_type, servers in self._worker_type_to_worker_id_mapping.items():
+            for server_idx, server_wids in enumerate(servers):
+                gpus = []
+                server_allocated = 0
+                for wid in server_wids:
+                    if wid in assigned_wids:
+                        gpus.append(0.0)
+                        server_allocated += 1
+                    else:
+                        gpus.append(1.0)
+
+                allocated_gpus += server_allocated
+                if server_allocated > 0:
+                    occupied_nodes += 1
+
+                node = Node(
+                    id=f'{worker_type}-{server_idx}',
+                    total_cpu=1000.0,
+                    total_memory=1000.0,
+                    gpus=gpus,
+                    gpu_type=worker_type,
+                )
+                node.allocated_cpu = server_allocated * 10.0
+                node.allocated_memory = server_allocated * 10.0
+                all_nodes.append(node)
+
+        unallocated_gpus = total_gpus - allocated_gpus
+        utilization = allocated_gpus / total_gpus * 100.0 if total_gpus > 0 else 0.0
+
+        frag_value = FragmentationCalculator.compute_cluster_fragmentation(
+            all_nodes, self._metrics_workload
+        )
+
+        frag_rate = (frag_value / unallocated_gpus * 100.0
+                     if unallocated_gpus > 0 else 0.0)
+        frag_total = frag_value / total_gpus * 100.0 if total_gpus > 0 else 0.0
+
+        self._round_metrics_history.append({
+            'simulated_time': self._current_timestamp,
+            'utilization': utilization,
+            'frag_value': frag_value,
+            'frag_rate': frag_rate,
+            'frag_total': frag_total,
+            'unalloc_pct': unallocated_gpus / total_gpus * 100.0 if total_gpus > 0 else 0.0,
+            'occupied_nodes': occupied_nodes,
+            'allocated_gpus': allocated_gpus,
+            'total_gpus': total_gpus,
+        })
 
     def reset_workers(self):
         """Sends a shutdown signal to every worker and ends the scheduler."""
@@ -1390,7 +1478,7 @@ class Scheduler:
                  num_gpus_per_server=None,
                  ideal=False,
                  output_trace_file_name=None,
-                 max_jct=None,
+                 max_jct=None,  # Deprecated, no longer used
                  completion_rate_threshold=0.1,
                  min_simulated_time=36000,
                  utilization_threshold=0.99,
@@ -1621,21 +1709,6 @@ class Scheduler:
             if jobs_to_complete is not None:
                 if self.is_done(jobs_to_complete):
                     break
-                # Early exit if partial JCT exceeds threshold (system saturated)
-                if max_jct is not None and num_completed_jobs > 0:
-                    completed_in_window = jobs_to_complete.intersection(self._completed_jobs)
-                    partial_jcts = [self._job_completion_times[job_id]
-                                    for job_id in completed_in_window
-                                    if job_id in self._job_completion_times
-                                    and self._job_completion_times[job_id] is not None]
-                    if len(partial_jcts) > 0:
-                        current_avg_jct = sum(partial_jcts) / len(partial_jcts)
-                        if current_avg_jct > max_jct:
-                            self._logger.info(
-                                'Early exit: partial JCT {0:.2f}s > max_jct {1:.2f}s'.format(
-                                    current_avg_jct, max_jct))
-                            self._jct_threshold_exceeded = True
-                            break
 
                 # Saturation detection via completion rate
                 # If completion rate << arrival rate, system is saturated
@@ -1995,6 +2068,10 @@ class Scheduler:
 
             _profile['scheduling'] += time.perf_counter() - _t0
             _profile['round_total'] += time.perf_counter() - _t_round_start
+
+            # Record per-round fragmentation/utilization metrics
+            if hasattr(self, '_round_metrics_history') and num_gpus_per_server is not None:
+                self._record_round_metrics(cluster_spec, num_gpus_per_server)
 
             if checkpoint_threshold is not None and last_added_job_id is not None \
                 and last_added_job_id[0] >= checkpoint_threshold \
