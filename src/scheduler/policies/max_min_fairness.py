@@ -526,7 +526,8 @@ class MaxMinFairnessPolicyWithPacking(PolicyWithPacking):
                                                 job_id_to_job_type_key)
 
     def get_allocation(self, unflattened_throughputs, scale_factors,
-                       unflattened_priority_weights, cluster_spec):
+                       unflattened_priority_weights, cluster_spec,
+                       gpu_demands=None):
         all_throughputs, index = \
             self.flatten(d=unflattened_throughputs,
                          cluster_spec=cluster_spec,
