@@ -88,6 +88,7 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
     solver = config.get('solver', 'ECOS')
     solver_kwargs = config.get('solver_kwargs', {})
     enable_gpu_sharing = config.get('enable_gpu_sharing', False)
+    completion_rate_threshold = config.get('completion_rate_threshold', 0.1)
 
     print(f"\n{'='*70}")
     print(f"Experiment: {name}")
@@ -96,8 +97,11 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
     if mode == 'steady_state':
         window_start = config['window_start']
         window_end = config['window_end']
-        max_jct = config.get('max_jct', 360000)
-        print(f"  Mode: steady_state, Window: [{window_start}, {window_end}), max_jct: {max_jct}")
+        # Compute max_simulated_time: enough to generate all window jobs + 50% buffer
+        # lam = inter-arrival time in seconds, so expected time = window_end * lam
+        default_max_sim = int(window_end * lam * 1.5) if lam > 0 else 7200000
+        max_simulated_time = config.get('max_simulated_time', default_max_sim)
+        print(f"  Mode: steady_state, Window: [{window_start}, {window_end}), max_sim_time: {max_simulated_time/3600:.0f}hrs")
     else:
         print(f"  Mode: fixed_jobs, Jobs: {num_total_jobs}")
     print(f"  Lambda: {lam}, Seed: {seed}, Round: {time_per_iteration}s")
@@ -135,10 +139,11 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
 
     # Set up scale factor generator and reference worker type for Alibaba workload
     scale_factor_generator_func = None
-    reference_worker_type = 'v100'
+    reference_worker_type = config.get('reference_worker_type', 'v100')
     if workload_mode == 'alibaba':
         scale_factor_generator_func = utils._generate_scale_factor_alibaba
-        reference_worker_type = 'V100M32'
+        if reference_worker_type == 'v100':
+            reference_worker_type = 'V100M32'
 
     # Optionally attach a file handler to capture scheduler logs
     file_handler = None
@@ -165,17 +170,16 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
             generate_multi_gpu_jobs=generate_multi_gpu_jobs,
             simulate_steady_state=True,
             num_gpus_per_server=num_gpus_per_server,
-            max_jct=max_jct,
             max_wall_time=max_wall_time,
+            max_simulated_time=max_simulated_time,
+            completion_rate_threshold=completion_rate_threshold,
             scale_factor_generator_func=scale_factor_generator_func,
             reference_worker_type=reference_worker_type,
         )
-        is_saturated = sched.jct_threshold_exceeded()
-        if is_saturated:
-            avg_jct = float('inf')
+        # Always try to compute real JCT if window is complete
+        if sched.is_done(jobs_to_complete):
+            avg_jct = sched.get_average_jct(jobs_to_complete)
         elif sched.saturated:
-            # Wall-clock or sim timeout -- use partial JCT from completed
-            # window jobs rather than losing all data
             avg_jct = sched.partial_jct if sched.partial_jct else float('inf')
             is_saturated = True
         else:
@@ -204,6 +208,30 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
     if enable_fgd and hasattr(sched, '_fgd_fragmentation_history'):
         frag_history = sched._fgd_fragmentation_history
 
+    # Extract per-round metrics if available
+    round_metrics = []
+    if hasattr(sched, '_round_metrics_history'):
+        round_metrics = sched._round_metrics_history
+
+    # Compute measurement-window averages for fragmentation metrics
+    frag_metrics = {}
+    if round_metrics and mode == 'steady_state':
+        window_metrics = round_metrics  # Use all recorded metrics
+        if window_metrics:
+            frag_metrics = {
+                'avg_utilization': float(np.mean([m['utilization'] for m in window_metrics])),
+                'avg_frag_rate': float(np.mean([m['frag_rate'] for m in window_metrics])),
+                'avg_frag_total': float(np.mean([m['frag_total'] for m in window_metrics])),
+                'avg_unalloc_pct': float(np.mean([m['unalloc_pct'] for m in window_metrics])),
+                'avg_occupied_nodes': float(np.mean([m['occupied_nodes'] for m in window_metrics])),
+                'std_utilization': float(np.std([m['utilization'] for m in window_metrics])),
+                'std_frag_rate': float(np.std([m['frag_rate'] for m in window_metrics])),
+                'std_frag_total': float(np.std([m['frag_total'] for m in window_metrics])),
+                'std_unalloc_pct': float(np.std([m['unalloc_pct'] for m in window_metrics])),
+                'std_occupied_nodes': float(np.std([m['occupied_nodes'] for m in window_metrics])),
+                'num_metric_samples': len(window_metrics),
+            }
+
     # Count jobs with actual completion times (not None from deadlock)
     completed_count = sum(
         1 for t in sched._job_completion_times.values() if t is not None
@@ -227,6 +255,7 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
         'saturated': is_saturated,
         'mode': mode,
     }
+    result.update(frag_metrics)
     if mode == 'steady_state':
         result['generate_multi_gpu_jobs'] = generate_multi_gpu_jobs
 
@@ -251,6 +280,11 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
         avg_frag = sum(f for _, _, f in frag_history) / len(frag_history)
         result['avg_fragmentation'] = avg_frag
         print(f"  Avg fragmentation: {avg_frag:.2f}")
+    if frag_metrics:
+        print(f"  Utilization: {frag_metrics['avg_utilization']:.1f}% +/- {frag_metrics['std_utilization']:.1f}")
+        print(f"  Frag rate: {frag_metrics['avg_frag_rate']:.1f}% +/- {frag_metrics['std_frag_rate']:.1f}")
+        print(f"  Frag/total: {frag_metrics['avg_frag_total']:.1f}% +/- {frag_metrics['std_frag_total']:.1f}")
+        print(f"  Unalloc: {frag_metrics['avg_unalloc_pct']:.1f}%, Occupied nodes: {frag_metrics['avg_occupied_nodes']:.0f}")
 
     return result
 

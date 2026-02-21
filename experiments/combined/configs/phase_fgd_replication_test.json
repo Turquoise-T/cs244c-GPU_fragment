@@ -1,0 +1,59 @@
+{
+  "description": "Quick local test: 4 experiments (1 per placement), tiny cluster, verify metrics pipeline.",
+  "common": {
+    "policy": "max_min_fairness",
+    "mode": "steady_state",
+    "window_start": 5,
+    "window_end": 15,
+    "time_per_iteration": 360,
+    "generate_multi_gpu_jobs": true,
+    "workload_mode": "alibaba",
+    "fgd_workload_mode": "alibaba",
+    "enable_migration_penalty": false,
+    "enable_gpu_sharing": false,
+    "solver": "ECOS",
+    "completion_rate_threshold": 0.1,
+    "throughputs_file": "simulation_throughputs_alibaba_split.json",
+    "reference_worker_type": "V100M32_8",
+    "cluster_spec": {
+      "G2_8": 64,
+      "T4_2": 16,
+      "V100M32_8": 16
+    },
+    "num_gpus_per_server": {
+      "G2_8": 8,
+      "T4_2": 2,
+      "V100M32_8": 8
+    }
+  },
+  "experiments": [
+    {
+      "name": "fgd_test_strided_10jph_s0",
+      "seed": 0,
+      "lam": 360.0,
+      "enable_fgd": false,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_test_random_10jph_s0",
+      "seed": 0,
+      "lam": 360.0,
+      "enable_fgd": true,
+      "fgd_placement_mode": "random"
+    },
+    {
+      "name": "fgd_test_bestfit_10jph_s0",
+      "seed": 0,
+      "lam": 360.0,
+      "enable_fgd": true,
+      "fgd_placement_mode": "bestfit"
+    },
+    {
+      "name": "fgd_test_fgd_10jph_s0",
+      "seed": 0,
+      "lam": 360.0,
+      "enable_fgd": true,
+      "fgd_placement_mode": "fgd"
+    }
+  ]
+}
