@@ -69,26 +69,32 @@ class RandomScheduler(Scheduler):
 class BestFitScheduler(Scheduler):
     """
     Best-fit: Assigns tasks to the node with the least remaining resources.
-    Computed as weighted sum of all resource dimensions.
+    Score = 0.5 * free_cpu / MaxSpecCpu + 0.5 * free_gpu / MaxSpecGpu
+    matching the author's formula (best_fit_score.go), where MaxSpec values
+    are the global cluster-wide maximums computed once on first scheduling call.
     """
 
     def __init__(self):
         super().__init__("BestFit")
+        self._max_cpu: Optional[float] = None
+        self._max_gpu: Optional[float] = None
 
     def select_node(self, task: Task, cluster: Cluster) -> Optional[int]:
         eligible = cluster.get_eligible_nodes(task)
         if not eligible:
             return None
 
-        # Select node with minimum remaining resources
-        # Score = remaining_cpu + remaining_gpu (normalized)
+        # Compute global max specs once and cache (cluster topology is fixed)
+        if self._max_cpu is None:
+            self._max_cpu = max(n.total_cpu for n in cluster.nodes)
+            self._max_gpu = max(n.num_gpus for n in cluster.nodes)
+
         best_node = None
         best_score = float('inf')
 
         for node in eligible:
-            # Normalize by max capacity in cluster for fair comparison
-            cpu_score = node.remaining_cpu / node.total_cpu if node.total_cpu > 0 else 0
-            gpu_score = node.total_unallocated_gpu / node.num_gpus if node.num_gpus > 0 else 0
+            cpu_score = 0.5 * node.remaining_cpu / self._max_cpu if self._max_cpu > 0 else 0
+            gpu_score = 0.5 * node.total_unallocated_gpu / self._max_gpu if self._max_gpu > 0 else 0
             score = cpu_score + gpu_score
 
             if score < best_score:
