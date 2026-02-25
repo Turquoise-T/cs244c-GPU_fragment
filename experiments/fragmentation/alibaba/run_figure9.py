@@ -67,8 +67,10 @@ POLICY_STYLES = {
     'Random':     {'color': '#808080', 'marker': 'o', 'linestyle': '-.'},
 }
 
-# Plot order matches paper: FGD first, then baselines
+# Bar chart order matches paper: FGD first (leftmost)
 POLICY_ORDER = ['FGD', 'BestFit', 'Packing', 'Clustering', 'DotProd', 'Random']
+# Legend order for line plots: Random at top, FGD at bottom (matches paper Fig 9a)
+LEGEND_ORDER = ['Random', 'DotProd', 'Clustering', 'Packing', 'BestFit', 'FGD']
 
 
 def get_style(name):
@@ -335,9 +337,13 @@ def plot_figure9(results: Dict, num_nodes: int, output_dir: str):
             ordered_names.append(n)
 
     # --- Subplot (a): Unallocatable GPU (%) vs Arrived workloads ---
-    # Plot baselines first (reversed order) so FGD draws on top
+    # Draw in LEGEND_ORDER so FGD (last) draws on top
+    draw_order = [n for n in LEGEND_ORDER if n in ordered_names]
+    for n in ordered_names:
+        if n not in draw_order:
+            draw_order.append(n)
     y_max_a = 0
-    for name in reversed(ordered_names):
+    for name in draw_order:
         data = results[name]
         style = get_style(name)
         curves = data['curves']
@@ -378,9 +384,9 @@ def plot_figure9(results: Dict, num_nodes: int, output_dir: str):
     ax_a.set_ylabel('Unalloc. GPU (%)')
     ax_a.set_xlim(78, 122)
     ax_a.set_ylim(0, max(25, y_max_a))
-    # Reorder legend to match POLICY_ORDER (FGD first)
+    # Reorder legend: Random at top, FGD at bottom (matches paper)
     handles, labels = ax_a.get_legend_handles_labels()
-    label_order = [n for n in POLICY_ORDER if n in labels] + ['Ideal']
+    label_order = [n for n in LEGEND_ORDER if n in labels] + ['Ideal']
     ordered_handles = [handles[labels.index(l)] for l in label_order if l in labels]
     ordered_labels = [l for l in label_order if l in labels]
     ax_a.legend(ordered_handles, ordered_labels, fontsize=7, loc='upper right')
@@ -388,7 +394,7 @@ def plot_figure9(results: Dict, num_nodes: int, output_dir: str):
     ax_a.set_title('(a) Unallocatable GPUs given arriving workloads')
 
     # --- Subplot (b): Occupied nodes vs Arrived workloads ---
-    for name in ordered_names:
+    for name in draw_order:
         data = results[name]
         style = get_style(name)
         curves = data['curves']
@@ -416,7 +422,7 @@ def plot_figure9(results: Dict, num_nodes: int, output_dir: str):
     ax_b.set_xlim(0, 105)
     ax_b.set_ylim(0, num_nodes * 1.1)
     handles_b, labels_b = ax_b.get_legend_handles_labels()
-    order_b = [n for n in POLICY_ORDER if n in labels_b]
+    order_b = [n for n in LEGEND_ORDER if n in labels_b]
     ax_b.legend([handles_b[labels_b.index(l)] for l in order_b if l in labels_b],
                 [l for l in order_b if l in labels_b],
                 fontsize=7, loc='lower right')
@@ -468,9 +474,9 @@ def plot_figure9(results: Dict, num_nodes: int, output_dir: str):
 
     # --- Subplot (d): Fragmentation breakdown (stacked bar) ---
     breakdown_colors = {
-        'non-gpu':   '#4472C4',
-        'stranded':  '#ED7D31',
-        'deficient': '#A5A5A5',
+        'non-gpu':   '#228B22',   # green (matches paper)
+        'stranded':  '#ED7D31',   # orange
+        'deficient': '#A5A5A5',   # gray
     }
 
     for name_idx, name in enumerate(ordered_names):

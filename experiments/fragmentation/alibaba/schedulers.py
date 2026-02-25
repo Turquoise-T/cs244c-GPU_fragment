@@ -65,11 +65,15 @@ class BestFitScheduler(Scheduler):
         if not eligible:
             return None
 
+        # Normalize by max capacity in cluster (paper Section 6.1)
+        max_cpu = max(n.total_cpu for n in cluster.nodes)
+        max_gpu = max(n.num_gpus for n in cluster.nodes)
+
         best_node = None
         best_score = float('inf')
         for node in eligible:
-            cpu_score = node.remaining_cpu / node.total_cpu if node.total_cpu > 0 else 0
-            gpu_score = node.total_unallocated_gpu / node.num_gpus if node.num_gpus > 0 else 0
+            cpu_score = node.remaining_cpu / max_cpu if max_cpu > 0 else 0
+            gpu_score = node.total_unallocated_gpu / max_gpu if max_gpu > 0 else 0
             score = cpu_score + gpu_score
             if score < best_score:
                 best_score = score
@@ -195,11 +199,25 @@ class FGDScheduler(Scheduler):
 
     Same algorithm as src/scheduler/policies/fgd.py (FragmentationCalculator +
     greedy min-delta placement), extended with CPU-awareness for Alibaba traces.
+
+    Per-GPU evaluation: for partial-GPU tasks, tries each candidate GPU
+    individually and picks the (node, GPU) pair with the smallest delta
+    (paper Algorithm 1 footnote).
+
+    Performance: groups eligible nodes by state to avoid redundant evaluations.
     """
 
     def __init__(self, scheduling_task_types=None):
         super().__init__("FGD")
         self.scheduling_task_types = scheduling_task_types
+        self._chosen_gpu_idx = None  # best GPU index for partial-GPU tasks
+
+    def _compute_frag_for_state(self, node, task_type_list):
+        """Compute F_n(M) using precomputed task type list."""
+        frag = 0.0
+        for dummy_task, popularity in task_type_list:
+            frag += popularity * node.get_fragmentation_for_task(dummy_task)
+        return frag
 
     def select_node(self, task: Task, cluster: Cluster) -> Optional[int]:
         eligible = cluster.get_eligible_nodes(task)
@@ -213,41 +231,100 @@ class FGDScheduler(Scheduler):
         else:
             return eligible[0].node_id
 
+        # Precompute Task objects for the distribution (Opt B)
+        task_type_list = [
+            (Task(task_id=-1, cpu_demand=cpu, gpu_demand=gpu), popularity)
+            for (cpu, gpu), popularity in task_types
+        ]
+
         best_node_id = None
         best_delta = float('inf')
+        best_gpu_idx = None
 
+        # Group eligible nodes by state to avoid redundant evals (Opt A)
+        from collections import defaultdict
+        groups = defaultdict(list)
         for node in eligible:
+            key = (node.total_cpu, node.num_gpus, node.allocated_cpu,
+                   tuple(sorted(node.gpu_remaining)))
+            groups[key].append(node)
+
+        for _key, group_nodes in groups.items():
+            node = group_nodes[0]  # evaluate representative
+
             # F_n(M) before placement
-            frag_before = 0.0
-            for (cpu, gpu), popularity in task_types:
-                dummy = Task(task_id=-1, cpu_demand=cpu, gpu_demand=gpu)
-                frag_before += popularity * node.get_fragmentation_for_task(dummy)
+            frag_before = self._compute_frag_for_state(node, task_type_list)
 
-            # Hypothetical placement: deep-copy node state
-            saved_cpu = node.allocated_cpu
-            saved_gpu = list(node.gpu_remaining)
+            if task.is_partial_gpu():
+                # Per-GPU evaluation: try each feasible GPU (paper Alg 1 footnote)
+                for gpu_idx, g in enumerate(node.gpu_remaining):
+                    if g < task.gpu_demand:
+                        continue
+                    # Hypothetical placement on this specific GPU
+                    saved_cpu = node.allocated_cpu
+                    saved_gpu = list(node.gpu_remaining)
+                    node.allocated_cpu += task.cpu_demand
+                    node.gpu_remaining[gpu_idx] -= task.gpu_demand
 
-            gpu_indices = node.allocate_task(task)
-            if gpu_indices is None:
-                continue
+                    frag_after = self._compute_frag_for_state(node, task_type_list)
+                    delta = frag_after - frag_before
 
-            # F_n(M) after placement
-            frag_after = 0.0
-            for (cpu, gpu), popularity in task_types:
-                dummy = Task(task_id=-1, cpu_demand=cpu, gpu_demand=gpu)
-                frag_after += popularity * node.get_fragmentation_for_task(dummy)
+                    # Restore
+                    node.allocated_cpu = saved_cpu
+                    node.gpu_remaining = saved_gpu
 
-            delta = frag_after - frag_before
+                    if delta < best_delta:
+                        best_delta = delta
+                        best_node_id = node.node_id
+                        best_gpu_idx = gpu_idx
+            else:
+                # Full-GPU or no-GPU tasks: single hypothetical placement
+                saved_cpu = node.allocated_cpu
+                saved_gpu = list(node.gpu_remaining)
 
-            # Restore node state
-            node.allocated_cpu = saved_cpu
-            node.gpu_remaining = saved_gpu
+                gpu_indices = node.allocate_task(task)
+                if gpu_indices is None:
+                    continue
 
-            if delta < best_delta:
-                best_delta = delta
-                best_node_id = node.node_id
+                frag_after = self._compute_frag_for_state(node, task_type_list)
+                delta = frag_after - frag_before
 
+                # Restore
+                node.allocated_cpu = saved_cpu
+                node.gpu_remaining = saved_gpu
+
+                if delta < best_delta:
+                    best_delta = delta
+                    best_node_id = node.node_id
+                    best_gpu_idx = None
+
+        # If we picked a representative from a group, map back to an actual node
+        if best_node_id is not None:
+            # The best_node_id is the representative's ID.
+            # Find the group it belongs to and pick any node from that group.
+            for _key, group_nodes in groups.items():
+                if group_nodes[0].node_id == best_node_id:
+                    # Pick the first node in the group (all have same state)
+                    best_node_id = group_nodes[0].node_id
+                    break
+
+        self._chosen_gpu_idx = best_gpu_idx
         return best_node_id
+
+    def schedule(self, task: Task, cluster: Cluster) -> bool:
+        """Schedule task, using chosen GPU index for partial-GPU tasks."""
+        node_id = self.select_node(task, cluster)
+        if node_id is None:
+            return False
+        if self._chosen_gpu_idx is not None and task.is_partial_gpu():
+            node = cluster.nodes[node_id]
+            node.allocated_cpu += task.cpu_demand
+            node.gpu_remaining[self._chosen_gpu_idx] -= task.gpu_demand
+            cluster.placement_map[task.task_id] = (node_id, [self._chosen_gpu_idx])
+            cluster._active_tasks[task.task_id] = task
+            self._chosen_gpu_idx = None
+            return True
+        return cluster.schedule_task(task, node_id)
 
 
 class WindowedFGDScheduler(FGDScheduler):

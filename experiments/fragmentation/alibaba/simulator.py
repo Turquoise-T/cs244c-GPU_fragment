@@ -163,7 +163,12 @@ class Node:
             gpus_needed = int(task.gpu_demand)
             if self.fully_unallocated_gpus < gpus_needed:
                 return self.total_unallocated_gpu
-            return 0.0
+            # Partial GPUs can't serve full-GPU tasks → fragmented (Eq. 3)
+            fragmented = 0.0
+            for g in self.gpu_remaining:
+                if g < 1.0:
+                    fragmented += g
+            return fragmented
 
         if task.is_partial_gpu():
             if not self.can_fit_task(task):
