@@ -202,6 +202,8 @@ class Scheduler:
         self._redispatched_worker_assignments = collections.OrderedDict()
         # Set of completed jobs in current round.
         self._completed_jobs_in_current_round = set()
+        # Number of job arrivals in the current round (for live metrics).
+        self._arrivals_this_round = 0
         # Set of jobs with an extended lease for the upcoming round.
         self._jobs_with_extended_lease = set()
         # The total number of lease extensions across all jobs.
@@ -569,6 +571,7 @@ class Scheduler:
                 'sim_time': self._current_timestamp,
             }
             self._logger.info('EVENT ' + json.dumps(arrival_event))
+            self._arrivals_this_round += 1
             self._scheduler_cv.notifyAll()
 
         return job_id
@@ -744,25 +747,21 @@ class Scheduler:
         - frag_total: F_N(M) / total_gpus * 100
         - unalloc_pct: unallocated / total * 100
         - occupied_nodes: servers with >= 1 GPU allocated
+
+        When num_gpus_per_server is None (flat cluster), fragmentation is
+        always zero but utilization is still recorded.
         """
-        if self._metrics_workload is None:
-            return
-
-        import sys as _sys
-        import os as _os
-        _sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), '..', 'fgd'))
-        from fgd import FragmentationCalculator, Node
-
         total_gpus = sum(cluster_spec.values())
-        allocated_gpus = 0
-        occupied_nodes = 0
-        all_nodes = []
 
         # Build set of assigned worker IDs from current assignments
         assigned_wids = set()
         for job_id, worker_ids in self._current_worker_assignments.items():
             for wid in worker_ids:
                 assigned_wids.add(wid)
+
+        allocated_gpus = 0
+        occupied_nodes = 0
+        all_nodes = []
 
         for worker_type, servers in self._worker_type_to_worker_id_mapping.items():
             for server_idx, server_wids in enumerate(servers):
@@ -779,6 +778,21 @@ class Scheduler:
                 if server_allocated > 0:
                     occupied_nodes += 1
 
+                all_nodes.append((worker_type, server_idx, gpus, server_allocated))
+
+        unallocated_gpus = total_gpus - allocated_gpus
+        utilization = allocated_gpus / total_gpus * 100.0 if total_gpus > 0 else 0.0
+
+        # Compute fragmentation only when we have node structure and a workload.
+        frag_value = 0.0
+        if num_gpus_per_server is not None and self._metrics_workload is not None:
+            import sys as _sys
+            import os as _os
+            _sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), '..', 'fgd'))
+            from fgd import FragmentationCalculator, Node
+
+            fgd_nodes = []
+            for worker_type, server_idx, gpus, server_allocated in all_nodes:
                 node = Node(
                     id=f'{worker_type}-{server_idx}',
                     total_cpu=1000.0,
@@ -788,18 +802,61 @@ class Scheduler:
                 )
                 node.allocated_cpu = server_allocated * 10.0
                 node.allocated_memory = server_allocated * 10.0
-                all_nodes.append(node)
+                fgd_nodes.append(node)
 
-        unallocated_gpus = total_gpus - allocated_gpus
-        utilization = allocated_gpus / total_gpus * 100.0 if total_gpus > 0 else 0.0
-
-        frag_value = FragmentationCalculator.compute_cluster_fragmentation(
-            all_nodes, self._metrics_workload
-        )
+            frag_value = FragmentationCalculator.compute_cluster_fragmentation(
+                fgd_nodes, self._metrics_workload
+            )
 
         frag_rate = (frag_value / unallocated_gpus * 100.0
                      if unallocated_gpus > 0 else 0.0)
         frag_total = frag_value / total_gpus * 100.0 if total_gpus > 0 else 0.0
+
+        # num_completed = jobs that have finished (removed from _jobs).
+        num_completed = sum(
+            1 for t in self._job_completion_times.values() if t is not None
+        )
+        # num_queued = active jobs that are NOT currently running.
+        # _jobs contains only active (not-yet-completed) jobs.
+        num_running = len(self._current_worker_assignments)
+        num_queued = max(0, len(self._jobs) - num_running)
+
+        # Build flat per-GPU allocation array (worker_id -> job_id).
+        # Index i holds the job_id occupying GPU i, or 0 if free.
+        gpu_allocations = [0] * total_gpus
+        for job_id, worker_ids in self._current_worker_assignments.items():
+            jid = job_id[0] if hasattr(job_id, '__getitem__') else int(job_id)
+            for wid in worker_ids:
+                if 0 <= wid < total_gpus:
+                    gpu_allocations[wid] = jid
+
+        # Build queue: job IDs that arrived, aren't running, aren't complete.
+        running_job_ids = set()
+        for job_id in self._current_worker_assignments:
+            jid = job_id[0] if hasattr(job_id, '__getitem__') else int(job_id)
+            running_job_ids.add(jid)
+        queue_job_ids = []
+        for job_id in self._jobs:
+            jid = job_id[0] if hasattr(job_id, '__getitem__') else int(job_id)
+            ct = self._job_completion_times.get(job_id)
+            if ct is None and jid not in running_job_ids:
+                queue_job_ids.append(jid)
+
+        # Per-round completions with duration (for live JCT charts).
+        completions_this_round = []
+        for job_id in self._completed_jobs_in_current_round:
+            jid = job_id[0] if hasattr(job_id, '__getitem__') else int(job_id)
+            dur = self._job_completion_times.get(job_id)
+            if dur is not None:
+                completions_this_round.append({'id': jid, 'duration': dur})
+
+        # Queued jobs with scale factors (for pending GPU demand chart).
+        queued_with_sf = []
+        for job_id in self._jobs:
+            jid = job_id[0] if hasattr(job_id, '__getitem__') else int(job_id)
+            if jid not in running_job_ids and self._job_completion_times.get(job_id) is None:
+                sf = self._jobs[job_id].scale_factor
+                queued_with_sf.append({'id': jid, 'sf': sf})
 
         self._round_metrics_history.append({
             'simulated_time': self._current_timestamp,
@@ -811,6 +868,13 @@ class Scheduler:
             'occupied_nodes': occupied_nodes,
             'allocated_gpus': allocated_gpus,
             'total_gpus': total_gpus,
+            'num_queued': num_queued,
+            'num_completed': num_completed,
+            'gpu_allocations': gpu_allocations,
+            'queue_job_ids': queue_job_ids,
+            'completions_this_round': completions_this_round,
+            'arrivals_this_round': self._arrivals_this_round,
+            'queued_with_sf': queued_with_sf,
         })
 
     def reset_workers(self):
@@ -947,6 +1011,23 @@ class Scheduler:
             if len(worker_ids[server_id_ptr]) == 0:
                 server_id_ptr += 1
                 continue
+            # Single-node enforcement: when real server structure exists,
+            # ensure this server can fit the full job before assigning.
+            # Skip servers that are too small (this IS fragmentation).
+            if (self._num_gpus_per_server is not None and
+                    len(worker_ids_for_job) == 0):
+                if sharing:
+                    avail = sum(
+                        1 for wid in worker_ids[server_id_ptr]
+                        if 1.0 - assigned_worker_ids.get(wid, 0.0)
+                        >= gpu_request - 1e-9)
+                else:
+                    avail = sum(
+                        1 for wid in worker_ids[server_id_ptr]
+                        if wid not in assigned_worker_ids)
+                if avail < scale_factor:
+                    server_id_ptr += 1
+                    continue
             worker_id_to_assign = worker_ids[server_id_ptr][0]
             if sharing:
                 remaining = 1.0 - assigned_worker_ids.get(
@@ -969,9 +1050,11 @@ class Scheduler:
                 worker_ids[server_id_ptr].pop(0)
 
         if len(worker_ids_for_job) != scale_factor:
-            if sharing:
-                # Bin-packing gap: fractional demand fits but discrete
-                # placement doesn't. Skip this job for this round.
+            if sharing or self._num_gpus_per_server is not None:
+                # Placement failure: job can't fit on any remaining server.
+                # With GPU sharing, this is a bin-packing gap.
+                # With real server structure (single-node), this is
+                # fragmentation -- the job waits for the next round.
                 worker_state['server_id_ptr'] = server_id_ptr
                 return
             raise RuntimeError(
@@ -1486,7 +1569,8 @@ class Scheduler:
                  max_simulated_time=7200000,  # Simulated time timeout: 2000 hours
                  max_wall_time=None,  # Wall-clock timeout in seconds (None = no limit)
                  scale_factor_generator_func=None,
-                 reference_worker_type='v100'):
+                 reference_worker_type='v100',
+                 round_callback=None):
         """Simulates the scheduler execution.
 
            Simulation can be performed using a trace or with continuously
@@ -1559,14 +1643,33 @@ class Scheduler:
         SLO_generator = self._SLO_generator if self._SLOs is not None else None
 
         # Set up the cluster according to the provided spec.
+        # num_gpus_per_server can be:
+        #   None -> each GPU is its own 1-GPU "server" (flat pool)
+        #   {type: int} -> uniform server size per type
+        #   {type: {size: count}} -> mixed node sizes within a type
+        #     e.g. {"generic": {"8": 462, "4": 310}} = 462 8-GPU + 310 4-GPU nodes
         worker_types = sorted([worker_type for worker_type in cluster_spec])
         for worker_type in worker_types:
-            num_gpus = 1
-            if num_gpus_per_server is not None:
+            if num_gpus_per_server is None:
+                for i in range(cluster_spec[worker_type]):
+                    self._register_worker_callback(worker_type, num_gpus=1)
+            elif isinstance(num_gpus_per_server[worker_type], dict):
+                # Mixed node sizes: {size_str: count, ...}
+                node_spec = num_gpus_per_server[worker_type]
+                for size_str in sorted(node_spec, key=lambda s: -int(s)):
+                    node_size = int(size_str)
+                    for i in range(node_spec[size_str]):
+                        self._register_worker_callback(worker_type,
+                                                       num_gpus=node_size)
+            else:
                 num_gpus = num_gpus_per_server[worker_type]
-            for i in range(cluster_spec[worker_type] // num_gpus):
-                self._register_worker_callback(worker_type,
-                                               num_gpus=num_gpus)
+                for i in range(cluster_spec[worker_type] // num_gpus):
+                    self._register_worker_callback(worker_type,
+                                                   num_gpus=num_gpus)
+
+        # Store server config for single-node placement enforcement.
+        # When servers have >1 GPU, strided placement should not span nodes.
+        self._num_gpus_per_server = num_gpus_per_server
 
         if checkpoint_file is not None and checkpoint_threshold is None:
             (last_job_arrival_time,
@@ -1638,6 +1741,7 @@ class Scheduler:
         round_number = 0
         while True:
             _t_round_start = time.perf_counter()
+            self._arrivals_this_round = 0
             if debug:
                 input('Press Enter to continue...')
             # --- Telemetry (emitted every round for all simulation modes) ---
@@ -2070,8 +2174,12 @@ class Scheduler:
             _profile['round_total'] += time.perf_counter() - _t_round_start
 
             # Record per-round fragmentation/utilization metrics
-            if hasattr(self, '_round_metrics_history') and num_gpus_per_server is not None:
+            if hasattr(self, '_round_metrics_history'):
                 self._record_round_metrics(cluster_spec, num_gpus_per_server)
+
+            # Fire per-round callback so callers can stream metrics live.
+            if round_callback is not None and self._round_metrics_history:
+                round_callback(self._round_metrics_history[-1])
 
             if checkpoint_threshold is not None and last_added_job_id is not None \
                 and last_added_job_id[0] >= checkpoint_threshold \
@@ -2399,6 +2507,7 @@ class Scheduler:
 
         # Reset metadata.
         self._completed_jobs_in_current_round = set()
+        self._arrivals_this_round = 0
         self._current_worker_assignments = self._next_worker_assignments
         self._next_worker_assignments = None
 
