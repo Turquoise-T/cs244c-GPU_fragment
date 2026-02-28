@@ -304,9 +304,12 @@ class FGDScheduler(Scheduler):
         self.scheduling_task_types = scheduling_task_types
         # If set, use GPU-type-aware distribution: [((cpu, gpu, gpu_spec), popularity)]
         self.typed_task_types = None
+        # GPU slot index chosen by select_node for the upcoming schedule() call.
+        # Valid only for partial GPU tasks; -1 means use default allocate_task().
+        self._pending_slot: int = -1
 
     @staticmethod
-    def _compute_frag_delta_for_node(args: Tuple) -> Tuple[int, float]:
+    def _compute_frag_delta_for_node(args: Tuple) -> Tuple[int, float, int]:
         """
         Worker function to compute fragmentation delta for a single node.
         Used for parallel evaluation.
@@ -356,10 +359,12 @@ class FGDScheduler(Scheduler):
         frag_before = _frag_for_types(node)
 
         if task.is_partial_gpu():
-            # For partial GPU tasks, this evaluates each eligible GPU slot
-            # separately and uses the best slot's score for node ranking
-            # We return the minimum delta across slots.
+            # For partial GPU tasks, evaluate each eligible GPU slot separately
+            # and track which slot produces the minimum fragmentation delta.
+            # The slot index is returned so FGD can place the task on the same
+            # slot that was evaluated, keeping scoring and placement consistent.
             best_delta = float('inf')
+            best_slot = -1
             node.allocated_cpu += task_cpu  # CPU is always consumed
             for i in range(num_gpus):
                 if gpu_remaining[i] >= task_gpu:
@@ -368,12 +373,13 @@ class FGDScheduler(Scheduler):
                     delta = _frag_for_types(node) - frag_before
                     if delta < best_delta:
                         best_delta = delta
-            return (node_id, best_delta)
+                        best_slot = i
+            return (node_id, best_delta, best_slot)
         else:
             # Full-GPU and no-GPU tasks have a single allocation path
             node.allocate_task(task)
             frag_after = _frag_for_types(node)
-            return (node_id, frag_after - frag_before)
+            return (node_id, frag_after - frag_before, -1)
 
     def _get_pool(self):
         """Lazy initialization of process pool"""
@@ -416,15 +422,36 @@ class FGDScheduler(Scheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
-        # Find best node
+        # Find best node, tracking the optimal slot for partial GPU tasks
         best_node_id = None
         best_delta = float('inf')
-        for node_id, delta in results:
+        self._pending_slot = -1
+        for node_id, delta, slot in results:
             if delta < best_delta:
                 best_delta = delta
                 best_node_id = node_id
+                self._pending_slot = slot
 
         return best_node_id
+
+    def schedule(self, task: Task, cluster: Cluster) -> bool:
+        """
+        Override base schedule() to place partial GPU tasks on the exact slot
+        that was scored in select_node(), not the best-fit slot from allocate_task().
+        This ensures scoring and placement are consistent.
+        """
+        node_id = self.select_node(task, cluster)
+        if node_id is None:
+            return False
+
+        if task.is_partial_gpu() and self._pending_slot >= 0:
+            node = cluster.nodes[node_id]
+            if node.allocate_to_slot(task, self._pending_slot):
+                cluster.scheduled_tasks.append((task, node_id))
+                return True
+            return False
+        else:
+            return cluster.schedule_task(task, node_id)
 
     def cleanup(self):
         """Clean up the process pool"""
@@ -514,13 +541,15 @@ class WindowedFGDScheduler(FGDScheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
-        # Find best node
+        # Find best node, tracking the optimal slot for partial GPU tasks
         best_node_id = None
         best_delta = float('inf')
-        for node_id, delta in results:
+        self._pending_slot = -1
+        for node_id, delta, slot in results:
             if delta < best_delta:
                 best_delta = delta
                 best_node_id = node_id
+                self._pending_slot = slot
 
         return best_node_id
 
@@ -643,10 +672,12 @@ class BayesianFGDScheduler(FGDScheduler):
 
         best_node_id = None
         best_delta = float('inf')
-        for node_id, delta in results:
+        self._pending_slot = -1
+        for node_id, delta, slot in results:
             if delta < best_delta:
                 best_delta = delta
                 best_node_id = node_id
+                self._pending_slot = slot
 
         return best_node_id
 

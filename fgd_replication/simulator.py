@@ -169,6 +169,22 @@ class Node:
 
         return False
 
+    def allocate_to_slot(self, task: Task, slot_idx: int) -> bool:
+        """
+        Allocate a partial GPU task to a specific GPU slot, bypassing best-fit
+        selection. Used by FGD to place the task on the exact slot that was
+        evaluated during node scoring, keeping scoring and placement consistent.
+        """
+        if self.remaining_cpu < task.cpu_demand:
+            return False
+        if slot_idx < 0 or slot_idx >= len(self.gpu_remaining):
+            return False
+        if self.gpu_remaining[slot_idx] < task.gpu_demand:
+            return False
+        self.allocated_cpu += task.cpu_demand
+        self.gpu_remaining[slot_idx] -= task.gpu_demand
+        return True
+
     def get_fragmentation_for_task(self, task: Task) -> float:
         """
         Calculate F_n(m): fragmented GPUs on this node for a specific task.
