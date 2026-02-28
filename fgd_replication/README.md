@@ -16,12 +16,12 @@ command to result directory and the files produced inside it.
 
 | Command | Result directory | Files |
 |---|---|---|
-| `python exp_fig7a.py --num-runs 10 --seed 42` | `result/fig7a-runs10-seed42/` | `figure7a_results.csv`, `figure7a.png`, `experiment_summary.log` |
-| `python exp_fig9.py --num-runs 10 --seed 42` | `result/fig9-runs10-seed42/` | `figure9a_unalloc.csv`, `figure9b_occupied.csv`, `figure9c_failed.csv`, `figure9d_breakdown.csv`, `figure9.png`, `experiment_summary.log` |
-| `python exp_fig11_14.py --figures 11 --num-runs 10 --seed 42` | `result/fig11-runs10-seed42/` | `figure11_results.csv`, `figure11.png`, `experiment_summary.log` |
-| `python exp_fig11_14.py --figures 12 --num-runs 10 --seed 42` | `result/fig12-runs10-seed42/` | `figure12_results.csv`, `figure12.png`, `experiment_summary.log` |
-| `python exp_fig11_14.py --figures 13 --num-runs 10 --seed 42` | `result/fig13-runs10-seed42/` | `figure13_results.csv`, `figure13.png`, `experiment_summary.log` |
-| `python exp_fig11_14.py --figures 14 --num-runs 10 --seed 42` | `result/fig14-runs10-seed42/` | `figure14_results.csv`, `figure14.png`, `experiment_summary.log` |
+| `python3 exp_fig7a.py --num-runs 10 --seed 42` | `result/fig7a-runs10-seed42/` | `figure7a_results.csv`, `figure7a.png`, `experiment_summary.log` |
+| `python3 exp_fig9.py --num-runs 10 --seed 42` | `result/fig9-runs10-seed42/` | `figure9a_unalloc.csv`, `figure9b_occupied.csv`, `figure9c_failed.csv`, `figure9d_breakdown.csv`, `figure9.png`, `experiment_summary.log` |
+| `python3 exp_fig11_14.py --figures 11 --num-runs 10 --seed 42` | `result/fig11-runs10-seed42/` | `figure11_results.csv`, `figure11.png`, `experiment_summary.log` |
+| `python3 exp_fig11_14.py --figures 12 --num-runs 10 --seed 42` | `result/fig12-runs10-seed42/` | `figure12_results.csv`, `figure12.png`, `experiment_summary.log` |
+| `python3 exp_fig11_14.py --figures 13 --num-runs 10 --seed 42` | `result/fig13-runs10-seed42/` | `figure13_results.csv`, `figure13.png`, `experiment_summary.log` |
+| `python3 exp_fig11_14.py --figures 14 --num-runs 10 --seed 42` | `result/fig14-runs10-seed42/` | `figure14_results.csv`, `figure14.png`, `experiment_summary.log` |
 | `python3 exp_dist_shift.py --task-order ascending --schedulers Random,BestFit,DotProd,Packing,Clustering,FGD-Full,FGD-2000,W-FGD-2000,U-FGD` | `result/dist-shift-ascending-100/` | `experiment_summary.log` |
 | `python3 exp_dist_shift.py --task-order descending --schedulers Random,BestFit,DotProd,Packing,Clustering,FGD-Full,FGD-2000,W-FGD-2000,U-FGD` | `result/dist-shift-descending-100/` | `experiment_summary.log` |
 | `python3 exp_dist_shift.py --task-order phased --tier-order 0,1,2,3,4 --schedulers Random,BestFit,DotProd,Packing,Clustering,FGD-Full,FGD-2000,W-FGD-2000,U-FGD` | `result/dist-shift-phased-01234-100/` | `experiment_summary.log` |
@@ -73,16 +73,16 @@ of arrived GPU workload (%).
 **Examples**
 ```bash
 # Full run (paper settings)
-python exp_fig7a.py --num-runs 10 --seed 42
+python3 exp_fig7a.py --num-runs 10 --seed 42
 
 # Quick test
-python exp_fig7a.py --num-runs 1
+python3 exp_fig7a.py --num-runs 1
 
 # Run only FGD and Packing
-python exp_fig7a.py --schedulers FGD,Packing
+python3 exp_fig7a.py --schedulers FGD,Packing
 
 # Plot from saved CSV
-python exp_fig7a.py --plot-csv result/fig7a-runs10-seed42/figure7a_results.csv
+python3 exp_fig7a.py --plot-csv result/fig7a-runs10-seed42/figure7a_results.csv
 ```
 
 ---
@@ -119,16 +119,16 @@ Monte-Carlo workload inflation producing four sub-figures:
 **Examples**
 ```bash
 # Full run
-python exp_fig9.py --num-runs 10 --seed 42
+python3 exp_fig9.py --num-runs 10 --seed 42
 
 # Quick test
-python exp_fig9.py --num-runs 1
+python3 exp_fig9.py --num-runs 1
 
 # Run only FGD and Packing
-python exp_fig9.py --schedulers FGD,Packing
+python3 exp_fig9.py --schedulers FGD,Packing
 
 # Plot from saved CSVs
-python exp_fig9.py --plot-csv result/fig9-runs10-seed42/
+python3 exp_fig9.py --plot-csv result/fig9-runs10-seed42/
 ```
 
 ---
@@ -168,20 +168,20 @@ different set of pre-built trace files; no synthetic sampling is performed.
 **Examples**
 ```bash
 # Run all four figures
-python exp_fig11_14.py
+python3 exp_fig11_14.py
 
 # Run single figure
-python exp_fig11_14.py --figures 11
+python3 exp_fig11_14.py --figures 11
 
 # Run subset of figures
-python exp_fig11_14.py --figures 11,12 --num-runs 10
+python3 exp_fig11_14.py --figures 11,12 --num-runs 10
 
 # Run only FGD and Packing across all figures
-python exp_fig11_14.py --schedulers FGD,Packing
+python3 exp_fig11_14.py --schedulers FGD,Packing
 
 # Plot from saved CSVs
-python exp_fig11_14.py --plot-csv result/fig11-runs10-seed42/figure11_results.csv
-python exp_fig11_14.py --plot-csv result/fig11-runs10-seed42/figure11_results.csv \
+python3 exp_fig11_14.py --plot-csv result/fig11-runs10-seed42/figure11_results.csv
+python3 exp_fig11_14.py --plot-csv result/fig11-runs10-seed42/figure11_results.csv \
                                    result/fig12-runs10-seed42/figure12_results.csv
 ```
 
@@ -231,19 +231,19 @@ For `FGD-N` and `W-FGD-M`, N and M are parsed directly from the scheduler name.
 **Examples**
 ```bash
 # Default: trace order, full cluster, all schedulers
-python exp_dist_shift.py
+python3 exp_dist_shift.py
 
 # Phased arrival (full-GPU tasks first, then fractional, then CPU-only)
-python exp_dist_shift.py --task-order phased --tier-order 3,2,1,4,0
+python3 exp_dist_shift.py --task-order phased --tier-order 3,2,1,4,0
 
 # Ascending GPU demand order, half-size cluster
-python exp_dist_shift.py --task-order ascending --cluster-scale 50
+python3 exp_dist_shift.py --task-order ascending --cluster-scale 50
 
 # Compare FGD variants only
-python exp_dist_shift.py --schedulers FGD-Full,FGD-500,W-FGD-200,B-FGD,U-FGD
+python3 exp_dist_shift.py --schedulers FGD-Full,FGD-500,W-FGD-200,B-FGD,U-FGD
 
 # FGD with first-1000-task distribution vs windowed FGD with window 300
-python exp_dist_shift.py --schedulers FGD-1000,W-FGD-300
+python3 exp_dist_shift.py --schedulers FGD-1000,W-FGD-300
 ```
 
 ---
