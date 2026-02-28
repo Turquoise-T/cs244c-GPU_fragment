@@ -21,8 +21,8 @@ from collections import Counter, defaultdict
 
 from simulator import Task, Node, Cluster, TaskDistribution
 from schedulers import (
-    Scheduler, get_all_schedulers,
-    ClusteringScheduler, FGDScheduler
+    Scheduler, get_all_schedulers, get_all_schedulers_with_bestfit_variants,
+    BestFitLocalScheduler, ClusteringScheduler, FGDScheduler
 )
 from trace_loader import AlibabaTraceLoader
 
@@ -305,6 +305,7 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
         'Clustering': {'color': 'red', 'linestyle': '--'},
         'Packing': {'color': 'darkgreen', 'linestyle': ':'},
         'BestFit': {'color': 'orange', 'linestyle': '--'},
+        'BestFit-PN': {'color': '#fdbf6f', 'linestyle': '--'},
         'FGD': {'color': 'blue', 'linestyle': '-'},
     }
 
@@ -365,7 +366,7 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
     ax.grid(True, alpha=0.3)
 
     # Fixed scheduler order for bar charts (9c, 9d)
-    bar_order = ['FGD', 'BestFit', 'Packing', 'Clustering', 'DotProd', 'Random']
+    bar_order = ['FGD', 'BestFit', 'BestFit-PN', 'Packing', 'Clustering', 'DotProd', 'Random']
     scheduler_names = [n for n in bar_order if n in results]
     x_pos = np.arange(len(scheduler_names))
 
@@ -601,7 +602,7 @@ if __name__ == "__main__":
                         help='Plot from existing CSV directory instead of running experiment')
     parser.add_argument('--schedulers', type=str, default='all',
                         help='Comma-separated scheduler names to run (default: all). '
-                             'Available: Random,BestFit,DotProd,Packing,Clustering,FGD')
+                             'Available: Random,BestFit,BestFit-PN,DotProd,Packing,Clustering,FGD')
     args = parser.parse_args()
 
     # Plot-only mode
@@ -622,9 +623,9 @@ if __name__ == "__main__":
 
     experiment = Figure9Experiment(data_dir)
 
-    all_sched_map = {s.name: s for s in get_all_schedulers()}
+    all_sched_map = {s.name: s for s in get_all_schedulers_with_bestfit_variants()}
     if args.schedulers == 'all':
-        schedulers = get_all_schedulers()
+        schedulers = get_all_schedulers_with_bestfit_variants()
     else:
         selected = [s.strip() for s in args.schedulers.split(',')]
         schedulers = []
