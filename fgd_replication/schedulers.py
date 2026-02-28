@@ -422,13 +422,19 @@ class FGDScheduler(Scheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
-        # Find best node, tracking the optimal slot for partial GPU tasks
+        # Build lookup: node_id -> total_unallocated_gpu for tiebreaking.
+        # When fragmentation deltas are equal (common at high GPU-sharing
+        # proportions), prefer the node with less remaining GPU (more packed),
+        # matching Packing's behavior as a graceful fallback.
+        node_unalloc = {n.node_id: n.total_unallocated_gpu for n in eligible}
+
         best_node_id = None
-        best_delta = float('inf')
+        best_key = (float('inf'), float('inf'))
         self._pending_slot = -1
         for node_id, delta, slot in results:
-            if delta < best_delta:
-                best_delta = delta
+            key = (delta, node_unalloc.get(node_id, float('inf')))
+            if key < best_key:
+                best_key = key
                 best_node_id = node_id
                 self._pending_slot = slot
 
@@ -541,13 +547,14 @@ class WindowedFGDScheduler(FGDScheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
-        # Find best node, tracking the optimal slot for partial GPU tasks
+        node_unalloc = {n.node_id: n.total_unallocated_gpu for n in eligible}
         best_node_id = None
-        best_delta = float('inf')
+        best_key = (float('inf'), float('inf'))
         self._pending_slot = -1
         for node_id, delta, slot in results:
-            if delta < best_delta:
-                best_delta = delta
+            key = (delta, node_unalloc.get(node_id, float('inf')))
+            if key < best_key:
+                best_key = key
                 best_node_id = node_id
                 self._pending_slot = slot
 
@@ -670,12 +677,14 @@ class BayesianFGDScheduler(FGDScheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
+        node_unalloc = {n.node_id: n.total_unallocated_gpu for n in eligible}
         best_node_id = None
-        best_delta = float('inf')
+        best_key = (float('inf'), float('inf'))
         self._pending_slot = -1
         for node_id, delta, slot in results:
-            if delta < best_delta:
-                best_delta = delta
+            key = (delta, node_unalloc.get(node_id, float('inf')))
+            if key < best_key:
+                best_key = key
                 best_node_id = node_id
                 self._pending_slot = slot
 
