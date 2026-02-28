@@ -190,8 +190,10 @@ class Node:
                 # Insufficient full GPUs - all unallocated GPUs are fragments
                 return self.total_unallocated_gpu
             else:
-                # Can run the task - no fragmentation from this task's view
-                return 0.0
+                # Can run the task, but partial GPU slices (0 < g < 1) on this
+                # node can't be used by a full-GPU task — they remain fragmented.
+                # returns the capacity of slots too small for the task.
+                return sum(g for g in self.gpu_remaining if 0 < g < 1.0)
 
         if task.is_partial_gpu():
             # Case 2 (Q-III): Check each GPU

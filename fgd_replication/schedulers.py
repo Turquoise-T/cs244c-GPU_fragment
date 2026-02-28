@@ -104,6 +104,40 @@ class BestFitScheduler(Scheduler):
         return best_node.node_id if best_node else None
 
 
+class BestFitLocalScheduler(Scheduler):
+    """
+    Best-fit with per-node normalization (original/naive implementation).
+
+    Score = remaining_cpu / node.total_cpu + total_unallocated_gpu / node.num_gpus
+
+    Kept for comparison against BestFitScheduler (global normalization).
+    Per-node normalization treats a 4-GPU node at 50% as equivalent to an
+    8-GPU node at 50%, which is incorrect for heterogeneous clusters.
+    """
+
+    def __init__(self):
+        super().__init__("BestFit-PN")
+
+    def select_node(self, task: Task, cluster: Cluster) -> Optional[int]:
+        eligible = cluster.get_eligible_nodes(task)
+        if not eligible:
+            return None
+
+        best_node = None
+        best_score = float('inf')
+
+        for node in eligible:
+            cpu_score = node.remaining_cpu / node.total_cpu if node.total_cpu > 0 else 0
+            gpu_score = node.total_unallocated_gpu / node.num_gpus if node.num_gpus > 0 else 0
+            score = cpu_score + gpu_score
+
+            if score < best_score:
+                best_score = score
+                best_node = node
+
+        return best_node.node_id if best_node else None
+
+
 class DotProdScheduler(Scheduler):
     """
     Dot-product: Allocates to node with smallest dot-product between
@@ -321,13 +355,25 @@ class FGDScheduler(Scheduler):
         # Compute fragmentation before (only for this node)
         frag_before = _frag_for_types(node)
 
-        # Hypothetically allocate
-        node.allocate_task(task)
-
-        # Compute fragmentation after
-        frag_after = _frag_for_types(node)
-
-        return (node_id, frag_after - frag_before)
+        if task.is_partial_gpu():
+            # For partial GPU tasks, this evaluates each eligible GPU slot
+            # separately and uses the best slot's score for node ranking
+            # We return the minimum delta across slots.
+            best_delta = float('inf')
+            node.allocated_cpu += task_cpu  # CPU is always consumed
+            for i in range(num_gpus):
+                if gpu_remaining[i] >= task_gpu:
+                    node.gpu_remaining = list(gpu_remaining)
+                    node.gpu_remaining[i] -= task_gpu
+                    delta = _frag_for_types(node) - frag_before
+                    if delta < best_delta:
+                        best_delta = delta
+            return (node_id, best_delta)
+        else:
+            # Full-GPU and no-GPU tasks have a single allocation path
+            node.allocate_task(task)
+            frag_after = _frag_for_types(node)
+            return (node_id, frag_after - frag_before)
 
     def _get_pool(self):
         """Lazy initialization of process pool"""
@@ -618,6 +664,7 @@ def get_scheduler(name: str) -> Scheduler:
     schedulers = {
         'random': RandomScheduler,
         'bestfit': BestFitScheduler,
+        'bestfit-pn': BestFitLocalScheduler,
         'dotprod': DotProdScheduler,
         'packing': PackingScheduler,
         'clustering': ClusteringScheduler,
@@ -632,10 +679,25 @@ def get_scheduler(name: str) -> Scheduler:
 
 
 def get_all_schedulers() -> List[Scheduler]:
-    """Return instances of all available schedulers"""
+    """Return instances of all schedulers (global-norm BestFit only)."""
     return [
         RandomScheduler(),
         BestFitScheduler(),
+        DotProdScheduler(),
+        PackingScheduler(),
+        ClusteringScheduler(),
+        FGDScheduler(),
+    ]
+
+
+def get_all_schedulers_with_bestfit_variants() -> List[Scheduler]:
+    """Return all schedulers including both BestFit normalization variants.
+    Used by exp_fig11_14 to compare per-node vs global normalization.
+    """
+    return [
+        RandomScheduler(),
+        BestFitScheduler(),
+        BestFitLocalScheduler(),
         DotProdScheduler(),
         PackingScheduler(),
         ClusteringScheduler(),

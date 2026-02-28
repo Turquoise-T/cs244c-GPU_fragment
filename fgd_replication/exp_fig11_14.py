@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 
 from simulator import Task, Node, Cluster, TaskDistribution
 from schedulers import (
-    Scheduler, get_all_schedulers,
+    Scheduler, get_all_schedulers, get_all_schedulers_with_bestfit_variants,
     ClusteringScheduler, FGDScheduler
 )
 from trace_loader import AlibabaTraceLoader
@@ -312,14 +312,15 @@ def plot_sensitivity(results: Dict[float, List[SensitivityResult]],
     config = FIGURE_CONFIG[figure_num]
 
     colors = {
-        'FGD': '#1f77b4', 'BestFit': '#ff7f0e', 'Packing': '#2ca02c',
-        'Clustering': '#d62728', 'DotProd': '#9467bd', 'Random': '#8c564b',
+        'FGD': '#1f77b4', 'BestFit': '#ff7f0e', 'BestFit-PN': '#fdbf6f',
+        'Packing': '#2ca02c', 'Clustering': '#d62728',
+        'DotProd': '#9467bd', 'Random': '#8c564b',
     }
     hatches = {
-        'FGD': '//', 'BestFit': '//', 'Packing': '//',
-        'Clustering': '//', 'DotProd': '//', 'Random': '//',
+        'FGD': '//', 'BestFit': '//', 'BestFit-PN': 'xx',
+        'Packing': '//', 'Clustering': '//', 'DotProd': '//', 'Random': '//',
     }
-    sched_order = ['FGD', 'BestFit', 'Packing', 'Clustering',
+    sched_order = ['FGD', 'BestFit', 'BestFit-PN', 'Packing', 'Clustering',
                    'DotProd', 'Random']
 
     proportions = sorted(results.keys())
@@ -507,9 +508,9 @@ if __name__ == "__main__":
 
     experiment = SensitivityExperiment(data_dir)
 
-    all_sched_map = {s.name: s for s in get_all_schedulers()}
+    all_sched_map = {s.name: s for s in get_all_schedulers_with_bestfit_variants()}
     if args.schedulers == 'all':
-        schedulers = get_all_schedulers()
+        schedulers = get_all_schedulers_with_bestfit_variants()
     else:
         selected = [s.strip() for s in args.schedulers.split(',')]
         schedulers = []
