@@ -94,10 +94,10 @@ class InflationSnapshot:
 
 
 def count_occupied_nodes(cluster: Cluster) -> int:
-    """Count nodes with at least one task assigned."""
+    """Count nodes with at least one GPU allocation."""
     count = 0
     for node in cluster.nodes:
-        if any(g < 1.0 for g in node.gpu_remaining) or node.allocated_cpu > 0:
+        if any(g < 1.0 for g in node.gpu_remaining):
             count += 1
     return count
 
@@ -572,15 +572,16 @@ def main():
     task_distribution = loader.compute_task_distribution()
     print(f"Task distribution: {len(task_distribution.distribution)} types")
 
-    # For sampling during inflation, use ALL tasks (including non-GPU).
-    # Non-GPU tasks won't advance cumulative GPU demand but will consume
-    # CPU and contribute to stranded-GPU fragmentation.
-    sample_tasks = loader.tasks
+    # For sampling during inflation, use ONLY GPU tasks.
+    # Non-GPU tasks remain in the distribution M (for fragmentation
+    # calculation in subplots a and d), but are not scheduled during
+    # inflation -- they add 0 to cumulative GPU demand (x-axis) while
+    # consuming CPU and inflating occupied node counts.
+    sample_tasks = gpu_tasks
     if args.max_tasks > 0:
         sample_tasks = sample_tasks[:args.max_tasks]
         print(f"Limited task pool to {len(sample_tasks)} tasks")
-    print(f"  GPU tasks in pool: {sum(1 for t in sample_tasks if t.gpu_demand > 0)}"
-          f"  Non-GPU: {sum(1 for t in sample_tasks if t.gpu_demand == 0)}")
+    print(f"  GPU tasks in sample pool: {len(sample_tasks)}")
 
     # Cluster setup
     if args.num_gpus > 0:
