@@ -139,12 +139,20 @@ def main():
     parser.add_argument('--output-dir', required=True)
     parser.add_argument('--reference', default=None,
                         help='Path to FGD paper_reference_curves.json')
+    parser.add_argument('--policy', default=None,
+                        help='Filter by policy name (e.g. fifo, max_min_fairness)')
+    parser.add_argument('--title-suffix', default=None,
+                        help='Extra text appended to the grid title')
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
 
     results = load_results(args.results_dir)
     print(f"Loaded {len(results)} results")
+
+    if args.policy:
+        results = [r for r in results if r.get('policy') == args.policy]
+        print(f"Filtered to {len(results)} results for policy={args.policy}")
 
     reference = None
     if args.reference:
@@ -175,7 +183,10 @@ def main():
         plot_figure(ax, series, y_key, y_label, reference, ref_fig)
         ax.set_title(y_label)
 
-    fig.suptitle('FGD Replication via Gavel (Alibaba Cluster)', fontsize=14, y=1.02)
+    title = 'FGD Replication via Gavel (Alibaba Cluster)'
+    if args.title_suffix:
+        title += f' -- {args.title_suffix}'
+    fig.suptitle(title, fontsize=14, y=1.02)
     fig.tight_layout()
     fig.savefig(os.path.join(args.output_dir, 'comparison_all.png'), dpi=150,
                 bbox_inches='tight')

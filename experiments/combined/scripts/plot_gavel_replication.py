@@ -80,17 +80,20 @@ REF_ROLE_MAP = {
 # Data loading
 # ------------------------------------------------------------------
 
-def load_csv(csv_path):
+def load_csv(csv_path, include_saturated=False):
     """Load combined runner CSV and add derived columns."""
     df = pd.read_csv(csv_path)
     df['jct_sec'] = pd.to_numeric(df['jct_sec'], errors='coerce')
     df['jct_hours'] = df['jct_sec'] / 3600.0
-    # Exclude saturated experiments: partial JCT from incomplete windows is
-    # unreliable due to extreme heavy-tail (top 10% of jobs = 95% of total JCT).
-    # Missing straggler jobs can change the mean by 10-20x.
-    mask_saturated = df['saturated'].astype(str).str.lower().isin(['true', '1', 'yes'])
     mask_inf = ~np.isfinite(df['jct_hours'])
-    df.loc[mask_saturated | mask_inf, 'jct_hours'] = np.nan
+    df.loc[mask_inf, 'jct_hours'] = np.nan
+    if not include_saturated:
+        # Exclude saturated experiments: partial JCT from incomplete windows is
+        # unreliable due to extreme heavy-tail (top 10% of jobs = 95% of total
+        # JCT).  Missing straggler jobs can change the mean by 10-20x.
+        mask_saturated = df['saturated'].astype(str).str.lower().isin(
+            ['true', '1', 'yes'])
+        df.loc[mask_saturated, 'jct_hours'] = np.nan
     return df
 
 
@@ -218,6 +221,11 @@ def parse_args():
         default=None,
         help='Output PNG path '
              '(default: ../figures/gavel_replication_combined.png)')
+    parser.add_argument(
+        '--include-saturated',
+        action='store_true',
+        help='Include saturated experiments (partial JCT from nearly-complete '
+             'windows).  Use when window completion is 99%%+.')
     return parser.parse_args()
 
 
@@ -262,7 +270,7 @@ def main():
 
     # -- Load and plot --
     print(f'Loading CSV from {csv_path} ...')
-    df = load_csv(csv_path)
+    df = load_csv(csv_path, include_saturated=args.include_saturated)
     print(f'  Total rows: {len(df)}')
     print(f'  Rows with valid JCT: {df["jct_hours"].notna().sum()}')
 
