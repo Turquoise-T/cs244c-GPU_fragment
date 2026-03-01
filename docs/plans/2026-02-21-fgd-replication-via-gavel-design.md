@@ -258,6 +258,35 @@ Create `experiments/combined/scripts/plot_fgd_replication.py`:
 | Strided placement doesn't work with 12 types | Test locally on small cluster first |
 | Fragmentation calculator import adds overhead | Calculator is lightweight; called once per round |
 
+## Important: Experimental Setup Differences from FGD Paper
+
+**Updated 2026-02-22 after analyzing results from 360 experiments (180 MMF + 180 FIFO).**
+
+The experiments above use Gavel's heterogeneous cluster architecture, which differs fundamentally from the FGD paper's setup. This produces valid but non-comparable fragmentation data.
+
+### FGD Paper Setup (Cluster H)
+- **1200 nodes, all generic GPU type (homogeneous)**
+- Nodes vary by **size**: 462 x 8-GPU, 310 x 4-GPU, 228 x 2-GPU, 200 x 1-GPU
+- Single flat GPU pool -- the scheduler sees 5592 GPUs of one type
+- Fragmentation arises from **packing multi-GPU jobs into mixed-size nodes** (e.g., a 3-GPU job on an 8-GPU node leaves 5 GPUs that may not match future demand)
+- No GPU type heterogeneity
+- Config: `src/fgd/configs/cluster_h.json`
+
+### Our Setup (Alibaba Split)
+- **12 heterogeneous GPU sub-types**, each with uniform node sizes
+- Gavel assigns jobs to specific GPU types first (via LP or FIFO), then places within that type's servers
+- Each type's servers are all the same size (e.g., all G2_8 servers have 8 GPUs)
+- Fragmentation can only occur **within** each type's pool, not across the whole cluster
+
+### Observed Impact
+- Our fragmentation rates (2-8%) are an order of magnitude lower than the paper's (14-99%)
+- Strided placement (Gavel's default sequential fill) outperforms FGD under both MMF and FIFO because within a single type's uniform servers, sequential filling is near-optimal
+- FGD's workload-model-aware optimization is designed for heterogeneous node sizes -- a problem that doesn't exist when each type has uniform servers
+- The policy ordering (FGD < BestFit < Random) does NOT hold in our setup
+
+### Next Step
+Run experiments with the FGD paper's actual Cluster H topology (homogeneous GPU type, mixed node sizes) to produce directly comparable results. See `phase_fgd_replication_cluster_h.json`.
+
 ## Validation Criteria
 
 **Policy ordering** should match the FGD paper:
