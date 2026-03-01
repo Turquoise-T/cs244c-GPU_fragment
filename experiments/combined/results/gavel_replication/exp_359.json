@@ -6,12 +6,12 @@
     "fgd_placement_mode": "fgd",
     "seed": 2,
     "lam": 1200.0,
-    "avg_jct": 184765.32506576471,
-    "wall_time_seconds": 1646.9451327323914,
-    "num_completed_jobs": 11958,
-    "num_failed_jobs": 2,
+    "avg_jct": 336701.05486041465,
+    "wall_time_seconds": 86400.52901101112,
+    "num_completed_jobs": 42908,
+    "num_failed_jobs": 8,
     "fragmentation_samples": 0,
-    "saturated": false,
+    "saturated": true,
     "mode": "steady_state",
     "generate_multi_gpu_jobs": true
   }

@@ -7,7 +7,7 @@
     "seed": 2,
     "lam": 18000.0,
     "avg_jct": 83919.87921033821,
-    "wall_time_seconds": 408.4041919708252,
+    "wall_time_seconds": 878.8652355670929,
     "num_completed_jobs": 5012,
     "num_failed_jobs": 1,
     "fragmentation_samples": 0,
