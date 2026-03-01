@@ -1,0 +1,30 @@
+[
+  {
+    "name": "ch_fifo_bestfit_80jph_s0",
+    "policy": "fifo",
+    "enable_fgd": true,
+    "fgd_placement_mode": "bestfit",
+    "seed": 0,
+    "lam": 45.0,
+    "avg_jct": 42352.97451313714,
+    "wall_time_seconds": 87.033855676651,
+    "num_completed_jobs": 9323,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 141,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 45.40040737020465,
+    "avg_frag_rate": 4.052800532662473,
+    "avg_frag_total": 2.173480161629075,
+    "avg_unalloc_pct": 54.59959262979535,
+    "avg_occupied_nodes": 816.2269503546099,
+    "std_utilization": 8.762171601339576,
+    "std_frag_rate": 0.9109590073379311,
+    "std_frag_total": 0.514043407074185,
+    "std_unalloc_pct": 8.762171601339576,
+    "std_occupied_nodes": 65.64957679416413,
+    "num_metric_samples": 564,
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 119.42375886524823
+  }
+]

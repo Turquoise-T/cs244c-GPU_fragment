@@ -1,0 +1,30 @@
+[
+  {
+    "name": "fgd_bestfit_5jph_s1",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "bestfit",
+    "seed": 1,
+    "lam": 720.0,
+    "avg_jct": 116889.9469282293,
+    "wall_time_seconds": 649.6724734306335,
+    "num_completed_jobs": 8179,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 15481,
+    "saturated": false,
+    "mode": "steady_state",
+    "avg_utilization": 5.934732866899839,
+    "avg_frag_rate": 1.951693766255218,
+    "avg_frag_total": 1.8194753364639749,
+    "avg_unalloc_pct": 94.06526713310016,
+    "avg_occupied_nodes": 83.61973413218499,
+    "std_utilization": 7.725063207506855,
+    "std_frag_rate": 0.4163191087718196,
+    "std_frag_total": 0.22045416650392222,
+    "std_unalloc_pct": 7.725063207506855,
+    "std_occupied_nodes": 97.8722699083084,
+    "num_metric_samples": 5341,
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 7.8106692074155415
+  }
+]

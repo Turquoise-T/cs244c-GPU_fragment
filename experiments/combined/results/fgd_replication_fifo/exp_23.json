@@ -1,0 +1,29 @@
+[
+  {
+    "name": "fifo_strided_80jph_s2",
+    "policy": "fifo",
+    "enable_fgd": false,
+    "fgd_placement_mode": "fgd",
+    "seed": 2,
+    "lam": 45.0,
+    "avg_jct": 63429.75609816314,
+    "wall_time_seconds": 566.7318847179413,
+    "num_completed_jobs": 5793,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 0,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 31.636919848565807,
+    "avg_frag_rate": 0.3157828155946779,
+    "avg_frag_total": 0.26601795655172095,
+    "avg_unalloc_pct": 68.36308015143419,
+    "avg_occupied_nodes": 630.7978723404256,
+    "std_utilization": 11.31502222727281,
+    "std_frag_rate": 0.5430565988827293,
+    "std_frag_total": 0.5101519231516611,
+    "std_unalloc_pct": 11.31502222727281,
+    "std_occupied_nodes": 200.30151455508698,
+    "num_metric_samples": 564,
+    "generate_multi_gpu_jobs": true
+  }
+]

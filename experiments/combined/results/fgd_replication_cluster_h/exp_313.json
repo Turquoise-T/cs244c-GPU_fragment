@@ -1,0 +1,30 @@
+[
+  {
+    "name": "ch_mmf_bestfit_360jph_s1",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "bestfit",
+    "seed": 1,
+    "lam": 10.0,
+    "avg_jct": 20172.302302768596,
+    "wall_time_seconds": 63.730618715286255,
+    "num_completed_jobs": 6804,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 68,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 93.5420961328332,
+    "avg_frag_rate": 6.043564670177574,
+    "avg_frag_total": 0.2830519977921215,
+    "avg_unalloc_pct": 6.457903867166819,
+    "avg_occupied_nodes": 1161.4094488188975,
+    "std_utilization": 5.070626062908042,
+    "std_frag_rate": 3.410507680316426,
+    "std_frag_total": 0.2267682663653023,
+    "std_unalloc_pct": 5.070626062908042,
+    "std_occupied_nodes": 32.36731955671879,
+    "num_metric_samples": 127,
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 9.023823529411764
+  }
+]
