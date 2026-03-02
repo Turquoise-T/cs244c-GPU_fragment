@@ -1,0 +1,19 @@
+[
+  {
+    "name": "fgd_85jph_s2",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 2,
+    "lam": 42.35,
+    "avg_jct": 89566.2203714208,
+    "wall_time_seconds": 28205.221014499664,
+    "num_completed_jobs": 22307,
+    "num_failed_jobs": 1,
+    "fragmentation_samples": 4949,
+    "saturated": true,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 0.7754101838755304
+  }
+]

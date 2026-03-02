@@ -1,0 +1,50 @@
+{
+  "_description": "Reference data traced from Gavel paper Fig 9a: Single-GPU, MMF",
+  "_x_axis": "Input Job Rate (jobs/hr)",
+  "_y_axis": "Average JCT (hours)",
+  "jobs_per_hr": [
+    0.5,
+    1,
+    1.5,
+    2,
+    2.5,
+    3,
+    3.5,
+    4,
+    4.5,
+    5,
+    5.5,
+    6,
+    6.5
+  ],
+  "gavel": [
+    22,
+    24,
+    23,
+    null,
+    23,
+    22,
+    22,
+    22,
+    24,
+    61,
+    92,
+    99,
+    null
+  ],
+  "baseline": [
+    16,
+    18,
+    17,
+    17,
+    16,
+    15,
+    15,
+    15,
+    14,
+    20,
+    30,
+    46,
+    99
+  ]
+}

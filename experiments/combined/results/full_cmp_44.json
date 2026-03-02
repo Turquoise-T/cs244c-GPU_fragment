@@ -1,0 +1,19 @@
+[
+  {
+    "name": "gavelfgd_160jph_s2",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 2,
+    "lam": 22.5,
+    "avg_jct": 104540.28835564846,
+    "wall_time_seconds": 28204.502417087555,
+    "num_completed_jobs": 102296,
+    "num_failed_jobs": 3,
+    "fragmentation_samples": 17678,
+    "saturated": true,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 3.57064826337821
+  }
+]

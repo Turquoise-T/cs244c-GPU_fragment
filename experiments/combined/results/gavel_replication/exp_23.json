@@ -1,0 +1,18 @@
+[
+  {
+    "name": "fig9_max_min_fairness_3.2jph_single_s2",
+    "policy": "max_min_fairness",
+    "enable_fgd": false,
+    "fgd_placement_mode": "fgd",
+    "seed": 2,
+    "lam": 1125.0,
+    "avg_jct": 86678.56854564842,
+    "wall_time_seconds": 144.69346117973328,
+    "num_completed_jobs": 5689,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 0,
+    "saturated": false,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": false
+  }
+]

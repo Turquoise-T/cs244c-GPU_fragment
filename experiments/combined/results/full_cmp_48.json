@@ -1,0 +1,19 @@
+[
+  {
+    "name": "fgd_185jph_s0",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 0,
+    "lam": 19.46,
+    "avg_jct": 92411.03835279099,
+    "wall_time_seconds": 28207.883954524994,
+    "num_completed_jobs": 48296,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 8526,
+    "saturated": true,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 1.2781374618813042
+  }
+]

@@ -18,8 +18,32 @@ Replicate Gavel (OSDI 2020) experiments, then extend with FGD's fragmentation-aw
 | `src/scheduler/policies/*.py` | Scheduling policies - READ to understand, create NEW files for new policies |
 | `src/scheduler/utils.py` | Policy registry - ADD new policies here |
 | `src/scheduler/simulation_throughputs.json` | DO NOT MODIFY |
-| `cluster/experiments_*.json` | Experiment configs |
-| `cluster/run_benchmark.py` | Experiment runner |
+| `experiments/gavel-replication/configs/` | Gavel replication experiment configs |
+| `experiments/gavel-replication/scripts/run_benchmark.py` | Gavel replication experiment runner |
+| `src/fgd/` | FGD core algorithm (fragmentation-aware placement) |
+| `experiments/combined/run_fgd_experiments.py` | FGD+Gavel integrated experiment runner |
+| `experiments/fgd-standalone/` | Standalone FGD evaluation |
+
+## Paper Reference Data (OCR'd from Graphs)
+
+| Paper | File | Used By |
+|-------|------|---------|
+| Gavel (Figs 9/10/11) | `experiments/gavel-replication/scripts/paper_reference_curves.json` | `experiments/gavel-replication/scripts/plot_results.py` |
+| FGD (standalone eval) | `experiments/fgd-standalone/paper_reference_curves.json` | `experiments/fgd-standalone/plot_results.py` |
+| FGD (duplicate in data/) | `src/fgd/data/paper_reference_curves.json` | Legacy -- same content as fgd-standalone copy |
+
+## Directory Structure Rules
+
+The repo is organized by paper: `src/` for core algorithms, `experiments/` for per-paper drivers and results. **Preserve this structure when adding new work:**
+
+- **New experiment configs** go in `experiments/<paper>/configs/`
+- **New experiment scripts** go in `experiments/<paper>/scripts/` (or `experiments/<paper>/` root for entry points)
+- **New SLURM jobs** go in `experiments/<paper>/slurm/`
+- **Experiment results/logs/telemetry** go in `experiments/<paper>/results/`, `logs/`, `telemetry/`
+- **New core algorithm code** goes in `src/scheduler/` (Gavel) or `src/fgd/` (FGD)
+- **Never put experiment scripts or results in `src/`** -- `src/` is only for importable library code
+- **Never create new top-level directories** without discussion -- use the existing `src/`, `experiments/`, `scripts/`, `docs/` structure
+- **Never put results, figures, or logs in `src/fgd/`** -- those belong in `experiments/fgd-standalone/`
 
 ## Existing Documentation
 
@@ -39,13 +63,13 @@ SSH multiplexing: User keeps `ssh farmshare` running in separate terminal. Claud
 ```bash
 # Sync code
 rsync -avz src/scheduler/ farmshare:~/gavel/src/scheduler/
-rsync -avz cluster/ farmshare:~/gavel/cluster/
+rsync -avz experiments/ farmshare:~/gavel/experiments/
 
 # Run experiment
-ssh farmshare "cd ~/gavel/cluster && python3 run_benchmark.py --index 0 --experiments-file experiments_benchmark.json"
+ssh farmshare "cd ~/gavel/experiments/gavel-replication && python3 scripts/run_benchmark.py --index 0 --experiments-file configs/experiments_full.json"
 
 # Submit batch
-ssh farmshare "cd ~/gavel/cluster && sbatch submit_benchmark.sbatch"
+ssh farmshare "cd ~/gavel/experiments/gavel-replication && sbatch slurm/submit_full.sbatch"
 ```
 
 ## Lessons Learned (Do Not Retry)
@@ -54,7 +78,7 @@ ssh farmshare "cd ~/gavel/cluster && sbatch submit_benchmark.sbatch"
 
 **Alternative solvers** - Tested Direct ECOS (+12% slower), Gurobi (+2% slower), Greedy heuristic (+45% slower). All performed worse than baseline cvxpy+ECOS.
 
-**Root cause** - LP solver is only 8% of runtime. The bottleneck is the simulation loop itself (80% in event processing). Optimizing the solver doesn't help.
+**Root cause (Philly scale only)** - At Philly scale (108 GPUs, 50 jobs), LP solver is only 8% of runtime. But at Alibaba scale (6200 GPUs, ~1700 active jobs), LP is **48% of runtime** (3.0s/solve). The bottleneck shifts with scale. See `docs/2026-02-10-alibaba-profile-results.md`.
 
 **What works** - Saturation detection via completion rate in `scheduler.simulate()`:
 - `utilization_threshold=0.99` - Only check when cluster utilization > 99%

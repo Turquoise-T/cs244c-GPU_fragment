@@ -1,0 +1,30 @@
+[
+  {
+    "name": "ch_mmf_random_20jph_s0",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "random",
+    "seed": 0,
+    "lam": 180.0,
+    "avg_jct": 83887.99974606448,
+    "wall_time_seconds": 196.0169394016266,
+    "num_completed_jobs": 10555,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 567,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 16.211078945562935,
+    "avg_frag_rate": 4.45473573720602,
+    "avg_frag_total": 3.6947178727794343,
+    "avg_unalloc_pct": 83.78892105443707,
+    "avg_occupied_nodes": 359.62255772646535,
+    "std_utilization": 8.550646326858484,
+    "std_frag_rate": 0.568218025095213,
+    "std_frag_total": 0.38116128185848197,
+    "std_unalloc_pct": 8.550646326858482,
+    "std_occupied_nodes": 142.790290737166,
+    "num_metric_samples": 2252,
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 204.9557495590829
+  }
+]

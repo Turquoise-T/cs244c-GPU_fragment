@@ -1,0 +1,29 @@
+[
+  {
+    "name": "ch_mmf_strided_10jph_s0",
+    "policy": "max_min_fairness",
+    "enable_fgd": false,
+    "fgd_placement_mode": "fgd",
+    "seed": 0,
+    "lam": 360.0,
+    "avg_jct": 91990.20356642426,
+    "wall_time_seconds": 263.3674736022949,
+    "num_completed_jobs": 10556,
+    "num_failed_jobs": 1,
+    "fragmentation_samples": 0,
+    "saturated": false,
+    "mode": "steady_state",
+    "avg_utilization": 8.765804475565213,
+    "avg_frag_rate": 3.7128050540423065,
+    "avg_frag_total": 3.36479821802417,
+    "avg_unalloc_pct": 91.23419552443478,
+    "avg_occupied_nodes": 143.07715338553663,
+    "std_utilization": 7.280571991773089,
+    "std_frag_rate": 0.42033286047742874,
+    "std_frag_total": 0.23399079924029792,
+    "std_unalloc_pct": 7.280571991773089,
+    "std_occupied_nodes": 149.5409166624473,
+    "num_metric_samples": 4342,
+    "generate_multi_gpu_jobs": true
+  }
+]

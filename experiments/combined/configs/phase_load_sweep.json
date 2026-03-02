@@ -1,0 +1,922 @@
+{
+  "description": "Gavel vs FGD vs Gavel+FGD load sweep across 13 Alibaba load levels (60-360 jph). 3 arms x 13 loads x 3 seeds = 117 experiments.",
+  "common": {
+    "cluster_spec": {
+      "G2": 4392,
+      "T4": 840,
+      "G3": 312,
+      "P100": 264,
+      "V100M32": 200,
+      "V100M16": 192
+    },
+    "num_gpus_per_server": 8,
+    "workload_mode": "alibaba",
+    "fgd_workload_mode": "alibaba",
+    "generate_multi_gpu_jobs": true,
+    "mode": "steady_state",
+    "window_start": 4000,
+    "window_end": 5000,
+    "max_jct": 360000,
+    "time_per_iteration": 600,
+    "enable_gpu_sharing": true
+  },
+  "experiments": [
+    {
+      "name": "gavel_60jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 60.0,
+      "seed": 0
+    },
+    {
+      "name": "gavel_60jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 60.0,
+      "seed": 1
+    },
+    {
+      "name": "gavel_60jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 60.0,
+      "seed": 2
+    },
+    {
+      "name": "fgd_60jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 60.0,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_60jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 60.0,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_60jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 60.0,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_60jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 60.0,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_60jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 60.0,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_60jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 60.0,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_85jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 42.35,
+      "seed": 0
+    },
+    {
+      "name": "gavel_85jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 42.35,
+      "seed": 1
+    },
+    {
+      "name": "gavel_85jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 42.35,
+      "seed": 2
+    },
+    {
+      "name": "fgd_85jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 42.35,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_85jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 42.35,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_85jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 42.35,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_85jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 42.35,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_85jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 42.35,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_85jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 42.35,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_110jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 32.73,
+      "seed": 0
+    },
+    {
+      "name": "gavel_110jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 32.73,
+      "seed": 1
+    },
+    {
+      "name": "gavel_110jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 32.73,
+      "seed": 2
+    },
+    {
+      "name": "fgd_110jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 32.73,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_110jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 32.73,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_110jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 32.73,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_110jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 32.73,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_110jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 32.73,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_110jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 32.73,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_135jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 26.67,
+      "seed": 0
+    },
+    {
+      "name": "gavel_135jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 26.67,
+      "seed": 1
+    },
+    {
+      "name": "gavel_135jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 26.67,
+      "seed": 2
+    },
+    {
+      "name": "fgd_135jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 26.67,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_135jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 26.67,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_135jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 26.67,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_135jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 26.67,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_135jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 26.67,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_135jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 26.67,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_160jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 22.5,
+      "seed": 0
+    },
+    {
+      "name": "gavel_160jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 22.5,
+      "seed": 1
+    },
+    {
+      "name": "gavel_160jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 22.5,
+      "seed": 2
+    },
+    {
+      "name": "fgd_160jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 22.5,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_160jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 22.5,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_160jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 22.5,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_160jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 22.5,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_160jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 22.5,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_160jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 22.5,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_185jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 19.46,
+      "seed": 0
+    },
+    {
+      "name": "gavel_185jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 19.46,
+      "seed": 1
+    },
+    {
+      "name": "gavel_185jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 19.46,
+      "seed": 2
+    },
+    {
+      "name": "fgd_185jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 19.46,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_185jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 19.46,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_185jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 19.46,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_185jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 19.46,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_185jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 19.46,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_185jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 19.46,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_210jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 17.14,
+      "seed": 0
+    },
+    {
+      "name": "gavel_210jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 17.14,
+      "seed": 1
+    },
+    {
+      "name": "gavel_210jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 17.14,
+      "seed": 2
+    },
+    {
+      "name": "fgd_210jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 17.14,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_210jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 17.14,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_210jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 17.14,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_210jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 17.14,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_210jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 17.14,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_210jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 17.14,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_235jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 15.32,
+      "seed": 0
+    },
+    {
+      "name": "gavel_235jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 15.32,
+      "seed": 1
+    },
+    {
+      "name": "gavel_235jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 15.32,
+      "seed": 2
+    },
+    {
+      "name": "fgd_235jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 15.32,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_235jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 15.32,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_235jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 15.32,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_235jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 15.32,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_235jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 15.32,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_235jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 15.32,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_260jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 13.85,
+      "seed": 0
+    },
+    {
+      "name": "gavel_260jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 13.85,
+      "seed": 1
+    },
+    {
+      "name": "gavel_260jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 13.85,
+      "seed": 2
+    },
+    {
+      "name": "fgd_260jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 13.85,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_260jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 13.85,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_260jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 13.85,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_260jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 13.85,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_260jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 13.85,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_260jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 13.85,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_285jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 12.63,
+      "seed": 0
+    },
+    {
+      "name": "gavel_285jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 12.63,
+      "seed": 1
+    },
+    {
+      "name": "gavel_285jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 12.63,
+      "seed": 2
+    },
+    {
+      "name": "fgd_285jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 12.63,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_285jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 12.63,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_285jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 12.63,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_285jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 12.63,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_285jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 12.63,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_285jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 12.63,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_310jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 11.61,
+      "seed": 0
+    },
+    {
+      "name": "gavel_310jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 11.61,
+      "seed": 1
+    },
+    {
+      "name": "gavel_310jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 11.61,
+      "seed": 2
+    },
+    {
+      "name": "fgd_310jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 11.61,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_310jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 11.61,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_310jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 11.61,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_310jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 11.61,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_310jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 11.61,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_310jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 11.61,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_335jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 10.75,
+      "seed": 0
+    },
+    {
+      "name": "gavel_335jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 10.75,
+      "seed": 1
+    },
+    {
+      "name": "gavel_335jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 10.75,
+      "seed": 2
+    },
+    {
+      "name": "fgd_335jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 10.75,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_335jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 10.75,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_335jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 10.75,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_335jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 10.75,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_335jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 10.75,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_335jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 10.75,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_360jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 10.0,
+      "seed": 0
+    },
+    {
+      "name": "gavel_360jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 10.0,
+      "seed": 1
+    },
+    {
+      "name": "gavel_360jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": false,
+      "lam": 10.0,
+      "seed": 2
+    },
+    {
+      "name": "fgd_360jph_s0",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 10.0,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_360jph_s1",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 10.0,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "fgd_360jph_s2",
+      "policy": "max_min_fairness",
+      "enable_fgd": true,
+      "lam": 10.0,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_360jph_s0",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 10.0,
+      "seed": 0,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_360jph_s1",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 10.0,
+      "seed": 1,
+      "fgd_placement_mode": "fgd"
+    },
+    {
+      "name": "gavel_fgd_360jph_s2",
+      "policy": "max_min_fairness_perf",
+      "enable_fgd": true,
+      "lam": 10.0,
+      "seed": 2,
+      "fgd_placement_mode": "fgd"
+    }
+  ]
+}

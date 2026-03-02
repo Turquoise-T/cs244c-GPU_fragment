@@ -1,0 +1,19 @@
+[
+  {
+    "name": "gavelfgd_360jph",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 228,
+    "lam": 360.0,
+    "avg_jct": 113037.69346763304,
+    "wall_time_seconds": 796.5786371231079,
+    "num_completed_jobs": 12082,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 1324,
+    "saturated": false,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 37.09072129909365
+  }
+]

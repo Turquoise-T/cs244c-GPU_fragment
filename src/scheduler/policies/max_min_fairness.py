@@ -8,33 +8,46 @@ from policy import Policy, PolicyWithPacking
 from proportional import ProportionalPolicy
 
 
-def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS", **kwargs):
+def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS",
+                         warm_start=False, solver_kwargs=None, **kwargs):
     """Solve CVXPY problem with automatic fallback on solver failure.
 
     Attempts to solve with the primary solver (typically ECOS for speed).
     If the primary solver fails with a SolverError, automatically retries
     with the fallback solver (SCS, which is slower but more numerically stable).
+
+    When warm_start=True, the solver is seeded with the current .value of
+    the cp.Variable (set by the caller before invoking this function).
     """
+    if solver_kwargs is None:
+        solver_kwargs = {}
+    merged = {**kwargs, **solver_kwargs}
     try:
-        return cvxprob.solve(solver=primary_solver, **kwargs)
+        return cvxprob.solve(solver=primary_solver, warm_start=warm_start,
+                             **merged)
     except cp.error.SolverError as e:
         print(f"WARNING: Solver '{primary_solver}' failed, retrying with '{fallback_solver}'")
         # Use SCS-specific kwargs when falling back to SCS
         fallback_kwargs = {'acceleration_lookback': 0} if fallback_solver == "SCS" else {}
-        return cvxprob.solve(solver=fallback_solver, **fallback_kwargs)
+        return cvxprob.solve(solver=fallback_solver, warm_start=warm_start,
+                             **fallback_kwargs)
 
 # PAPER[§4.1] "MaximizeX min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)"
 # PAPER[§4.1] "Max-min fairness: maximize minimum normalized throughput across jobs"
 # PAPER[§4.1|def] "throughput(m,X^equal) = proportional_throughputs (baseline for normalization)"
 class MaxMinFairnessPolicy(Policy):
 
-    def __init__(self, solver):
+    def __init__(self, solver, solver_kwargs=None):
         self._name = 'MaxMinFairness'
         self._max_min_fairness_perf_policy = \
-            MaxMinFairnessPolicyWithPerf(solver)
+            MaxMinFairnessPolicyWithPerf(solver, solver_kwargs=solver_kwargs)
+
+    def set_migration_context(self, migration_times, time_per_iteration):
+        self._max_min_fairness_perf_policy.set_migration_context(
+            migration_times, time_per_iteration)
 
     def get_allocation(self, unflattened_throughputs, scale_factors,
-                       priority_weights, cluster_spec):
+                       priority_weights, cluster_spec, gpu_demands=None):
         throughputs, index = super().flatten(unflattened_throughputs,
                                              cluster_spec)
         if throughputs is None: return None
@@ -49,29 +62,96 @@ class MaxMinFairnessPolicy(Policy):
 
         return self._max_min_fairness_perf_policy.get_allocation(
             new_unflattened_throughputs, scale_factors, priority_weights,
-            cluster_spec)
+            cluster_spec, gpu_demands=gpu_demands)
 
 
 # PAPER[§4.1] MaxMinFairness_Perf: heterogeneity-aware variant using actual throughputs
 class MaxMinFairnessPolicyWithPerf(Policy):
 
-    def __init__(self, solver):
-        Policy.__init__(self, solver)
+    def __init__(self, solver, solver_kwargs=None):
+        Policy.__init__(self, solver, solver_kwargs=solver_kwargs)
         self._name = 'MaxMinFairness_Perf'
         self._proportional_policy = ProportionalPolicy()
+        # Track previous allocation for switching penalty and warm-start
+        self._prev_allocation = None  # {job_id: {worker_type: fraction}}
+        # DPP problem cache: reuse compiled problem when shape matches.
+        # Only used when migration penalty is active (penalty stabilizes
+        # allocations, giving high cache hit rate).
+        self._dpp_cache = None  # dict with shape, x, t, params, problem
+
+    def _build_dpp_problem(self, m, n):
+        """Build a DPP-parametrized LP for shape (m, n).
+
+        Uses explicit auxiliary variables for the abs term so that all
+        parameters appear affinely in the canonicalized problem:
+        - coeff_param: objective coefficients (affine in objective)
+        - sf_param: scale factors in capacity constraint (affine in RHS)
+        - alpha_param: penalty weight (affine in objective)
+        - x_prev_param: previous allocation (affine in constraint RHS)
+        - mask_param: zero-throughput mask (affine in constraint RHS)
+        """
+        x = cp.Variable((m, n))
+        # Explicit auxiliary for |x - x_prev| to ensure DPP compliance.
+        # cp.abs(x - param) is not recognized as DPP by cvxpy, but manual
+        # reformulation with t >= x - param, t >= param - x is.
+        t = cp.Variable((m, n), nonneg=True)
+
+        coeff_param = cp.Parameter((m, n))
+        sf_param = cp.Parameter((m, n), nonneg=True)
+        alpha_param = cp.Parameter(m, nonneg=True)
+        x_prev_param = cp.Parameter((m, n))
+        mask_param = cp.Parameter((m, n), nonneg=True)
+
+        per_job_throughput = cp.sum(cp.multiply(coeff_param, x), axis=1)
+        switch_per_job = cp.sum(t, axis=1)
+        penalty = cp.multiply(alpha_param, switch_per_job)
+
+        objective = cp.Maximize(cp.min(per_job_throughput - penalty))
+
+        constraints = [
+            x >= 0,
+            cp.sum(cp.multiply(sf_param, x), axis=0) <= self._num_workers,
+            cp.sum(x, axis=1) <= 1,
+            x <= mask_param,
+            # Manual abs reformulation: t >= |x - x_prev|
+            t >= x - x_prev_param,
+            t >= x_prev_param - x,
+        ]
+
+        problem = cp.Problem(objective, constraints)
+
+        return {
+            'shape': (m, n),
+            'x': x,
+            't': t,
+            'coeff': coeff_param,
+            'sf': sf_param,
+            'alpha': alpha_param,
+            'x_prev': x_prev_param,
+            'mask': mask_param,
+            'problem': problem,
+        }
 
     def get_allocation(self, unflattened_throughputs, scale_factors,
-                       unflattened_priority_weights, cluster_spec):
+                       unflattened_priority_weights, cluster_spec,
+                       gpu_demands=None):
         throughputs, index = super().flatten(unflattened_throughputs,
                                              cluster_spec)
         if throughputs is None: return None
         (m, n) = throughputs.shape
         (job_ids, worker_types) = index
 
-        # Row i of scale_factors_array is the scale_factor of job i
-        # repeated len(worker_types) times.
         scale_factors_array = self.scale_factors_array(
              scale_factors, job_ids, m, n)
+
+        # Capacity array: use gpu_demands for fractional GPU capacity
+        # in the LP constraint, else fall back to scale_factors.
+        # This lets four 0.25-GPU jobs share one GPU slot in the LP.
+        if gpu_demands is not None:
+            capacity_array = self.scale_factors_array(
+                gpu_demands, job_ids, m, n)
+        else:
+            capacity_array = scale_factors_array
 
         priority_weights = np.array(
             [1. / unflattened_priority_weights[job_id]
@@ -82,40 +162,183 @@ class MaxMinFairnessPolicyWithPerf(Policy):
         priority_weights = np.multiply(priority_weights.reshape((m, 1)),
                                        1.0 / proportional_throughputs.reshape((m, 1)))
 
-        x = cp.Variable(throughputs.shape)
-        # PAPER[§4.1] "scale_factor adjustment: distributed jobs counted as scale_factor jobs"
-        # Multiply throughputs by scale_factors to ensure that scale_factor
-        # is taken into account while allocating times to different jobs.
-        # A job run on 1 GPU should receive `scale_factor` more time than
-        # a job run on `scale_factor` GPUs if throughputs are equal.
-        # PAPER[§4.1|eq] Objective: Maximize min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)
-        objective = cp.Maximize(
-            cp.min(cp.sum(cp.multiply(
-                np.multiply(throughputs * priority_weights.reshape((m, 1)),
-                            scale_factors_array), x), axis=1)))
-        # Make sure that the allocation can fit in the cluster.
-        constraints = self.get_base_constraints(x, scale_factors_array)
+        # Coefficients still use scale_factors_array (NOT capacity_array).
+        # Throughput is already scaled by gpu_request at scheduler.py:2800,
+        # so using gpu_demands here would double-penalize fractional jobs.
+        coefficients = np.multiply(
+            throughputs * priority_weights.reshape((m, 1)),
+            scale_factors_array)
 
-        # FIX: Explicitly constrain zero-throughput allocations to zero.
-        # This prevents allocating jobs to GPU types they cannot run on.
+        # Build previous allocation matrix (used for switching penalty
+        # and warm-start seeding). New jobs get x_prev=0.
+        x_prev = None
+        if self._prev_allocation is not None:
+            x_prev = np.zeros((m, n))
+            for i, job_id in enumerate(job_ids):
+                if job_id in self._prev_allocation:
+                    for j, wt in enumerate(worker_types):
+                        x_prev[i, j] = self._prev_allocation[job_id].get(
+                            wt, 0.0)
+
+        # Choose code path:
+        #  1. Standard (no penalty): preserves exact determinism for tests
+        #  2. DPP-cached (penalty, small problems): compiles cone form once
+        #  3. Fresh penalty (penalty, large problems): builds LP each round
+        #     to avoid DPP compilation overhead at scale
+        use_penalty = (self._migration_times is not None
+                       and self._time_per_iteration is not None
+                       and self._time_per_iteration > 0)
+
+        # DPP compilation is expensive for large parameter matrices, but
+        # the cost is one-time and amortized over hundreds of rounds.
+        # 50000 comfortably covers Alibaba-scale (3500*6 = 21000).
+        _DPP_MAX_ELEMENTS = 50000
+
+        if use_penalty and m * n <= _DPP_MAX_ELEMENTS:
+            solved_x = self._solve_dpp(
+                m, n, job_ids, worker_types, throughputs,
+                coefficients, capacity_array, x_prev)
+        elif use_penalty:
+            solved_x = self._solve_penalty_fresh(
+                m, n, job_ids, throughputs,
+                coefficients, capacity_array, x_prev)
+        else:
+            solved_x = self._solve_standard(
+                m, n, throughputs, coefficients, capacity_array, x_prev)
+
+        # Always save allocation for warm-start seeding and switching penalty
+        self._prev_allocation = {}
+        for i, job_id in enumerate(job_ids):
+            self._prev_allocation[job_id] = {}
+            for j, wt in enumerate(worker_types):
+                self._prev_allocation[job_id][wt] = float(solved_x[i, j])
+
+        return super().unflatten(solved_x, index)
+
+    def _solve_standard(self, m, n, throughputs, coefficients,
+                        scale_factors_array, x_prev):
+        """Original non-cached solve path (no migration penalty)."""
+        x = cp.Variable((m, n))
+        per_job_throughput = cp.sum(cp.multiply(coefficients, x), axis=1)
+        objective = cp.Maximize(cp.min(per_job_throughput))
+
+        constraints = self.get_base_constraints(x, scale_factors_array)
         for i in range(m):
             for j in range(n):
                 if throughputs[i, j] == 0:
                     constraints.append(x[i, j] == 0)
 
         cvxprob = cp.Problem(objective, constraints)
-        result = _solve_with_fallback(cvxprob, self._solver)
+
+        use_warm_start = False
+        if x_prev is not None:
+            x.value = x_prev
+            use_warm_start = True
+
+        _solve_with_fallback(cvxprob, self._solver, warm_start=use_warm_start,
+                             solver_kwargs=self._solver_kwargs)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')
 
-        return super().unflatten(x.value.clip(min=0.0).clip(max=1.0), index)
+        return x.value.clip(min=0.0).clip(max=1.0)
+
+    def _solve_penalty_fresh(self, m, n, job_ids, throughputs,
+                             coefficients, scale_factors_array, x_prev):
+        """Non-cached solve with migration penalty for large problems.
+
+        Builds the LP fresh each round using concrete numpy values.
+        At this scale, cp.abs(x - numpy_array) works natively without
+        the DPP auxiliary-variable trick, and we avoid the expensive
+        DPP compilation pass over large parameter matrices.
+        """
+        x = cp.Variable((m, n))
+
+        # Compute penalty weights from migration times.
+        alpha = np.zeros(m)
+        if x_prev is not None:
+            for i, job_id in enumerate(job_ids):
+                mt = self._migration_times.get(job_id, 0)
+                migration_frac = mt / self._time_per_iteration
+                alpha[i] = migration_frac * np.max(coefficients[i]) / 2.0
+
+        per_job_throughput = cp.sum(cp.multiply(coefficients, x), axis=1)
+
+        if x_prev is not None and np.any(alpha > 0):
+            switching_cost = cp.sum(cp.abs(x - x_prev), axis=1)
+            penalty = cp.multiply(alpha, switching_cost)
+            objective = cp.Maximize(cp.min(per_job_throughput - penalty))
+        else:
+            objective = cp.Maximize(cp.min(per_job_throughput))
+
+        constraints = self.get_base_constraints(x, scale_factors_array)
+        # Vectorized zero-throughput mask instead of O(m*n) individual
+        # constraints (significant at Alibaba scale with 21000+ entries).
+        mask = (throughputs > 0).astype(np.float64)
+        constraints.append(x <= mask)
+
+        cvxprob = cp.Problem(objective, constraints)
+
+        use_warm_start = False
+        if x_prev is not None:
+            x.value = x_prev
+            use_warm_start = True
+
+        _solve_with_fallback(cvxprob, self._solver, warm_start=use_warm_start,
+                             solver_kwargs=self._solver_kwargs)
+
+        if cvxprob.status != "optimal":
+            print('WARNING: Allocation returned by policy not optimal!')
+
+        return x.value.clip(min=0.0).clip(max=1.0)
+
+    def _solve_dpp(self, m, n, job_ids, worker_types, throughputs,
+                   coefficients, scale_factors_array, x_prev):
+        """DPP-cached solve path (migration penalty active)."""
+        # Build or reuse DPP-cached problem.
+        if self._dpp_cache is None or self._dpp_cache['shape'] != (m, n):
+            self._dpp_cache = self._build_dpp_problem(m, n)
+
+        cache = self._dpp_cache
+        x = cache['x']
+
+        # Compute penalty alpha vector.
+        alpha = np.zeros(m)
+        if x_prev is not None:
+            migration_frac = np.zeros(m)
+            for i, job_id in enumerate(job_ids):
+                mt = self._migration_times.get(job_id, 0)
+                migration_frac[i] = mt / self._time_per_iteration
+            peak_throughput = np.max(coefficients, axis=1)
+            alpha = migration_frac * peak_throughput / 2.0
+
+        # Update parameter values for this round.
+        cache['coeff'].value = coefficients
+        cache['sf'].value = scale_factors_array
+        cache['alpha'].value = alpha
+        cache['x_prev'].value = x_prev if x_prev is not None else np.zeros((m, n))
+        cache['mask'].value = (throughputs > 0).astype(np.float64)
+
+        # Warm-start: seed x with previous allocation.
+        use_warm_start = False
+        if x_prev is not None:
+            x.value = x_prev
+            use_warm_start = True
+
+        _solve_with_fallback(cache['problem'], self._solver,
+                             warm_start=use_warm_start,
+                             solver_kwargs=self._solver_kwargs)
+
+        if cache['problem'].status != "optimal":
+            print('WARNING: Allocation returned by policy not optimal!')
+
+        return x.value.clip(min=0.0).clip(max=1.0)
 
 
 class MaxMinFairnessPolicyWithPacking(PolicyWithPacking):
 
-    def __init__(self, solver):
-        PolicyWithPacking.__init__(self, solver)
+    def __init__(self, solver, solver_kwargs=None):
+        PolicyWithPacking.__init__(self, solver, solver_kwargs=solver_kwargs)
         self._name = 'MaxMinFairness_Packing'
         self._proportional_policy = ProportionalPolicy()
 
@@ -303,7 +526,8 @@ class MaxMinFairnessPolicyWithPacking(PolicyWithPacking):
                                                 job_id_to_job_type_key)
 
     def get_allocation(self, unflattened_throughputs, scale_factors,
-                       unflattened_priority_weights, cluster_spec):
+                       unflattened_priority_weights, cluster_spec,
+                       gpu_demands=None):
         all_throughputs, index = \
             self.flatten(d=unflattened_throughputs,
                          cluster_spec=cluster_spec,

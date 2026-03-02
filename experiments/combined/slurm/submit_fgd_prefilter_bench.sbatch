@@ -1,0 +1,32 @@
+#!/bin/bash
+#SBATCH --job-name=gavel-fgd-prefilter
+#SBATCH --output=slurm_logs/fgd_prefilter_bench-%A.out
+#SBATCH --error=slurm_logs/fgd_prefilter_bench-%A.err
+#SBATCH --time=00:30:00
+#SBATCH --mem=16G
+#SBATCH --cpus-per-task=1
+#SBATCH --partition=normal
+
+# FGD pre-filter optimization: skip full servers in FGD node iteration
+# Usage: cd ~/gavel/experiments/combined/slurm && sbatch submit_fgd_prefilter_bench.sbatch
+
+GAVEL_DIR="$HOME/gavel"
+FGD_DIR="$GAVEL_DIR/experiments/combined"
+RESULTS_DIR="$FGD_DIR/results"
+
+mkdir -p "$(dirname "$0")/slurm_logs"
+mkdir -p "$RESULTS_DIR"
+
+echo "Starting FGD pre-filter benchmark at $(date)"
+echo "Host: $(hostname)"
+
+$HOME/gavel/.venv/bin/python3 "$FGD_DIR/run_fgd_experiments.py" \
+    --phase e_alibaba_fgd_skip \
+    --index 0 \
+    --output "$RESULTS_DIR/fgd_prefilter_bench.json" \
+    --max-wall-time 1200
+
+EXIT_CODE=$?
+echo "Finished at $(date) with exit code $EXIT_CODE"
+echo "Check stderr for PROFILE: grep PROFILE slurm_logs/fgd_prefilter_bench-\${SLURM_JOB_ID}.err"
+exit $EXIT_CODE

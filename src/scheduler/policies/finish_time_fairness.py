@@ -44,11 +44,21 @@ class FinishTimeFairnessPolicy(Policy):
                        unflattened_priority_weights,
                        times_since_start,
                        num_steps_remaining, cluster_spec):
-        # FIX: Pass through actual throughputs instead of V100 hardcoding.
-        # Zero-throughput cases are now handled via explicit constraints
-        # in FinishTimeFairnessPolicyWithPerf.get_allocation().
+        # PAPER[§4.2] Heterogeneity-agnostic baseline: use V100 throughput
+        # for all GPU types.  Unlike max-min (which can use 1.0), FTF tracks
+        # cumulative isolated time across rounds, so the throughput values
+        # must be realistic to keep finish-time predictions consistent.
+        # Using V100 throughput everywhere makes the LP treat all types as
+        # equally fast while preserving correct temporal dynamics.
+        new_unflattened_throughputs = {}
+        for job_id in unflattened_throughputs:
+            v100_tput = unflattened_throughputs[job_id].get('v100', 0.0)
+            new_unflattened_throughputs[job_id] = {}
+            for worker_type in unflattened_throughputs[job_id]:
+                new_unflattened_throughputs[job_id][worker_type] = v100_tput
+
         return self._finish_time_fairness_perf_policy.get_allocation(
-            unflattened_throughputs, scale_factors,
+            new_unflattened_throughputs, scale_factors,
             unflattened_priority_weights,
             times_since_start,
             num_steps_remaining, cluster_spec)

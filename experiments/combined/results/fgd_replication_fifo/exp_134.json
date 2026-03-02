@@ -1,0 +1,30 @@
+[
+  {
+    "name": "fifo_bestfit_360jph_s2",
+    "policy": "fifo",
+    "enable_fgd": true,
+    "fgd_placement_mode": "bestfit",
+    "seed": 2,
+    "lam": 10.0,
+    "avg_jct": 27977.374954340517,
+    "wall_time_seconds": 152.49687933921814,
+    "num_completed_jobs": 2994,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 1112,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 39.8661975044491,
+    "avg_frag_rate": 3.3728525221545294,
+    "avg_frag_total": 1.6117205206078153,
+    "avg_unalloc_pct": 60.1338024955509,
+    "avg_occupied_nodes": 421.9448818897638,
+    "std_utilization": 25.393545472492274,
+    "std_frag_rate": 1.8333052698829122,
+    "std_frag_total": 0.19121251216219418,
+    "std_unalloc_pct": 25.393545472492278,
+    "std_occupied_nodes": 213.47548890579623,
+    "num_metric_samples": 127,
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 9.129955035971223
+  }
+]

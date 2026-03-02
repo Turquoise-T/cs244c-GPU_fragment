@@ -126,19 +126,19 @@ rsync -avz experiments/ farmshare:~/gavel/experiments/
 
 ### Running Experiments
 
-See `experiments/replication/README.md` for detailed instructions on running the paper replication experiments.
+See `experiments/gavel-replication/README.md` for detailed instructions on running the paper replication experiments.
 
 #### Quick Start
 
 ```bash
 # Single experiment (interactive)
 ssh farmshare
-cd ~/gavel/experiments/replication
+cd ~/gavel/experiments/gavel-replication
 source ~/.venv/bin/activate
 python3 scripts/run_benchmark.py --index 0 --experiments-file configs/experiments_full.json --output-dir results/test
 
 # Batch experiments (SLURM)
-ssh farmshare "cd ~/gavel/experiments/replication && sbatch slurm/submit_full.sbatch"
+ssh farmshare "cd ~/gavel/experiments/gavel-replication && sbatch slurm/submit_full.sbatch"
 
 # Check job status
 ssh farmshare "squeue -u \$USER"
@@ -149,14 +149,14 @@ ssh farmshare "squeue -u \$USER"
 ```bash
 # Sync results back to local machine
 rsync -avz --exclude='simulation.log' \
-    farmshare:~/gavel/experiments/replication/results/ \
-    ./experiments/replication/results/
+    farmshare:~/gavel/experiments/gavel-replication/results/ \
+    ./experiments/gavel-replication/results/
 ```
 
 ### Troubleshooting
 
 **Solver failures (ECOS):**
-- See `experiments/replication/debug/2025-01-27-ecos-solver-failures-research.md`
+- See `experiments/gavel-replication/debug/2025-01-27-ecos-solver-failures-research.md`
 - The codebase includes ECOS-to-SCS fallback to handle these cases
 
 **Out of memory:**
@@ -166,22 +166,29 @@ rsync -avz --exclude='simulation.log' \
 
 ```
 .
-├── src/scheduler/           # Core scheduler code
-│   ├── scheduler.py         # Main scheduler logic and simulation loop
-│   ├── policies/            # Scheduling policies (FIFO, LAS, Gavel, etc.)
-│   ├── scripts/sweeps/      # Simulation scripts
-│   ├── traces/              # Trace data (Philly, etc.)
-│   └── simulation_throughputs.json  # Throughput profiles
+├── src/
+│   ├── scheduler/           # Core scheduler code
+│   │   ├── scheduler.py     # Main scheduler logic and simulation loop
+│   │   ├── policies/        # Scheduling policies (FIFO, LAS, Gavel, etc.)
+│   │   ├── traces/          # Trace data (Philly, etc.)
+│   │   └── simulation_throughputs.json  # Throughput profiles
+│   └── fgd/                 # FGD core algorithm (fragmentation-aware placement)
 │
-├── experiments/             # Experiment-specific code and results
-│   └── replication/         # Gavel paper replication (Figs 9, 10, 11)
-│       ├── configs/         # Experiment configurations (JSON)
-│       ├── results/         # Experiment outputs and CSVs
-│       ├── figures/         # Generated plots
-│       ├── scripts/         # Experiment runner, generators, plotting
-│       ├── slurm/           # SLURM batch scripts for FarmShare
-│       ├── debug/           # Telemetry tools and investigation notes
-│       └── README.md        # Replication-specific documentation
+├── experiments/
+│   ├── gavel-replication/   # Gavel paper replication (Figs 9, 10, 11)
+│   │   ├── configs/         # Experiment configurations (JSON)
+│   │   ├── results/         # Experiment outputs and CSVs
+│   │   ├── figures/         # Generated plots
+│   │   ├── scripts/         # Experiment runner, generators, plotting
+│   │   ├── slurm/           # SLURM batch scripts for FarmShare
+│   │   ├── debug/           # Telemetry tools and investigation notes
+│   │   └── README.md        # Replication-specific documentation
+│   ├── combined/            # FGD+Gavel integrated experiments (Alibaba traces)
+│   │   ├── configs/         # Experiment configurations (JSON)
+│   │   ├── results/         # Experiment outputs
+│   │   ├── telemetry/       # Per-experiment telemetry JSONL
+│   │   └── slurm/           # SLURM batch scripts for FarmShare
+│   └── fgd-standalone/      # Standalone FGD evaluation
 │
 ├── scripts/                 # Shared utilities
 │   ├── sync_results.sh      # FarmShare result sync helper
@@ -200,7 +207,36 @@ rsync -avz --exclude='simulation.log' \
 | `src/scheduler/scheduler.py` | Core scheduling logic and simulation loop |
 | `src/scheduler/policies/` | Policy implementations (what we'll extend) |
 | `src/scheduler/simulation_throughputs.json` | Job throughput profiles by GPU type |
-| `experiments/replication/` | Complete Gavel paper replication with results |
+| `src/fgd/` | FGD core algorithm (fragmentation-aware placement) |
+| `experiments/gavel-replication/` | Gavel paper replication with results |
+| `experiments/combined/` | FGD+Gavel integrated experiments (Alibaba traces) |
+| `experiments/fgd-standalone/` | Standalone FGD evaluation |
+
+## Paper Reference Data
+
+OCR'd reference curves from the original paper figures are stored as JSON:
+
+| Paper | Reference Data |
+|-------|---------------|
+| Gavel (Figs 9/10/11) | `experiments/gavel-replication/scripts/paper_reference_curves.json` |
+| FGD | `experiments/fgd-standalone/paper_reference_curves.json` |
+
+These are used by the respective `plot_results.py` scripts to overlay our replication results against the published figures.
+
+## Adding New Experiments
+
+Follow the paper-centric structure. Core algorithm code lives in `src/`, experiment drivers and results live in `experiments/`:
+
+| What | Where |
+|------|-------|
+| New scheduling policy | `src/scheduler/policies/` |
+| New FGD algorithm change | `src/fgd/` |
+| New experiment config | `experiments/<paper>/configs/` |
+| New experiment script | `experiments/<paper>/scripts/` |
+| New SLURM job | `experiments/<paper>/slurm/` |
+| Results, logs, telemetry | `experiments/<paper>/results/`, `logs/`, `telemetry/` |
+
+Do **not** put experiment scripts or results in `src/`. Do **not** create new top-level directories.
 
 ## Contributing
 

@@ -1,0 +1,33 @@
+{
+    "name": "Cluster H (Alibaba)",
+    "description": "Alibaba Cluster H from FGD paper: 1,200 nodes, 6,216 GPUs",
+    "nodes": {
+        "8gpu": {
+            "count": 462,
+            "gpus_per_node": 8,
+            "cpu_per_node": 96,
+            "memory_per_node": 512
+        },
+        "4gpu": {
+            "count": 310,
+            "gpus_per_node": 4,
+            "cpu_per_node": 48,
+            "memory_per_node": 256
+        },
+        "2gpu": {
+            "count": 228,
+            "gpus_per_node": 2,
+            "cpu_per_node": 24,
+            "memory_per_node": 128
+        },
+        "1gpu": {
+            "count": 200,
+            "gpus_per_node": 1,
+            "cpu_per_node": 12,
+            "memory_per_node": 64
+        }
+    },
+    "total_nodes": 1200,
+    "total_gpus": 5592,
+    "gpu_type": "generic"
+}

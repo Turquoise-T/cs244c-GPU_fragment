@@ -1,0 +1,19 @@
+[
+  {
+    "name": "fgd_260jph",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 281,
+    "lam": 260.0,
+    "avg_jct": 109761.84761833417,
+    "wall_time_seconds": 28212.283743858337,
+    "num_completed_jobs": 12714,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 7929,
+    "saturated": true,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 0.49635262958758986
+  }
+]
