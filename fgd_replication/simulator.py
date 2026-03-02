@@ -197,36 +197,19 @@ class Node:
             return self.total_unallocated_gpu
 
         # Case 1: Task cannot run due to insufficient CPU or GPU
-        if self.remaining_cpu < task.cpu_demand:
+        if self.remaining_cpu < task.cpu_demand or self.scalar_gpu_capacity < task.gpu_demand:
             return self.total_unallocated_gpu
 
-        if task.is_full_gpu():
-            gpus_needed = int(task.gpu_demand)
-            if self.fully_unallocated_gpus < gpus_needed:
-                # Insufficient full GPUs - all unallocated GPUs are fragments
-                return self.total_unallocated_gpu
-            else:
-                # Can run the task, but partial GPU slices (0 < g < 1) on this
-                # node can't be used by a full-GPU task — they remain fragmented.
-                # returns the capacity of slots too small for the task.
-                return sum(g for g in self.gpu_remaining if 0 < g < 1.0)
-
-        if task.is_partial_gpu():
-            # Case 2 (Q-III): Check each GPU
-            # GPUs with insufficient capacity are considered fragmented
-            if not self.can_fit_task(task):
-                return self.total_unallocated_gpu
-
-            # Count fragmented capacity: GPUs that can't fit this task
-            fragmented = 0.0
-            for g in self.gpu_remaining:
-                if g < task.gpu_demand:
-                    # This GPU cannot fit the task - its remaining capacity is fragmented
-                    fragmented += g
-            return fragmented
-
-        return 0.0
-
+        # Case 2 (Q-III): Check each GPU
+        # GPUs with insufficient capacity are considered fragmented
+        # Count fragmented capacity: GPUs that can't fit this task
+        fragmented = 0.0
+        gpu_demand = min(task.gpu_demand, 1)
+        for g in self.gpu_remaining:
+            if g < gpu_demand:
+                # This GPU cannot fit the task - its remaining capacity is fragmented
+                fragmented += g
+        return fragmented
 
 @dataclass
 class TaskDistribution:
