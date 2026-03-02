@@ -59,11 +59,18 @@ class Figure9Experiment:
         self.loader.load_tasks()
 
         self.task_distribution = self.loader.compute_task_distribution()
+        # Paper's GetTypicalPods: filter to top types covering 60% of tasks,
+        # renormalize. Rare types (4-GPU, 8-GPU) are excluded, preventing FGD
+        # from "protecting" large nodes for multi-GPU tasks it won't see often.
+        self.fgd_scoring_distribution = self.loader.compute_task_distribution(
+            popularity_threshold=60
+        )
         self.total_gpu_capacity = sum(n.num_gpus for n in self.loader.nodes)
 
         print(f"Loaded trace: {len(self.loader.nodes)} nodes, {self.total_gpu_capacity} GPUs")
         print(f"Tasks in trace: {len(self.loader.tasks)}")
-        print(f"Task types: {len(self.task_distribution.get_task_types())}")
+        print(f"Task types (full): {len(self.task_distribution.get_task_types())}")
+        print(f"Task types (FGD scoring, top 60%): {len(self.fgd_scoring_distribution.get_task_types())}")
 
     def create_fresh_cluster(self) -> Cluster:
         """Create a fresh cluster from trace nodes"""
@@ -185,6 +192,11 @@ class Figure9Experiment:
 
         if isinstance(scheduler, ClusteringScheduler):
             scheduler.reset()
+
+        # Use filtered distribution for FGD scoring (paper's GetTypicalPods, 60% threshold).
+        # Cluster distribution (full) is kept for fragmentation metric computation.
+        if isinstance(scheduler, FGDScheduler):
+            scheduler.scheduling_task_types = self.fgd_scoring_distribution.get_task_types()
 
         cumulative_gpu_demand = 0.0
         next_sample_pct = sample_interval_pct

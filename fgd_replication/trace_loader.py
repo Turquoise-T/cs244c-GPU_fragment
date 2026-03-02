@@ -124,10 +124,17 @@ class AlibabaTraceLoader:
 
         return cluster
 
-    def compute_task_distribution(self) -> TaskDistribution:
+    def compute_task_distribution(self, popularity_threshold: float = None) -> TaskDistribution:
         """
         Compute task distribution from loaded tasks.
         Groups tasks by (cpu_demand, gpu_demand) and calculates popularity.
+
+        Args:
+            popularity_threshold: If set, apply the paper's GetTypicalPods filter:
+                keep only the most popular types that together cover this percentage
+                of all tasks (sorted by count descending), then renormalize to sum=1.
+                Paper default: 60 (DefaultTypicalPodPopularityThreshold).
+                None = use all types.
 
         Returns:
             TaskDistribution object
@@ -144,8 +151,27 @@ class AlibabaTraceLoader:
             cpu_bucket = self._bucket_cpu(task.cpu_demand)
             type_counts[(cpu_bucket, gpu_rounded)] += 1
 
-        # Convert to distribution
         total = sum(type_counts.values())
+
+        if popularity_threshold is not None:
+            # Paper's GetTypicalPods: keep top types covering popularity_threshold% of tasks.
+            # Sort by count descending, accumulate until cumulative count >= threshold.
+            # Then renormalize the selected types to sum to 1.0.
+            expected = popularity_threshold * total / 100.0
+            sorted_types = sorted(type_counts.items(), key=lambda x: x[1], reverse=True)
+            selected = {}
+            cum = 0
+            for type_key, count in sorted_types:
+                selected[type_key] = count
+                cum += count
+                if cum >= expected:
+                    break
+            dist = TaskDistribution()
+            for (cpu, gpu), count in selected.items():
+                dist.add_task_type(cpu, gpu, count / cum)
+            return dist
+
+        # Convert to distribution (all types)
         dist = TaskDistribution()
         for (cpu, gpu), count in type_counts.items():
             dist.add_task_type(cpu, gpu, count / total)
