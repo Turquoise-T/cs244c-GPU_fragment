@@ -30,7 +30,7 @@ import scheduler
 import utils
 
 
-def run_one_experiment(exp, output_csv, verbose=True):
+def run_one_experiment(exp, output_csv, verbose=True, keep_logs=False):
     """Run a single experiment and append result to CSV."""
     name = exp["name"]
 
@@ -50,9 +50,17 @@ def run_one_experiment(exp, output_csv, verbose=True):
 
     start = time.time()
 
-    # Redirect scheduler logs to /dev/null
-    log_path = os.path.join(os.path.dirname(output_csv), f"{name}.log")
-    with open(log_path, "w") as log_f:
+    # Log dir: results/logs/<name>/ when keep_logs, else a temp path we delete
+    results_dir = os.path.dirname(output_csv)
+    if keep_logs:
+        log_dir = os.path.join(results_dir, "logs", name)
+        os.makedirs(log_dir, exist_ok=True)
+        log_path = os.path.join(log_dir, "simulation.log")
+    else:
+        log_dir = results_dir
+        log_path = os.path.join(log_dir, f"{name}.log")
+    log_f = open(log_path, "w")
+    try:
         with contextlib.redirect_stdout(log_f), contextlib.redirect_stderr(log_f):
             policy = utils.get_policy(exp["policy"], seed=exp["seed"],
                                       solver="ECOS")
@@ -80,6 +88,8 @@ def run_one_experiment(exp, output_csv, verbose=True):
             avg_jct = sched.get_average_jct(verbose=False)
             makespan = sched.get_current_timestamp()
             utilization = sched.get_cluster_utilization()
+    finally:
+        log_f.close()
 
     elapsed = time.time() - start
 
@@ -106,8 +116,8 @@ def run_one_experiment(exp, output_csv, verbose=True):
                 f"{avg_jct:.2f},{makespan:.2f},"
                 f"{utilization:.4f},{elapsed:.2f}\n")
 
-    # Remove log file to save space (keep CSV only)
-    if os.path.exists(log_path):
+    # Remove log file to save space unless --keep-logs (for visualizer)
+    if not keep_logs and os.path.exists(log_path):
         os.remove(log_path)
 
     return avg_jct, makespan, utilization
@@ -131,6 +141,8 @@ def main():
                         default=os.path.join(SCRIPT_DIR, "..", "results",
                                              "results_fgd.csv"),
                         help="Output CSV file")
+    parser.add_argument("--keep-logs", action="store_true",
+                        help="Keep simulation logs under results/logs/<name>/ for visualization")
     args = parser.parse_args()
 
     # Load experiments
@@ -163,7 +175,7 @@ def main():
             continue
         exp = experiments[idx]
         print(f"[{i+1}/{len(indices)}]", end="")
-        run_one_experiment(exp, args.output)
+        run_one_experiment(exp, args.output, keep_logs=args.keep_logs)
 
     total_elapsed = time.time() - total_start
     print("=" * 70)

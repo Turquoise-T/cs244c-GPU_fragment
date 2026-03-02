@@ -1,10 +1,9 @@
 #!/bin/bash
-# Run the full FGD vs Strided comparison pipeline
+# Run the full FGD vs Strided comparison pipeline (all experiments).
 #
 # Usage:
 #   cd experiments/fgd_comparison
-#   bash run_all.sh          # full 48 experiments
-#   bash run_all.sh quick    # only 2 seeds × 4 rates = 16 experiments (faster)
+#   bash run_all.sh          # runs all configured experiments
 
 set -e
 
@@ -22,12 +21,7 @@ python3 "$SCRIPT_DIR/generate_fgd_experiments.py"
 # Step 2: Run experiments
 echo ""
 echo "[Step 2] Running experiments..."
-if [ "$1" = "quick" ]; then
-    echo "  (Quick mode: running only first 16 experiments)"
-    python3 "$SCRIPT_DIR/run_fgd_experiment.py" --range 0 16
-else
-    python3 "$SCRIPT_DIR/run_fgd_experiment.py" --all
-fi
+python3 "$SCRIPT_DIR/run_fgd_experiment.py" --all
 
 # Step 3: Plot results
 echo ""

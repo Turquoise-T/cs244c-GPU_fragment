@@ -5,3 +5,5 @@ venv/
 **/logs/
 .claude/phone-a-friend/
 experiments/replication/results/results_full/*/simulation.log
+cs244c-GPU_fragment/
+gpu-scheduling-viz/

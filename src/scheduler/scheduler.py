@@ -703,6 +703,32 @@ class Scheduler:
             return None
         return sum(utilizations) / len(utilizations)
 
+    def _get_gpu_used_counts(self):
+        """Return dict worker_type -> number of GPUs of that type currently in use.
+
+        In GPU sharing mode we count unique workers per type in
+        _current_worker_assignments (queue state is not reliable). Otherwise
+        we use total - available from _available_worker_ids.
+        """
+        spec = self._cluster_spec
+        if self._gpu_sharing_mode:
+            in_use_sets = {wt: set() for wt in spec}
+            for job_id, worker_ids in self._current_worker_assignments.items():
+                for w in worker_ids:
+                    wt = self._worker_id_to_worker_type_mapping.get(w)
+                    if wt is not None and wt in in_use_sets:
+                        in_use_sets[wt].add(w)
+            return {wt: len(s) for wt, s in in_use_sets.items()}
+        with self._available_worker_ids.mutex:
+            available_workers = set(self._available_worker_ids.queue)
+        result = {}
+        for worker_type in spec:
+            total_gpus = spec[worker_type]
+            available = len([w for w in available_workers
+                            if self._worker_id_to_worker_type_mapping.get(w) == worker_type])
+            result[worker_type] = max(0, total_gpus - available)
+        return result
+
     def reset_workers(self):
         """Sends a shutdown signal to every worker and ends the scheduler."""
         with self._scheduler_lock:
@@ -1773,19 +1799,15 @@ class Scheduler:
                     'jobs_completed_total': len(self._completed_jobs),
                     'jobs_completed_window': num_completed_jobs,
                     'jobs_queued': len(self._jobs) - len(running_jobs),
-                    'utilization': current_util if current_util else 0,
+                    'utilization': min(1.0, current_util) if current_util is not None else 0,
                     'avg_jct': avg_jct,
                     'next_arrival': next_job_arrival_time,
                 }
-                # Per-GPU-type utilization (count available workers from SetQueue)
-                with self._available_worker_ids.mutex:
-                    available_workers = set(self._available_worker_ids.queue)
+                # Per-GPU-type utilization (from assignments in GPU sharing, else from queue)
+                used_counts = self._get_gpu_used_counts()
                 for worker_type in cluster_spec:
                     total_gpus = cluster_spec[worker_type]
-                    available = len([w for w in available_workers
-                                    if self._worker_id_to_worker_type_mapping.get(w) == worker_type])
-                    in_use = total_gpus - available
-                    telemetry[f'{worker_type}_used'] = in_use
+                    telemetry[f'{worker_type}_used'] = used_counts.get(worker_type, 0)
                     telemetry[f'{worker_type}_total'] = total_gpus
 
                 # Add windowed completion rate (last N jobs, up to 100)
@@ -1871,7 +1893,50 @@ class Scheduler:
                         if len(partial_jcts) > 0:
                             self._partial_jct = sum(partial_jcts) / len(partial_jcts)
                         break
-            elif (num_total_jobs is not None and
+            else:
+                # Log TELEMETRY for visualization when not using jobs_to_complete (e.g. FGD experiments)
+                total_completed = len(self._completed_jobs)
+                if total_completed > last_total_completed_count:
+                    new_completions = total_completed - last_total_completed_count
+                    for _ in range(new_completions):
+                        all_completion_times.append(self._current_timestamp)
+                    last_total_completed_count = total_completed
+                current_util = self._get_current_utilization()
+                jcts_so_far = [self._job_completion_times[jid]
+                               for jid in self._completed_jobs
+                               if jid in self._job_completion_times
+                               and self._job_completion_times[jid] is not None]
+                avg_jct = sum(jcts_so_far) / len(jcts_so_far) if jcts_so_far else 0
+                telemetry = {
+                    'round': round_number,
+                    'sim_time': self._current_timestamp,
+                    'wall_time': time.time() - simulation_start_time,
+                    'jobs_generated': num_jobs_generated,
+                    'jobs_active': len(self._jobs),
+                    'jobs_running': len(running_jobs),
+                    'jobs_completed_total': total_completed,
+                    'jobs_completed_window': total_completed,
+                    'jobs_queued': len(self._jobs) - len(running_jobs),
+                    'utilization': min(1.0, current_util) if current_util is not None else 0,
+                    'avg_jct': avg_jct,
+                    'next_arrival': next_job_arrival_time,
+                }
+                # Per-GPU-type utilization (from assignments in GPU sharing, else from queue)
+                used_counts = self._get_gpu_used_counts()
+                for worker_type in cluster_spec:
+                    total_gpus = cluster_spec[worker_type]
+                    telemetry[f'{worker_type}_used'] = used_counts.get(worker_type, 0)
+                    telemetry[f'{worker_type}_total'] = total_gpus
+                if len(all_completion_times) >= 2:
+                    time_span = all_completion_times[-1] - all_completion_times[0]
+                    telemetry['windowed_completion_rate'] = (
+                        len(all_completion_times) / (time_span / 3600.0) if time_span > 0 else None)
+                else:
+                    telemetry['windowed_completion_rate'] = None
+                self._logger.info('TELEMETRY ' + json.dumps(telemetry))
+                round_number += 1
+
+            if (num_total_jobs is not None and
                     remaining_jobs <= 0):
                 break
             elif from_trace:
