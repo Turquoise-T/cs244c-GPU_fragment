@@ -422,11 +422,13 @@ class FGDScheduler(Scheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
-        # Build lookup: node_id -> total_unallocated_gpu for tiebreaking.
-        # When fragmentation deltas are equal (common at high GPU-sharing
-        # proportions), prefer the node with less remaining GPU (more packed),
-        # matching Packing's behavior as a graceful fallback.
-        node_unalloc = {n.node_id: n.total_unallocated_gpu for n in eligible}
+        # Build lookup: node_id -> unallocated GPU fraction for tiebreaking.
+        # Normalized by node capacity so that a half-full 8-GPU node (0.5)
+        # correctly beats a fresh 2-GPU node (1.0) in a heterogeneous cluster.
+        # Without normalization, the 2-GPU fresh node (abs=2.0) would win over
+        # the 8-GPU half-full node (abs=4.0), unnecessarily opening a new node.
+        node_unalloc = {n.node_id: n.total_unallocated_gpu / n.num_gpus
+                        for n in eligible}
 
         best_node_id = None
         best_key = (float('inf'), float('inf'))
@@ -547,7 +549,8 @@ class WindowedFGDScheduler(FGDScheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
-        node_unalloc = {n.node_id: n.total_unallocated_gpu for n in eligible}
+        node_unalloc = {n.node_id: n.total_unallocated_gpu / n.num_gpus
+                        for n in eligible}
         best_node_id = None
         best_key = (float('inf'), float('inf'))
         self._pending_slot = -1
@@ -677,7 +680,8 @@ class BayesianFGDScheduler(FGDScheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
-        node_unalloc = {n.node_id: n.total_unallocated_gpu for n in eligible}
+        node_unalloc = {n.node_id: n.total_unallocated_gpu / n.num_gpus
+                        for n in eligible}
         best_node_id = None
         best_key = (float('inf'), float('inf'))
         self._pending_slot = -1
