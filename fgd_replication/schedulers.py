@@ -13,6 +13,7 @@ Implements 6 scheduling policies from the FGD paper (Section 6.1):
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
 from collections import deque, Counter
+import math
 import random
 
 from simulator import Task, Node, Cluster, TaskDistribution
@@ -422,21 +423,14 @@ class FGDScheduler(Scheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
-        # Build lookup: node_id -> unallocated GPU fraction for tiebreaking.
-        # Normalized by node capacity so that a half-full 8-GPU node (0.5)
-        # correctly beats a fresh 2-GPU node (1.0) in a heterogeneous cluster.
-        # Without normalization, the 2-GPU fresh node (abs=2.0) would win over
-        # the 8-GPU half-full node (abs=4.0), unnecessarily opening a new node.
-        node_unalloc = {n.node_id: n.total_unallocated_gpu / n.num_gpus
-                        for n in eligible}
-
+        # Paper scores: int(sigmoid(-delta) * 100), higher = better.
         best_node_id = None
-        best_key = (float('inf'), float('inf'))
+        best_score = -1
         self._pending_slot = -1
         for node_id, delta, slot in results:
-            key = (delta, node_unalloc.get(node_id, float('inf')))
-            if key < best_key:
-                best_key = key
+            score = int(100.0 / (1.0 + math.exp(delta)))  # sigmoid(-delta)*100
+            if score > best_score:
+                best_score = score
                 best_node_id = node_id
                 self._pending_slot = slot
 
@@ -549,15 +543,13 @@ class WindowedFGDScheduler(FGDScheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
-        node_unalloc = {n.node_id: n.total_unallocated_gpu / n.num_gpus
-                        for n in eligible}
         best_node_id = None
-        best_key = (float('inf'), float('inf'))
+        best_score = -1
         self._pending_slot = -1
         for node_id, delta, slot in results:
-            key = (delta, node_unalloc.get(node_id, float('inf')))
-            if key < best_key:
-                best_key = key
+            score = int(100.0 / (1.0 + math.exp(delta)))
+            if score > best_score:
+                best_score = score
                 best_node_id = node_id
                 self._pending_slot = slot
 
@@ -680,15 +672,13 @@ class BayesianFGDScheduler(FGDScheduler):
         pool = self._get_pool()
         results = pool.map(FGDScheduler._compute_frag_delta_for_node, args_list)
 
-        node_unalloc = {n.node_id: n.total_unallocated_gpu / n.num_gpus
-                        for n in eligible}
         best_node_id = None
-        best_key = (float('inf'), float('inf'))
+        best_score = -1
         self._pending_slot = -1
         for node_id, delta, slot in results:
-            key = (delta, node_unalloc.get(node_id, float('inf')))
-            if key < best_key:
-                best_key = key
+            score = int(100.0 / (1.0 + math.exp(delta)))
+            if score > best_score:
+                best_score = score
                 best_node_id = node_id
                 self._pending_slot = slot
 
