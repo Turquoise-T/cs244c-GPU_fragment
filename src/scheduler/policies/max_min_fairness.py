@@ -4,33 +4,8 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import cvxpy as cp
 import numpy as np
 
-from policy import Policy, PolicyWithPacking
+from policy import Policy, PolicyWithPacking, solve_with_fallback
 from proportional import ProportionalPolicy
-
-
-def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS",
-                         warm_start=False, solver_kwargs=None, **kwargs):
-    """Solve CVXPY problem with automatic fallback on solver failure.
-
-    Attempts to solve with the primary solver (typically ECOS for speed).
-    If the primary solver fails with a SolverError, automatically retries
-    with the fallback solver (SCS, which is slower but more numerically stable).
-
-    When warm_start=True, the solver is seeded with the current .value of
-    the cp.Variable (set by the caller before invoking this function).
-    """
-    if solver_kwargs is None:
-        solver_kwargs = {}
-    merged = {**kwargs, **solver_kwargs}
-    try:
-        return cvxprob.solve(solver=primary_solver, warm_start=warm_start,
-                             **merged)
-    except cp.error.SolverError as e:
-        print(f"WARNING: Solver '{primary_solver}' failed, retrying with '{fallback_solver}'")
-        # Use SCS-specific kwargs when falling back to SCS
-        fallback_kwargs = {'acceleration_lookback': 0} if fallback_solver == "SCS" else {}
-        return cvxprob.solve(solver=fallback_solver, warm_start=warm_start,
-                             **fallback_kwargs)
 
 # PAPER[§4.1] "MaximizeX min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)"
 # PAPER[§4.1] "Max-min fairness: maximize minimum normalized throughput across jobs"
@@ -45,6 +20,10 @@ class MaxMinFairnessPolicy(Policy):
     def set_migration_context(self, migration_times, time_per_iteration):
         self._max_min_fairness_perf_policy.set_migration_context(
             migration_times, time_per_iteration)
+
+    def set_fragmentation_context(self, frag_ema, penalty_weight):
+        self._max_min_fairness_perf_policy.set_fragmentation_context(
+            frag_ema, penalty_weight)
 
     def get_allocation(self, unflattened_throughputs, scale_factors,
                        priority_weights, cluster_spec, gpu_demands=None):
@@ -78,6 +57,20 @@ class MaxMinFairnessPolicyWithPerf(Policy):
         # Only used when migration penalty is active (penalty stabilizes
         # allocations, giving high cache hit rate).
         self._dpp_cache = None  # dict with shape, x, t, params, problem
+        # Fragmentation-aware allocation: penalize allocation to GPU types
+        # with high fragmentation EMA.
+        self._frag_ema = None  # {worker_type: float}
+        self._frag_penalty_weight = 0.0
+
+    def set_fragmentation_context(self, frag_ema, penalty_weight):
+        """Set fragmentation context for fragmentation-aware allocation.
+
+        Args:
+            frag_ema: Dict mapping worker_type to fragmentation EMA value.
+            penalty_weight: Weight (lambda) for fragmentation penalty in LP.
+        """
+        self._frag_ema = frag_ema
+        self._frag_penalty_weight = penalty_weight
 
     def _build_dpp_problem(self, m, n):
         """Build a DPP-parametrized LP for shape (m, n).
@@ -204,7 +197,8 @@ class MaxMinFairnessPolicyWithPerf(Policy):
                 coefficients, capacity_array, x_prev)
         else:
             solved_x = self._solve_standard(
-                m, n, throughputs, coefficients, capacity_array, x_prev)
+                m, n, throughputs, coefficients, capacity_array, x_prev,
+                worker_types)
 
         # Always save allocation for warm-start seeding and switching penalty
         self._prev_allocation = {}
@@ -216,11 +210,34 @@ class MaxMinFairnessPolicyWithPerf(Policy):
         return super().unflatten(solved_x, index)
 
     def _solve_standard(self, m, n, throughputs, coefficients,
-                        scale_factors_array, x_prev):
-        """Original non-cached solve path (no migration penalty)."""
+                        scale_factors_array, x_prev, worker_types=None):
+        """Original non-cached solve path (no migration penalty).
+
+        When fragmentation context is set (via set_fragmentation_context),
+        adds a penalty term to the objective to discourage allocation to
+        GPU types with high fragmentation.
+        """
         x = cp.Variable((m, n))
         per_job_throughput = cp.sum(cp.multiply(coefficients, x), axis=1)
-        objective = cp.Maximize(cp.min(per_job_throughput))
+
+        # Build objective with optional fragmentation penalty.
+        # Penalty = lambda * sum_m sum_t (frag_ema[t] * X[m,t])
+        # This discourages allocating jobs to GPU types with high fragmentation.
+        if (self._frag_ema is not None
+                and self._frag_penalty_weight > 0
+                and worker_types is not None):
+            # Build fragmentation weight vector [frag_v100, frag_p100, ...]
+            frag_weights = np.array([
+                self._frag_ema.get(wt, 0.0) for wt in worker_types
+            ])
+            # Total fragmentation penalty: sum over all allocations weighted by
+            # per-GPU-type fragmentation. This is a scalar.
+            frag_penalty = cp.sum(x @ frag_weights)
+            objective = cp.Maximize(
+                cp.min(per_job_throughput) - self._frag_penalty_weight * frag_penalty
+            )
+        else:
+            objective = cp.Maximize(cp.min(per_job_throughput))
 
         constraints = self.get_base_constraints(x, scale_factors_array)
         for i in range(m):
@@ -235,7 +252,7 @@ class MaxMinFairnessPolicyWithPerf(Policy):
             x.value = x_prev
             use_warm_start = True
 
-        _solve_with_fallback(cvxprob, self._solver, warm_start=use_warm_start,
+        solve_with_fallback(cvxprob, self._solver, warm_start=use_warm_start,
                              solver_kwargs=self._solver_kwargs)
 
         if cvxprob.status != "optimal":
@@ -284,7 +301,7 @@ class MaxMinFairnessPolicyWithPerf(Policy):
             x.value = x_prev
             use_warm_start = True
 
-        _solve_with_fallback(cvxprob, self._solver, warm_start=use_warm_start,
+        solve_with_fallback(cvxprob, self._solver, warm_start=use_warm_start,
                              solver_kwargs=self._solver_kwargs)
 
         if cvxprob.status != "optimal":
@@ -325,7 +342,7 @@ class MaxMinFairnessPolicyWithPerf(Policy):
             x.value = x_prev
             use_warm_start = True
 
-        _solve_with_fallback(cache['problem'], self._solver,
+        solve_with_fallback(cache['problem'], self._solver,
                              warm_start=use_warm_start,
                              solver_kwargs=self._solver_kwargs)
 
@@ -505,7 +522,7 @@ class MaxMinFairnessPolicyWithPacking(PolicyWithPacking):
                                       axis=1)))
 
         cvxprob = cp.Problem(objective, constraints)
-        result = _solve_with_fallback(cvxprob, self._solver)
+        result = solve_with_fallback(cvxprob, self._solver)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')
@@ -605,7 +622,7 @@ class MaxMinFairnessPolicyWithPacking(PolicyWithPacking):
         else:
             kwargs = {}
 
-        result = _solve_with_fallback(cvxprob, self._solver, **kwargs)
+        result = solve_with_fallback(cvxprob, self._solver, **kwargs)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')

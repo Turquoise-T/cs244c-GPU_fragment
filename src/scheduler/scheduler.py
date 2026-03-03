@@ -73,6 +73,7 @@ class Scheduler:
                  fgd_workload_mode='philly',
                  enable_migration_penalty=False,
                  enable_gpu_sharing=False,
+                 fgd_frag_penalty_weight=0.0,
                  log_level=None):
 
         # Flag to control whether scheduler runs in simulation mode.
@@ -86,6 +87,12 @@ class Scheduler:
         self._fgd_placement = None
         self._fgd_fragmentation_history = []
         self._round_metrics_history = []
+
+        # Fragmentation-aware allocation: track per-GPU-type fragmentation EMA
+        # and penalize allocation to highly fragmented GPU types in the LP.
+        self._fragmentation_ema = {}  # {worker_type: float}
+        self._fragmentation_ema_alpha = 0.3  # EMA smoothing coefficient
+        self._fgd_frag_penalty_weight = fgd_frag_penalty_weight
         if enable_fgd:
             from fgd_placement import GavelFGDPlacement, build_fgd_workload
             self._fgd_placement = GavelFGDPlacement(
@@ -738,6 +745,25 @@ class Scheduler:
             return None
         return sum(utilizations) / len(utilizations)
 
+    def _update_fragmentation_ema(self, worker_type, frag):
+        """Update the exponential moving average of fragmentation for a GPU type.
+
+        This EMA is used to inform the LP allocation: GPU types with high
+        fragmentation will be penalized to reduce placement failures.
+
+        Args:
+            worker_type: The GPU type (e.g., 'v100', 'p100').
+            frag: Current fragmentation value from FGD (0 to N).
+        """
+        alpha = self._fragmentation_ema_alpha
+        if worker_type not in self._fragmentation_ema:
+            self._fragmentation_ema[worker_type] = frag
+        else:
+            old_ema = self._fragmentation_ema[worker_type]
+            self._fragmentation_ema[worker_type] = (
+                alpha * frag + (1 - alpha) * old_ema
+            )
+
     def _record_round_metrics(self, cluster_spec, num_gpus_per_server):
         """Record fragmentation and utilization metrics for the current round.
 
@@ -1325,6 +1351,9 @@ class Scheduler:
                     )
                     self._fgd_fragmentation_history.append(
                         (self.get_current_timestamp(), worker_type, frag))
+                    # Update fragmentation EMA for this GPU type to inform
+                    # future LP allocation decisions.
+                    self._update_fragmentation_ema(worker_type, frag)
                 # Update running job state for FGD-placed jobs
                 for (job_id, scale_factor) in jobs_needing_placement:
                     if job_id in new_worker_assignments:
@@ -2867,6 +2896,14 @@ class Scheduler:
                         break
             self._policy.set_migration_context(
                 migration_times, self._time_per_iteration)
+
+        # Provide fragmentation context to the policy for fragmentation-aware
+        # allocation. Only active when fgd_frag_penalty_weight > 0.
+        if (self._fgd_frag_penalty_weight > 0
+                and self._fragmentation_ema
+                and hasattr(self._policy, 'set_fragmentation_context')):
+            self._policy.set_fragmentation_context(
+                self._fragmentation_ema, self._fgd_frag_penalty_weight)
 
         # Compute the allocation.
         if self._policy.name == "AlloX_Perf":
