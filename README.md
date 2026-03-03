@@ -25,45 +25,77 @@ This project replicates both papers independently, then integrates FGD's placeme
 - Cluster topology matters more than algorithm choice: uniform node sizes (Alibaba split) produce only 2-8% fragmentation regardless of placement strategy, while mixed node sizes (Cluster H) produce the expected differentiation between strategies
 - The packed max-min fairness policy does not scale beyond ~50 active jobs due to O(n^2) job-pair throughput tensors
 
-## Architecture
+---
 
-Each scheduling round has two phases: Gavel's LP determines GPU type and count allocations, then FGD selects specific servers to minimize fragmentation.
+## Part 1: FGD -- Fragmentation Gradient Descent
 
-![Architecture](docs/architecture.png)
+### How FGD Works
 
-## Results
+When placing a new job on a multi-GPU cluster, FGD computes a fragmentation gradient for each candidate server -- measuring how much cluster-wide fragmentation would increase if the job were placed there -- then selects the server with the lowest gradient.
 
-### Gavel Replication (Figs 9, 10, 11)
-
-108-GPU heterogeneous cluster (36 V100 + 36 P100 + 36 K80), Philly trace. 312 experiments across 3 policies, 3 seeds, and full arrival rate sweeps.
-
-Solid lines = our replication, dashed lines = paper reference curves:
-
-![Gavel Replication](experiments/combined/figures/gavel_replication_combined.png)
+![FGD Algorithm](docs/fgd_algorithm.png)
 
 ### FGD Standalone Replication
 
-Alibaba Cluster H (1,200 nodes, 5,592 GPUs, mixed node sizes 1/2/4/8 GPUs). Inflation-based evaluation with 6 placement strategies.
+**Setup:** Alibaba Cluster H topology -- 1,200 nodes with 5,592 GPUs across mixed node sizes (462 nodes with 8 GPUs, 310 with 4, 228 with 2, and 200 with 1). Evaluation uses an inflation methodology where tasks arrive one by one and never leave, measuring fragmentation as the cluster fills. All 6 placement strategies from the paper: Random, DotProduct, GPUClustering, GPUPacking, BestFit, and FGD.
+
+**Results:** Our replication reproduces the correct ordering across all metrics. For fragmentation rate, the ordering is FGD < BestFit < GPUPacking < GPUClustering < DotProduct < Random, matching the paper's Figure 7.
 
 ![FGD Standalone](experiments/fgd-standalone/figures/full_run/comparison_all.png)
 
-### FGD via Gavel -- Alibaba Split Cluster
+---
 
-6,200-GPU heterogeneous cluster with 12 sub-types, uniform node sizes per type. 45 experiments (5 policies x 3 rates x 3 seeds).
+## Part 2: Gavel -- Heterogeneity-Aware Scheduling
+
+### How Gavel Works
+
+Gavel formulates GPU scheduling as a max-min fairness linear program. It uses an *effective throughput* abstraction to express how fast each job runs on each GPU type, then solves for the allocation that maximizes the minimum throughput across all jobs.
+
+![Gavel Policy](docs/gavel_policy.png)
+
+### Gavel Replication (Figs 9, 10, 11)
+
+**Setup:** 108-GPU heterogeneous cluster (36 V100 + 36 P100 + 36 K80) using the Microsoft Philly trace. 312 experiments across 3 policies (MMF baseline, MMF Gavel, FTF Gavel), 3 seeds, and full arrival rate sweeps covering Figures 9, 10, and 11 from the paper.
+
+**Results:** Solid lines = our replication, dashed lines = paper reference curves. At moderate load (4.0 jph), Gavel achieves mean JCT of 16.4 hours vs. 23.0 hours for the baseline -- a 29% improvement.
+
+![Gavel Replication](experiments/combined/figures/gavel_replication_combined.png)
+
+---
+
+## Part 3: Gavel + FGD -- Combining Allocation and Placement
+
+### Integration Architecture
+
+Each scheduling round proceeds in two phases: Gavel's LP determines GPU type and count allocations, then FGD selects specific servers to minimize fragmentation.
+
+![Architecture](docs/architecture.png)
+
+### Why Topology Matters
+
+Our key finding is that cluster topology -- specifically, whether nodes have uniform or mixed GPU counts -- determines whether fragmentation-aware placement provides any benefit.
+
+![Node Topology Comparison](docs/node_topology_comparison.png)
+
+### Experiment 1: Alibaba Split Cluster (Uniform Node Sizes)
+
+**Setup:** 6,200-GPU heterogeneous cluster with 12 GPU sub-types, uniform node sizes per type. 45 experiments (5 placement policies x 3 arrival rates x 3 seeds).
+
+**Results:** Fragmentation stays at 2-8% for *all* placement strategies. With uniform node sizes, any job can always be packed without creating fragments -- the packing problem that FGD solves simply does not arise.
 
 ![FGD Alibaba Split](experiments/combined/figures/fgd_replication/comparison_all.png)
 
-Key finding: fragmentation stays at 2-8% for all placement strategies because uniform node sizes eliminate the packing problem that FGD is designed to solve.
+### Experiment 2: Cluster H (Mixed Node Sizes)
 
-### FGD via Gavel -- Cluster H (Mixed Node Sizes)
+**Setup:** 5,592-GPU single-type cluster with mixed node sizes (462x8-GPU + 310x4-GPU + 228x2-GPU + 200x1-GPU). 360 experiments (2 policies x 4 placements x 15 arrival rates x 3 seeds).
 
-5,592-GPU single-type cluster with mixed node sizes (462x8-GPU + 310x4-GPU + 228x2-GPU + 200x1-GPU). 360 experiments (2 policies x 4 placements x 15 rates x 3 seeds).
+**Results:** With mixed node sizes, the expected differentiation emerges: FGD < BestFit < Strided < Random for fragmentation rate. At moderate loads, FGD achieves 15-25% lower fragmentation than random placement.
 
 | FIFO Policy | Max-Min Fairness |
 |:-----------:|:----------------:|
 | ![Cluster H FIFO](experiments/combined/figures/fgd_replication_cluster_h_fifo/comparison_all.png) | ![Cluster H MMF](experiments/combined/figures/fgd_replication_cluster_h_mmf/comparison_all.png) |
 
-With mixed node sizes, the expected ordering emerges: FGD < BestFit < Strided < Random for fragmentation rate.
+---
 
 ## Reproducing Results
 
