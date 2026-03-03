@@ -6,6 +6,27 @@ import numpy as np
 
 import job_id_pair
 
+def solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS",
+                        warm_start=False, solver_kwargs=None, **kwargs):
+    """Solve CVXPY problem with automatic fallback on solver failure.
+
+    Attempts to solve with the primary solver (typically ECOS for speed).
+    If the primary solver fails with a SolverError, automatically retries
+    with the fallback solver (SCS, which is slower but more numerically stable).
+    """
+    if solver_kwargs is None:
+        solver_kwargs = {}
+    merged = {**kwargs, **solver_kwargs}
+    try:
+        return cvxprob.solve(solver=primary_solver, warm_start=warm_start,
+                             **merged)
+    except cp.error.SolverError:
+        print(f"WARNING: Solver '{primary_solver}' failed, retrying with '{fallback_solver}'")
+        fallback_kwargs = {'acceleration_lookback': 0} if fallback_solver == "SCS" else {}
+        return cvxprob.solve(solver=fallback_solver, warm_start=warm_start,
+                             **fallback_kwargs)
+
+
 # PAPER[§3.1|def] "allocation matrix X where X_mj = fraction of time job m spends on accelerator j"
 # PAPER[§3.1|def] "effective throughput: throughput(m,X) = Σ_j T_mj * X_mj"
 class Policy:

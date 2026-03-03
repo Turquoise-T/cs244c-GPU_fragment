@@ -16,7 +16,6 @@ Usage:
 """
 
 import argparse
-import copy
 import json
 import os
 import random
@@ -30,30 +29,11 @@ from fgd import Node, Task, Workload
 from simulator import FGDSimulator
 from alibaba_trace_parser import (
     parse_alibaba_trace, parse_node_list, derive_workload_distribution,
-    count_non_gpu_tasks,
+    count_non_gpu_tasks, build_workload_from_distribution,
 )
 
 
 ALL_POLICIES = ['random', 'dotprod', 'gpuclustering', 'gpupacking', 'bestfit', 'fgd']
-
-
-def build_workload_from_distribution(distribution):
-    """Convert distribution tuples into FGD Workload object."""
-    workload = Workload()
-    for entry in distribution:
-        gpu_req = entry[0]
-        cpu_req = entry[1]
-        mem_req = entry[2] if len(entry) > 3 else 0.0
-        gpu_type = entry[3] if len(entry) > 4 else None
-        pop = entry[-1]
-        task_id = f'{gpu_req}gpu'
-        workload.add_task_type(
-            Task(id=task_id, cpu_request=cpu_req, gpu_request=gpu_req,
-                 memory_request=mem_req, gpu_type=gpu_type),
-            popularity=pop,
-        )
-    workload.normalize_popularity()
-    return workload
 
 
 def deep_copy_nodes(nodes):

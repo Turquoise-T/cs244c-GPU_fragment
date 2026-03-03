@@ -1,4 +1,5 @@
 from queue import Empty
+from time import time
 import queue
 
 class SetQueue(queue.Queue):

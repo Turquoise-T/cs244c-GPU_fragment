@@ -24,33 +24,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 from fgd import Task, Workload
 from simulator import FGDSimulator
 from alibaba_trace_parser import (
-    parse_alibaba_trace, derive_workload_distribution, generate_synthetic_trace
+    parse_alibaba_trace, derive_workload_distribution, build_workload_from_distribution
 )
 
 ALL_PLACEMENTS = ['fgd', 'bestfit', 'firstfit', 'random', 'dotprod', 'gpupacking', 'gpuclustering']
-
-
-def build_workload_from_distribution(distribution):
-    """Convert distribution tuples into FGD Workload object.
-
-    Accepts both old 3-tuple (gpu, cpu, pop) and new 5-tuple
-    (gpu, cpu, mem, gpu_type, pop) formats.
-    """
-    workload = Workload()
-    for entry in distribution:
-        gpu_req = entry[0]
-        cpu_req = entry[1]
-        mem_req = entry[2] if len(entry) > 3 else 0.0
-        gpu_type = entry[3] if len(entry) > 4 else None
-        pop = entry[-1]
-        task_id = f'{gpu_req}gpu'
-        workload.add_task_type(
-            Task(id=task_id, cpu_request=cpu_req, gpu_request=gpu_req,
-                 memory_request=mem_req, gpu_type=gpu_type),
-            popularity=pop,
-        )
-    workload.normalize_popularity()
-    return workload
 
 
 def run_inflation(args):

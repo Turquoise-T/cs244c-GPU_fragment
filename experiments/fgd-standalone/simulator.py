@@ -23,7 +23,7 @@ from baselines import (
     BaselinePlacer, BestFitPlacer, FirstFitPlacer, RandomPlacer,
     DotProdPlacer, GpuPackingPlacer, GpuClusteringPlacer,
 )
-from alibaba_trace_parser import TraceTask
+from alibaba_trace_parser import TraceTask, _weighted_choice
 
 
 # -- Events --
@@ -523,11 +523,3 @@ class FGDSimulator:
         return curve
 
 
-def _weighted_choice(weights, rng):
-    r = rng.random()
-    cumulative = 0.0
-    for i, w in enumerate(weights):
-        cumulative += w
-        if r <= cumulative:
-            return i
-    return len(weights) - 1
