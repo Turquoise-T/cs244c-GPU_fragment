@@ -25,6 +25,12 @@ This project replicates both papers independently, then integrates FGD's placeme
 - Cluster topology matters more than algorithm choice: uniform node sizes (Alibaba split) produce only 2-8% fragmentation regardless of placement strategy, while mixed node sizes (Cluster H) produce the expected differentiation between strategies
 - The packed max-min fairness policy does not scale beyond ~50 active jobs due to O(n^2) job-pair throughput tensors
 
+## Architecture
+
+Each scheduling round has two phases: Gavel's LP determines GPU type and count allocations, then FGD selects specific servers to minimize fragmentation.
+
+![Architecture](docs/architecture.png)
+
 ## Results
 
 ### Gavel Replication (Figs 9, 10, 11)
