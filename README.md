@@ -5,7 +5,7 @@
 **CS244C -- Advanced Topics in Networking (Winter 2026)**
 Stanford University
 
-**Team:** Varun Ramesh, Guankai Huang
+**Team:** Jiayu Chang, Stefan Ene, Hyeonggyu Kim, Varun Ramesh
 
 **Papers replicated:**
 - [Gavel: Heterogeneity-Aware Cluster Scheduling Policies for Deep Learning Workloads (OSDI 2020)](https://www.usenix.org/conference/osdi20/presentation/narayanan-deepak)
