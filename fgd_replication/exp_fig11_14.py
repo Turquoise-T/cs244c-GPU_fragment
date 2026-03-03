@@ -336,24 +336,29 @@ def plot_sensitivity(results: Dict[float, List[SensitivityResult]],
     for i, name in enumerate(sched_names):
         x_positions = []
         values = []
+        stds = []
         for j, pct in enumerate(proportions):
             r = next((r for r in results[pct]
                        if r.scheduler_name == name), None)
             if r:
                 x_positions.append(j + (i - n_bars / 2 + 0.5) * bar_width)
                 values.append(r.unalloc_gpu_pct)
+                stds.append(r.unalloc_std)
 
         bars = ax.bar(x_positions, values, bar_width,
                       label=name,
                       color=colors.get(name, 'gray'),
                       hatch=hatches.get(name, ''),
-                      edgecolor='black', linewidth=0.5)
+                      edgecolor='black', linewidth=0.5,
+                      yerr=stds,
+                      error_kw={'ecolor': 'gray', 'capsize': 3,
+                                'elinewidth': 1.2, 'capthick': 1.2})
 
-        # Annotate FGD bars with values
+        # Annotate FGD bars with values (place above the error bar cap)
         if name == 'FGD':
-            for bar, val in zip(bars, values):
+            for bar, val, std in zip(bars, values, stds):
                 ax.text(bar.get_x() + bar.get_width() / 2,
-                        bar.get_height() + 0.3,
+                        val + std + 0.3,
                         f'{val:.1f}', ha='center', va='bottom',
                         fontsize=7, fontweight='bold')
 
