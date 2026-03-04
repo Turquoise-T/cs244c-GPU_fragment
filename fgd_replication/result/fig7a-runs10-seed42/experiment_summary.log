@@ -10,9 +10,9 @@ EXPERIMENT SUMMARY
 
 Scheduler     Avg Frag%   Avg Alloc%    Scheduled     Failed
 ------------------------------------------------------------
-Random             99.4         88.0         7984       2018
-BestFit            99.7         93.9         8143       1848
+Random             99.5         88.0         7984       2018
+BestFit            99.7         93.2         8089       1901
 DotProd            99.6         89.9         7854       2137
 Packing            99.6         94.5         8185       1805
 Clustering         99.3         94.5         8184       1806
-FGD                99.2         95.6         8311       1679
+FGD                99.3         95.2         8240       1751
