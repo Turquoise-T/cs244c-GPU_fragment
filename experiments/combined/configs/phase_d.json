@@ -1,0 +1,41 @@
+{
+    "description": "Phase D: Validate FGD placement vs random baseline. Both use FIFO allocation with single-node placement (FGD paper semantics).",
+    "experiments": [
+        {
+            "name": "fifo_random_placement",
+            "policy": "fifo",
+            "enable_fgd": true,
+            "fgd_placement_mode": "random",
+            "cluster_spec": {"v100": 36, "p100": 36, "k80": 36},
+            "num_gpus_per_server": {"v100": 4, "p100": 4, "k80": 4},
+            "lam": 1.0,
+            "num_total_jobs": 100,
+            "generate_multi_gpu_jobs": true,
+            "seed": 0
+        },
+        {
+            "name": "fifo_bestfit_placement",
+            "policy": "fifo",
+            "enable_fgd": true,
+            "fgd_placement_mode": "bestfit",
+            "cluster_spec": {"v100": 36, "p100": 36, "k80": 36},
+            "num_gpus_per_server": {"v100": 4, "p100": 4, "k80": 4},
+            "lam": 1.0,
+            "num_total_jobs": 100,
+            "generate_multi_gpu_jobs": true,
+            "seed": 0
+        },
+        {
+            "name": "fifo_fgd_placement",
+            "policy": "fifo",
+            "enable_fgd": true,
+            "fgd_placement_mode": "fgd",
+            "cluster_spec": {"v100": 36, "p100": 36, "k80": 36},
+            "num_gpus_per_server": {"v100": 4, "p100": 4, "k80": 4},
+            "lam": 1.0,
+            "num_total_jobs": 100,
+            "generate_multi_gpu_jobs": true,
+            "seed": 0
+        }
+    ]
+}

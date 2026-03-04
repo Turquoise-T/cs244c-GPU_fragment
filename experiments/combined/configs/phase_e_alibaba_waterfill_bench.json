@@ -1,0 +1,35 @@
+{
+  "description": "Water-filling benchmark vs ECOS baseline at 60 jph Alibaba scale.",
+  "common": {
+    "cluster_spec": {
+      "G2": 4392, "T4": 840, "G3": 312,
+      "P100": 264, "V100M32": 200, "V100M16": 192
+    },
+    "num_gpus_per_server": 8,
+    "workload_mode": "alibaba",
+    "fgd_workload_mode": "alibaba",
+    "generate_multi_gpu_jobs": true,
+    "mode": "steady_state",
+    "window_start": 4000,
+    "window_end": 5000,
+    "max_jct": 360000,
+    "enable_migration_penalty": false,
+    "time_per_iteration": 600,
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "lam": 60.0,
+    "seed": 0
+  },
+  "experiments": [
+    {
+      "name": "ecos_no_penalty",
+      "policy": "max_min_fairness_perf",
+      "solver": "ECOS"
+    },
+    {
+      "name": "waterfill",
+      "policy": "max_min_fairness_waterfill",
+      "solver": "ECOS"
+    }
+  ]
+}

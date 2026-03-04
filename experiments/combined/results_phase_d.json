@@ -1,0 +1,44 @@
+[
+  {
+    "name": "fifo_random_placement",
+    "policy": "fifo",
+    "enable_fgd": true,
+    "fgd_placement_mode": "random",
+    "seed": 0,
+    "lam": 1.0,
+    "avg_jct": 186352.91877939506,
+    "wall_time_seconds": 7.340349197387695,
+    "num_completed_jobs": 94,
+    "num_failed_jobs": 6,
+    "fragmentation_samples": 13254,
+    "avg_fragmentation": 1.9981515014331093
+  },
+  {
+    "name": "fifo_bestfit_placement",
+    "policy": "fifo",
+    "enable_fgd": true,
+    "fgd_placement_mode": "bestfit",
+    "seed": 0,
+    "lam": 1.0,
+    "avg_jct": 185586.30182649853,
+    "wall_time_seconds": 7.798119783401489,
+    "num_completed_jobs": 94,
+    "num_failed_jobs": 6,
+    "fragmentation_samples": 13254,
+    "avg_fragmentation": 1.920657914591387
+  },
+  {
+    "name": "fifo_fgd_placement",
+    "policy": "fifo",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 0,
+    "lam": 1.0,
+    "avg_jct": 185586.30182649853,
+    "wall_time_seconds": 8.559880018234253,
+    "num_completed_jobs": 94,
+    "num_failed_jobs": 6,
+    "fragmentation_samples": 13254,
+    "avg_fragmentation": 1.876029877772288
+  }
+]

@@ -1,0 +1,57 @@
+{
+  "_description": "Reference data traced from FGD paper Fig 9b: Occupied Nodes",
+  "_x_axis": "Arrived Workloads (% capacity)",
+  "_y_axis": "Occupied Nodes",
+  "demand_pct": [
+    0,
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    95
+  ],
+  "random": [
+    0,
+    520,
+    849,
+    1075,
+    1177,
+    1204,
+    1211,
+    1225,
+    1225,
+    1200,
+    1201
+  ],
+  "clustering": [
+    0,
+    351,
+    604,
+    699,
+    780,
+    880,
+    960,
+    1040,
+    1100,
+    1170,
+    1208
+  ],
+  "fgd": [
+    0,
+    120,
+    258,
+    402,
+    525,
+    661,
+    771,
+    907,
+    1017,
+    1146,
+    1208
+  ]
+}

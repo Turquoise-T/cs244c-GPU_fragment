@@ -1,0 +1,19 @@
+[
+  {
+    "name": "fgd_235jph_s2",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 2,
+    "lam": 15.32,
+    "avg_jct": 95653.10224554692,
+    "wall_time_seconds": 28208.31756591797,
+    "num_completed_jobs": 69759,
+    "num_failed_jobs": 2,
+    "fragmentation_samples": 10871,
+    "saturated": true,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 3.352004415417165
+  }
+]

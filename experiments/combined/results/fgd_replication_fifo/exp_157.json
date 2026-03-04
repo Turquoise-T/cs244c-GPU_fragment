@@ -1,0 +1,30 @@
+[
+  {
+    "name": "fifo_fgd_80jph_s1",
+    "policy": "fifo",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 1,
+    "lam": 45.0,
+    "avg_jct": 71407.22215324853,
+    "wall_time_seconds": 541.5200660228729,
+    "num_completed_jobs": 6625,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 5287,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 24.753965100720176,
+    "avg_frag_rate": 2.157801482974983,
+    "avg_frag_total": 1.5822541477716432,
+    "avg_unalloc_pct": 75.2460348992798,
+    "avg_occupied_nodes": 298.0336879432624,
+    "std_utilization": 10.378507961561562,
+    "std_frag_rate": 0.48301276467612597,
+    "std_frag_total": 0.22085188930286037,
+    "std_unalloc_pct": 10.378507961561564,
+    "std_occupied_nodes": 86.66334922656193,
+    "num_metric_samples": 564,
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 9.30877246075279
+  }
+]

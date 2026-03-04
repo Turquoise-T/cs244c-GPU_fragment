@@ -1,0 +1,19 @@
+[
+  {
+    "name": "gavelfgd_135jph_s2",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 2,
+    "lam": 26.67,
+    "avg_jct": 112518.42612109274,
+    "wall_time_seconds": 11022.925683259964,
+    "num_completed_jobs": 112101,
+    "num_failed_jobs": 5,
+    "fragmentation_samples": 12244,
+    "saturated": false,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 8.135871855602744
+  }
+]

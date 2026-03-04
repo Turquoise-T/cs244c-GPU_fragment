@@ -1,0 +1,28 @@
+{
+  "common": {
+    "cluster_spec": {
+      "G2": 4392, "T4": 840, "G3": 312,
+      "P100": 264, "V100M32": 200, "V100M16": 192
+    },
+    "num_gpus_per_server": 8,
+    "workload_mode": "alibaba",
+    "fgd_workload_mode": "alibaba",
+    "generate_multi_gpu_jobs": true,
+    "mode": "steady_state",
+    "window_start": 4000,
+    "window_end": 5000,
+    "max_jct": 360000,
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "lam": 60.0
+  },
+  "experiments": [
+    {"name": "gavel_fgd_60jph_noshare_s0", "enable_gpu_sharing": false, "seed": 0},
+    {"name": "gavel_fgd_60jph_noshare_s1", "enable_gpu_sharing": false, "seed": 1},
+    {"name": "gavel_fgd_60jph_noshare_s2", "enable_gpu_sharing": false, "seed": 2},
+    {"name": "gavel_fgd_60jph_share_s0", "enable_gpu_sharing": true, "seed": 0},
+    {"name": "gavel_fgd_60jph_share_s1", "enable_gpu_sharing": true, "seed": 1},
+    {"name": "gavel_fgd_60jph_share_s2", "enable_gpu_sharing": true, "seed": 2}
+  ]
+}

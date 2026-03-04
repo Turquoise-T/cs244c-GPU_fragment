@@ -1,0 +1,18 @@
+[
+  {
+    "name": "gavel_285jph_s0",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": false,
+    "fgd_placement_mode": "strided",
+    "seed": 0,
+    "lam": 12.63,
+    "avg_jct": 118112.4081230646,
+    "wall_time_seconds": 28203.89080929756,
+    "num_completed_jobs": 301680,
+    "num_failed_jobs": 7,
+    "fragmentation_samples": 0,
+    "saturated": true,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true
+  }
+]

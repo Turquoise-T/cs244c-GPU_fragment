@@ -1,0 +1,18 @@
+[
+  {
+    "name": "sharing_test_s0",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "bestfit",
+    "seed": 0,
+    "lam": 900.0,
+    "avg_jct": 193456.4225487804,
+    "wall_time_seconds": 4.73782205581665,
+    "num_completed_jobs": 89,
+    "num_failed_jobs": 11,
+    "fragmentation_samples": 11733,
+    "saturated": false,
+    "mode": "fixed_jobs",
+    "avg_fragmentation": 1.165825449586597
+  }
+]

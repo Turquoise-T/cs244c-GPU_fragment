@@ -1,0 +1,18 @@
+[
+  {
+    "name": "gavel_260jph",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": false,
+    "fgd_placement_mode": "strided",
+    "seed": 281,
+    "lam": 260.0,
+    "avg_jct": 109812.71514716392,
+    "wall_time_seconds": 402.8335371017456,
+    "num_completed_jobs": 13679,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 0,
+    "saturated": false,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true
+  }
+]

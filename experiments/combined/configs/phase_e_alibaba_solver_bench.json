@@ -1,0 +1,39 @@
+{
+  "description": "Solver benchmark: ECOS vs SCS vs HiGHS at 60 jph Alibaba scale. Same config as fgd_only index 0.",
+  "common": {
+    "cluster_spec": {
+      "G2": 4392, "T4": 840, "G3": 312,
+      "P100": 264, "V100M32": 200, "V100M16": 192
+    },
+    "num_gpus_per_server": 8,
+    "workload_mode": "alibaba",
+    "fgd_workload_mode": "alibaba",
+    "generate_multi_gpu_jobs": true,
+    "mode": "steady_state",
+    "window_start": 4000,
+    "window_end": 5000,
+    "max_jct": 360000,
+    "enable_migration_penalty": true,
+    "time_per_iteration": 600,
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "lam": 60.0,
+    "seed": 0
+  },
+  "experiments": [
+    {
+      "name": "ecos_baseline",
+      "solver": "ECOS"
+    },
+    {
+      "name": "scs_warm",
+      "solver": "SCS",
+      "solver_kwargs": {"eps_abs": 1e-3, "eps_rel": 1e-3, "max_iters": 5000}
+    },
+    {
+      "name": "highs_simplex",
+      "solver": "HIGHS"
+    }
+  ]
+}

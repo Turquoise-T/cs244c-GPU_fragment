@@ -1,3 +1,4 @@
+from queue import Empty
 import queue
 
 class SetQueue(queue.Queue):

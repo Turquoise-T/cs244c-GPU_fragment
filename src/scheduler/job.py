@@ -5,7 +5,8 @@
 class Job:
     def __init__(self, job_id, job_type, command, working_directory,
                  num_steps_arg, total_steps, duration, scale_factor=1,
-                 priority_weight=1, SLO=None, needs_data_dir=False):
+                 priority_weight=1, SLO=None, needs_data_dir=False,
+                 gpu_request=None, migration_time=0):
         self._job_id = job_id
         self._job_type = job_type
         self._command = command
@@ -16,6 +17,15 @@ class Job:
         self._duration = duration
         self._scale_factor = scale_factor
         self._priority_weight = priority_weight
+        # gpu_request: fractional GPU demand (e.g., 0.5 for half a GPU).
+        # When set, scale_factor = ceil(gpu_request) for LP allocation,
+        # and throughput scales linearly (gpu_request * throughput[(model, 1)]).
+        # When None, behaves identically to original Gavel (whole GPUs only).
+        self._gpu_request = gpu_request
+        # migration_time: estimated seconds to checkpoint, migrate, and restart
+        # this job on a different GPU type. Used by the switching penalty in the
+        # LP to discourage unnecessary migrations.
+        self._migration_time = migration_time
         if SLO is not None and SLO < 0:
             self._SLO = None
         else:
@@ -81,6 +91,14 @@ class Job:
     @property
     def priority_weight(self):
         return self._priority_weight
+
+    @property
+    def gpu_request(self):
+        return self._gpu_request
+
+    @property
+    def migration_time(self):
+        return self._migration_time
 
     @property
     def SLO(self):

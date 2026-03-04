@@ -1,0 +1,19 @@
+[
+  {
+    "name": "fgd_335jph_s1",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 1,
+    "lam": 10.75,
+    "avg_jct": 80883.11299896757,
+    "wall_time_seconds": 28234.113380670547,
+    "num_completed_jobs": 67724,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 8254,
+    "saturated": true,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 1.2126011630724496
+  }
+]

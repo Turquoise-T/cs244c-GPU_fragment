@@ -27,6 +27,106 @@ def _generate_scale_factor(rng):
         scale_factor = 8
     return scale_factor
 
+
+def _generate_scale_factor_alibaba(rng):
+    """Sample (scale_factor, gpu_request) from Alibaba trace distribution.
+
+    Distribution derived from cluster-trace-gpu-v2023 pod list:
+      10% -> 0.25 GPU (scale_factor=1, gpu_request=0.25)
+      16% -> 0.50 GPU (scale_factor=1, gpu_request=0.50)
+      63% -> 1.0  GPU (scale_factor=1, gpu_request=None)
+       1% -> 2 GPUs   (scale_factor=2, gpu_request=None)
+       2% -> 4 GPUs   (scale_factor=4, gpu_request=None)
+       8% -> 8 GPUs   (scale_factor=8, gpu_request=None)
+
+    Returns:
+        (scale_factor, gpu_request) tuple.
+    """
+    r = rng.uniform(0, 1)
+    if r < 0.10:
+        return (1, 0.25)
+    elif r < 0.26:
+        return (1, 0.50)
+    elif r < 0.89:
+        return (1, None)
+    elif r < 0.90:
+        return (2, None)
+    elif r < 0.92:
+        return (4, None)
+    else:
+        return (8, None)
+
+# Approximate model parameter counts for estimating checkpoint sizes.
+# Training checkpoint = params * 16 bytes (fp32 params + fp32 Adam m + fp32 Adam v).
+# Sources: torchvision model zoo, HuggingFace model cards.
+_MODEL_PARAMS = {
+    'ResNet-18':       11.7e6,   # ~187 MB checkpoint
+    'ResNet-50':       25.6e6,   # ~410 MB checkpoint
+    'Transformer':     110e6,    # ~1.76 GB (BERT-base scale)
+    'LM':              345e6,    # ~5.5 GB (GPT-2 medium scale)
+    'Recommendation':  50e6,     # ~800 MB dense params
+    'A3C':             1.7e6,    # ~27 MB (small RL policy net)
+    'CycleGAN':        28.3e6,   # ~453 MB (2 generators + 2 discriminators)
+}
+
+# Fixed overhead components (seconds) for warm-cache container images.
+# Based on measured data from MegaScale (NSDI'24), FlashRecovery (2025),
+# PyTorch DataLoader benchmarks, and NCCL init measurements.
+_MIGRATION_CONTAINER_RESTART = 30   # warm image cache: framework + process init
+_MIGRATION_CUDA_INIT = 5            # CUDA context creation
+_MIGRATION_DATALOADER_SPAWN = 40    # 16 workers, sequential spawn (PyTorch default)
+_MIGRATION_CUDNN_WARMUP = 15        # cuDNN auto-tuning on first forward pass
+_MIGRATION_STORAGE_BW_GBPS = 2.0    # shared Lustre under contention, per-client
+
+def _nccl_init_time(scale_factor):
+    """NCCL communicator init time based on measured data.
+
+    NCCL 2.22 blog: 6.7s at 8 GPUs (before optimization).
+    NCCL issue #534: 16.3s at 8 GPUs, 130s at 32 GPUs (older versions).
+    Conservative estimates for typical cluster software stacks.
+    """
+    if scale_factor <= 1:
+        return 0
+    elif scale_factor <= 2:
+        return 3
+    elif scale_factor <= 4:
+        return 8
+    else:
+        return 16
+
+def estimate_migration_time(job_type, scale_factor):
+    """Estimate end-to-end migration time for a job in seconds.
+
+    Models the full preemption-to-productive-training pipeline:
+      1. Container restart (warm cache)  ~30s
+      2. CUDA context init               ~5s
+      3. NCCL communicator init           0-16s (depends on scale_factor)
+      4. Checkpoint write + read          ~2 * (size / bandwidth)
+      5. Multi-GPU coordination           ~3s per extra GPU
+      6. DataLoader worker spawn          ~40s
+      7. cuDNN warmup                     ~15s
+
+    Returns:
+        Estimated migration time in seconds.
+    """
+    # Extract base model name (strip batch size suffix like " (batch size 64)")
+    base_model = job_type.split(' (')[0]
+    params = _MODEL_PARAMS.get(base_model, 50e6)
+
+    # Training checkpoint: params * 16 bytes (model + optimizer state)
+    ckpt_gb = (params * 16) / 1e9
+
+    # Write on old node + read on new node
+    io_time = 2 * (ckpt_gb / _MIGRATION_STORAGE_BW_GBPS)
+
+    # Multi-GPU coordination overhead (barrier sync, gradient buffer flush)
+    coordination = max(0, (scale_factor - 1) * 3)
+
+    return (_MIGRATION_CONTAINER_RESTART + _MIGRATION_CUDA_INIT
+            + _nccl_init_time(scale_factor) + io_time + coordination
+            + _MIGRATION_DATALOADER_SPAWN + _MIGRATION_CUDNN_WARMUP)
+
+
 def _generate_duration(rng):
     # Sample the job duration from the Philly distribution.
     if rng.random() >= 0.8:
@@ -42,7 +142,8 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
                  scale_factor_generator_func=_generate_scale_factor,
                  duration_generator_func=_generate_duration,
                  scale_factor_rng=None, duration_rng=None, SLO_rng=None,
-                 always_generate_scale_factor=True):
+                 always_generate_scale_factor=True,
+                 gpu_request=None):
     """Generates a new job.
 
        Args:
@@ -80,13 +181,22 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
     job_template = None
 
     if always_generate_scale_factor:
-        scale_factor = scale_factor_generator_func(scale_factor_rng)
+        result = scale_factor_generator_func(scale_factor_rng)
+        # Support generators that return (scale_factor, gpu_request) tuples
+        if isinstance(result, tuple):
+            scale_factor, gpu_request = result
+        else:
+            scale_factor = result
     else:
         # NOTE: We select the job template here to maintain backwards
         # compatability with scripts/utils/generate_trace.py
         job_template = rng.choice(JobTable)
         if generate_multi_gpu_jobs and job_template.distributed:
-            scale_factor = scale_factor_generator_func(scale_factor_rng)
+            result = scale_factor_generator_func(scale_factor_rng)
+            if isinstance(result, tuple):
+                scale_factor, gpu_request = result
+            else:
+                scale_factor = result
         else:
             scale_factor = 1
 
@@ -96,6 +206,7 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
         run_time = duration_generator_func(duration_rng)
     if not generate_multi_gpu_jobs:
         scale_factor = 1
+        gpu_request = None
     assert(run_time > 0)
     assert(scale_factor >= 1 and scale_factor <= 8)
 
@@ -150,7 +261,8 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
               scale_factor=scale_factor,
               priority_weight=priority_weight,
               SLO=SLO,
-              needs_data_dir=job_template.needs_data_dir)
+              needs_data_dir=job_template.needs_data_dir,
+              gpu_request=gpu_request)
 
     return job
 
@@ -432,7 +544,7 @@ def read_all_throughputs_json(throughputs_file):
     return throughputs
 
 def get_policy(policy_name, solver=None, seed=None,
-               priority_reweighting_policies=None):
+               priority_reweighting_policies=None, solver_kwargs=None):
     if policy_name.startswith('allox'):
         if policy_name == 'allox':
             alpha = 1.0
@@ -459,12 +571,22 @@ def get_policy(policy_name, solver=None, seed=None,
     elif policy_name == 'isolated':
         policy = isolated.IsolatedPolicy()
     elif policy_name == 'max_min_fairness':
-        policy = max_min_fairness.MaxMinFairnessPolicy(solver=solver)
+        policy = max_min_fairness.MaxMinFairnessPolicy(
+            solver=solver, solver_kwargs=solver_kwargs)
     elif policy_name == 'max_min_fairness_perf':
-        policy = max_min_fairness.MaxMinFairnessPolicyWithPerf(solver=solver)
+        policy = max_min_fairness.MaxMinFairnessPolicyWithPerf(
+            solver=solver, solver_kwargs=solver_kwargs)
     elif policy_name == 'max_min_fairness_packed':
-        policy = \
-            max_min_fairness.MaxMinFairnessPolicyWithPacking(solver=solver)
+        policy = max_min_fairness.MaxMinFairnessPolicyWithPacking(
+            solver=solver, solver_kwargs=solver_kwargs)
+    elif policy_name == 'max_min_fairness_waterfill':
+        import max_min_fairness_waterfill
+        policy = max_min_fairness_waterfill.MaxMinFairnessWaterfillPolicy(
+            solver=solver, solver_kwargs=solver_kwargs)
+    elif policy_name == 'max_min_fairness_single_type':
+        import max_min_fairness_single_type
+        policy = max_min_fairness_single_type.MaxMinFairnessSingleTypePolicy(
+            solver=solver, solver_kwargs=solver_kwargs)
     elif policy_name == 'max_min_fairness_water_filling':
         policy = max_min_fairness_water_filling.MaxMinFairnessWaterFillingPolicy(
             priority_reweighting_policies=priority_reweighting_policies)

@@ -1,0 +1,18 @@
+[
+  {
+    "name": "fig11_finish_time_fairness_2.0jph_multi_s1",
+    "policy": "finish_time_fairness",
+    "enable_fgd": false,
+    "fgd_placement_mode": "fgd",
+    "seed": 1,
+    "lam": 1800.0,
+    "avg_jct": 83866.61440368318,
+    "wall_time_seconds": 352.0138461589813,
+    "num_completed_jobs": 5390,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 0,
+    "saturated": false,
+    "mode": "steady_state",
+    "generate_multi_gpu_jobs": true
+  }
+]
