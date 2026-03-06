@@ -274,121 +274,127 @@ class Figure7aExperiment:
         return avg_curve
 
 
-def plot_figure7a(results: Dict[str, List[ExperimentResult]], output_path: str = None):
-    """
-    Plot Figure 7(a): Fragmentation rate vs arrived workloads.
+def _average_curve_by_key(
+    result_list: List[ExperimentResult],
+    curve_key: str,
+) -> List[Tuple[float, float]]:
+    """Average one curve type across runs by x-value."""
+    all_x = set()
+    for r in result_list:
+        curve = getattr(r, curve_key)
+        for x, _ in curve:
+            all_x.add(x)
 
-    Args:
-        results: Dict mapping scheduler name to list of results
-        output_path: Path to save the plot (optional)
-    """
-    try:
-        import matplotlib.pyplot as plt
-    except ImportError:
-        print("matplotlib not installed. Skipping plot.")
-        return
-
-    plt.figure(figsize=(10, 6))
-
-    # Color and style mapping to match paper
-    styles = {
-        'Random': {'color': 'brown', 'linestyle': '-.'},
-        'DotProd': {'color': 'purple', 'linestyle': '--'},
-        'Clustering': {'color': 'red', 'linestyle': '--'},
-        'Packing': {'color': 'darkgreen', 'linestyle': ':'},
-        'BestFit': {'color': 'orange', 'linestyle': '--'},
-        'FGD': {'color': 'blue', 'linestyle': '-'},
-    }
-
-    for name, result_list in results.items():
-        avg_curve = Figure7aExperiment.average_curves(result_list)
-        if avg_curve:
-            x_vals = [p[0] for p in avg_curve]
-            y_vals = [p[1] for p in avg_curve]
-
-            style = styles.get(name, {'color': 'black', 'linestyle': '-'})
-            plt.plot(x_vals, y_vals, label=name,
-                    color=style['color'],
-                    linestyle=style['linestyle'],
-                    linewidth=2)
-
-    plt.xlabel('Arrived workloads (in % of cluster GPU capacity)', fontsize=12)
-    plt.ylabel('Frag Rate (%)', fontsize=12)
-    plt.title('Figure 7(a): Fragmentation Rate vs Arrived Workloads', fontsize=14)
-    plt.legend(loc='upper left')
-    plt.grid(True, alpha=0.3)
-    plt.xlim(0, 120)
-    plt.ylim(0, 100)
-
-    if output_path:
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        print(f"Plot saved to {output_path}")
-
-    plt.show()
-
-
-def plot_figure7b(results: Dict[str, List[ExperimentResult]], output_path: str = None):
-    """
-    Plot Figure 7(b): Fragmented GPUs / total resources (%) vs arrived workloads.
-
-    Args:
-        results: Dict mapping scheduler name to list of results
-        output_path: Path to save the plot (optional)
-    """
-    try:
-        import matplotlib.pyplot as plt
-    except ImportError:
-        print("matplotlib not installed. Skipping plot.")
-        return
-
-    plt.figure(figsize=(10, 6))
-
-    styles = {
-        'Random': {'color': 'brown', 'linestyle': '-.'},
-        'DotProd': {'color': 'purple', 'linestyle': '--'},
-        'Clustering': {'color': 'red', 'linestyle': '--'},
-        'Packing': {'color': 'darkgreen', 'linestyle': ':'},
-        'BestFit': {'color': 'orange', 'linestyle': '--'},
-        'FGD': {'color': 'blue', 'linestyle': '-'},
-    }
-
-    for name, result_list in results.items():
-        # Average Figure 7(b) curve across runs
-        all_x = set()
+    avg_curve = []
+    for x in sorted(all_x):
+        y_values = []
         for r in result_list:
-            for x, _ in r.frag_total_curve:
-                all_x.add(x)
-        avg_curve = []
-        for x in sorted(all_x):
-            y_values = []
-            for r in result_list:
-                for rx, ry in r.frag_total_curve:
-                    if rx == x:
-                        y_values.append(ry)
-                        break
-            if y_values:
-                avg_curve.append((x, sum(y_values) / len(y_values)))
+            curve = getattr(r, curve_key)
+            for rx, ry in curve:
+                if rx == x:
+                    y_values.append(ry)
+                    break
+        if y_values:
+            avg_curve.append((x, sum(y_values) / len(y_values)))
+    return avg_curve
 
-        if avg_curve:
-            x_vals = [p[0] for p in avg_curve]
-            y_vals = [p[1] for p in avg_curve]
 
-            style = styles.get(name, {'color': 'black', 'linestyle': '-'})
-            plt.plot(x_vals, y_vals, label=name,
-                    color=style['color'],
-                    linestyle=style['linestyle'],
-                    linewidth=2)
+def plot_figure7(results: Dict[str, List[ExperimentResult]], output_path: str = None):
+    """
+    Plot Figure 7 as one image with two sub-panels:
+      (a) Fragmentation rate
+      (b) Fragmented GPUs / total resources
+    """
+    try:
+        import matplotlib
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("matplotlib not installed. Skipping plot.")
+        return
 
-    plt.xlabel('Arrived workloads (in % of cluster GPU capacity)', fontsize=12)
-    plt.ylabel('Frag / Total (%)', fontsize=12)
-    plt.title('Figure 7(b): Fragmented GPUs / Total Resources', fontsize=14)
-    plt.legend(loc='upper left')
-    plt.grid(True, alpha=0.3)
-    plt.xlim(0, 120)
-    plt.ylim(bottom=0)
+    matplotlib.rcdefaults()
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams.update({"font.size": 16})
+    matplotlib.rcParams['lines.linewidth'] = 3
+    matplotlib.rcParams['savefig.bbox'] = None
+    matplotlib.rcParams['savefig.pad_inches'] = 0.0
+
+    # Fixed canvas: 833x670.
+    fig, axes = plt.subplots(2, 1, figsize=(8.33, 6.00), dpi=100)
+
+    styles = {
+        'Random': {'color': 'brown', 'linestyle': '-.'},
+        'DotProd': {'color': 'purple', 'linestyle': '--'},
+        'Clustering': {'color': 'red', 'linestyle': '--'},
+        'Packing': {'color': 'darkgreen', 'linestyle': ':'},
+        'BestFit': {'color': 'orange', 'linestyle': '--'},
+        'BestFit-PN': {'color': '#fdbf6f', 'linestyle': '--'},
+        'FGD': {'color': 'blue', 'linestyle': '-'},
+    }
+    order = ['Random', 'DotProd', 'Clustering', 'Packing', 'BestFit', 'BestFit-PN', 'FGD']
+
+    # --- 7(a): Frag Rate ---
+    ax = axes[0]
+    for name in [n for n in order if n in results]:
+        avg_curve = _average_curve_by_key(results[name], 'fragmentation_curve')
+        if not avg_curve:
+            continue
+        x_vals = [p[0] for p in avg_curve]
+        y_vals = [p[1] for p in avg_curve]
+        if x_vals and x_vals[0] > 0:
+            x_vals = [0.0] + x_vals
+            y_vals = [y_vals[0]] + y_vals
+        style = styles.get(name, {'color': 'black', 'linestyle': '-'})
+        ax.plot(x_vals, y_vals, label=name, color=style['color'], linestyle=style['linestyle'])
+
+    ax.set_xlabel('Arrived workloads (in % of cluster GPU capacity)', fontsize=14)
+    ax.set_ylabel('Frag Rate (%)', fontsize=14)
+    ax.set_xlim(0, 120)
+    ax.set_xticks([0, 20, 40, 60, 80, 100, 120])
+    ax.set_ylim(0, 105)
+    ax.set_yticks([0, 25, 50, 75, 100])
+    ax.grid(linestyle='-.', alpha=0.65)
+    ax.tick_params(axis='both', labelsize=12)
+    ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1.03), fontsize=12, frameon=False)
+
+    # --- 7(b): Frag / Total ---
+    ax = axes[1]
+    for name in [n for n in order if n in results]:
+        avg_curve = _average_curve_by_key(results[name], 'frag_total_curve')
+        if not avg_curve:
+            continue
+        x_vals = [p[0] for p in avg_curve]
+        y_vals = [p[1] for p in avg_curve]
+        if x_vals and x_vals[0] > 0:
+            x_vals = [0.0] + x_vals
+            y_vals = [y_vals[0]] + y_vals
+        style = styles.get(name, {'color': 'black', 'linestyle': '-'})
+        ax.plot(x_vals, y_vals, label=name, color=style['color'], linestyle=style['linestyle'])
+
+    ax.set_xlabel('Arrived workloads (in % of cluster GPU capacity)', fontsize=14)
+    ax.set_ylabel('Frag / Total (%)', fontsize=14)
+    ax.set_xlim(0, 120)
+    ax.set_xticks([0, 20, 40, 60, 80, 100, 120])
+    ax.set_ylim(0, 20)
+    ax.set_yticks([0, 5, 10, 15, 20])
+    ax.grid(linestyle='-.', alpha=0.65)
+    ax.tick_params(axis='both', labelsize=12)
+    ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1.03), fontsize=12, frameon=False)
+
+    fig.subplots_adjust(left=0.10, right=0.77, top=0.97, bottom=0.20, hspace=0.72)
+
+    # Captions centered to full image width.
+    captions = [
+        "(a) Fragmentation rate grows to 100% as more resources are allocated.",
+        "(b) Percentage of fragmented GPUs to total resources under our measure.",
+    ]
+    p0 = axes[0].get_position()
+    p1 = axes[1].get_position()
+    fig.text(0.5, p0.y0 - 0.11, captions[0], ha='center', va='top', fontsize=13, family='serif')
+    fig.text(0.5, p1.y0 - 0.11, captions[1], ha='center', va='top', fontsize=13, family='serif')
 
     if output_path:
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
+        plt.savefig(output_path, dpi=100, bbox_inches=None, pad_inches=0.0)
         print(f"Plot saved to {output_path}")
 
     plt.show()
@@ -523,13 +529,12 @@ if __name__ == "__main__":
         results = load_results_from_csv(args.plot_csv)
         print(f"Loaded {len(results)} schedulers from {args.plot_csv}")
         plot_dir = os.path.dirname(args.plot_csv)
-        plot_path = os.path.join(plot_dir, 'figure7a.png')
-        plot_figure7a(results, plot_path)
-        # Figure 7(b) can be drawn only from new CSVs that include frag_total_pct.
+        plot_path = os.path.join(plot_dir, 'figure7.png')
+        # Figure 7(b) can be drawn only from CSVs that include frag_total_pct.
         if any(r.frag_total_curve for runs in results.values() for r in runs):
-            plot_figure7b(results, os.path.join(plot_dir, 'figure7b.png'))
+            plot_figure7(results, plot_path)
         else:
-            print("INFO: CSV has no 'frag_total_pct' column; skipping Figure 7(b) plot.")
+            print("INFO: CSV has no 'frag_total_pct' column; skipping Figure 7 plot.")
         exit(0)
 
     # Run the experiment
@@ -590,7 +595,5 @@ if __name__ == "__main__":
     save_results_to_csv(results, csv_path)
 
     # Plot results
-    plot_path = os.path.join(result_dir, 'figure7a.png')
-    plot_figure7a(results, plot_path)
-    plot_path_b = os.path.join(result_dir, 'figure7b.png')
-    plot_figure7b(results, plot_path_b)
+    plot_path = os.path.join(result_dir, 'figure7.png')
+    plot_figure7(results, plot_path)

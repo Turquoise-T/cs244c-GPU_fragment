@@ -321,12 +321,13 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
         'FGD': {'color': 'blue', 'linestyle': '-'},
     }
 
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    # Fixed output size: 590x900 pixels.
+    fig, axes = plt.subplots(4, 1, figsize=(5.9, 9), dpi=100)
 
     # --- 9(a): Unallocated GPU % ---
-    ax = axes[0, 0]
-    # Ideal line: max(0, 100 - arrived_pct)
-    ideal_x = list(range(80, 125, 2))
+    ax = axes[0]
+    # Ideal line: max(0, 100 - arrived_pct), include pre-80 segment.
+    ideal_x = list(range(70, 121))
     ideal_y = [max(0, 100 - x) for x in ideal_x]
     ax.plot(ideal_x, ideal_y, color='gray', linestyle=':', linewidth=1.5, label='Ideal')
 
@@ -337,45 +338,50 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
         if avg:
             x_vals = [p[0] for p in avg]
             y_vals = [p[1] for p in avg]
-            # Filter to 80-120% range
-            filtered = [(x, y) for x, y in zip(x_vals, y_vals) if 80 <= x <= 120]
+            # Keep pre-80 data so visible line starts around x~76 like paper.
+            filtered = [(x, y) for x, y in zip(x_vals, y_vals) if 70 <= x <= 120]
             if filtered:
                 style = styles.get(name, {'color': 'black', 'linestyle': '-'})
                 ax.plot([p[0] for p in filtered], [p[1] for p in filtered],
                         label=name, color=style['color'], linestyle=style['linestyle'],
                         linewidth=2)
 
-    ax.set_xlabel('Arrived workloads (% of GPU capacity)')
+    ax.set_xlabel('Arrived workloads (in % of cluster GPU capacity)')
     ax.set_ylabel('Unalloc. GPU (%)')
-    ax.set_title('(a) Unallocated GPUs')
-    ax.legend(fontsize=8)
-    ax.set_xlim(80, 120)
+    ax.legend(fontsize=9, loc='center left', bbox_to_anchor=(1.02, 0.5), frameon=False)
+    ax.set_xlim(75, 120)
+    ax.set_xticks([80, 90, 100, 110, 120])
     ax.set_ylim(0, 25)
-    ax.grid(True, alpha=0.3)
+    ax.set_yticks([0, 5, 10, 15, 20, 25])
+    ax.grid(True, linestyle='--', alpha=0.35)
 
     # --- 9(b): Occupied nodes ---
-    ax = axes[0, 1]
+    ax = axes[1]
     for name, result_list in results.items():
         all_curves = [r.occupied_curve for r in result_list]
         avg = _average_curves(all_curves)
         if avg:
             x_vals = [p[0] for p in avg]
             y_vals = [p[1] for p in avg]
-            filtered = [(x, y) for x, y in zip(x_vals, y_vals) if x <= 100]
+            # Keep all data (including >100%) and let xlim clip at panel boundary.
+            filtered = [(x, y) for x, y in zip(x_vals, y_vals) if x >= 0]
             if filtered:
+                # Start from true origin for occupied-node curves.
+                if filtered[0][0] > 0:
+                    filtered = [(0.0, 0.0)] + filtered
                 style = styles.get(name, {'color': 'black', 'linestyle': '-'})
                 ax.plot([p[0] for p in filtered], [p[1] for p in filtered],
                         label=name, color=style['color'], linestyle=style['linestyle'],
                         linewidth=2)
 
-    ax.set_xlabel('Arrived workloads (% of GPU capacity)')
+    ax.set_xlabel('Arrived workloads (in % of cluster GPU capacity)')
     ax.set_ylabel('Occupied nodes')
-    ax.set_title('(b) Occupied Nodes')
-    ax.legend(fontsize=8)
-    ax.set_xlim(0, 100)
-    if total_nodes > 0:
-        ax.set_ylim(0, total_nodes + 50)
-    ax.grid(True, alpha=0.3)
+    ax.legend(fontsize=9, loc='center left', bbox_to_anchor=(1.02, 0.5), frameon=False)
+    ax.set_xlim(0, 105)
+    ax.set_xticks([0, 20, 40, 60, 80, 100])
+    ax.set_ylim(0, 1250)
+    ax.set_yticks([0, 250, 500, 750, 1000, 1250])
+    ax.grid(True, linestyle='--', alpha=0.35)
 
     # Fixed scheduler order for bar charts (9c, 9d)
     bar_order = ['FGD', 'BestFit', 'BestFit-PN', 'Packing', 'Clustering', 'DotProd', 'Random']
@@ -383,28 +389,46 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
     x_pos = np.arange(len(scheduler_names))
 
     # --- 9(c): Failed tasks by GPU category (stacked bar) ---
-    ax = axes[1, 0]
+    ax = axes[2]
+    # Bottom -> top order requested: <1, 1, 2, 8
     categories = ['<1', '1', '2', '8']
     cat_colors = {'<1': 'orange', '1': 'green', '2': 'red', '8': '#8c564b'}
 
     bottoms = np.zeros(len(scheduler_names))
+    cat_handles = {}
     for cat in categories:
         values = []
         for name in scheduler_names:
             avg_val = sum(r.failed_by_category.get(cat, 0) for r in results[name]) / len(results[name])
             values.append(avg_val)
-        ax.bar(x_pos, values, bottom=bottoms, label=f'GPU {cat}', color=cat_colors[cat])
+        cat_handles[cat] = ax.bar(x_pos, values, bottom=bottoms, label=cat, color=cat_colors[cat],
+                                  edgecolor='0', linewidth=0.3)
         bottoms += np.array(values)
 
     ax.set_xticks(x_pos)
-    ax.set_xticklabels(scheduler_names, rotation=45, ha='right', fontsize=8)
-    ax.set_ylabel('Sum of Requesting Task GPUs')
-    ax.set_title('(c) Failed Tasks at 96% Arrival')
-    ax.legend(fontsize=8)
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_xticklabels(scheduler_names, rotation=0, fontsize=10)
+    ax.set_ylabel('Sum of Pending Task GPUs')
+    ax.set_title('When arrived workloads equals 96% GPU capacity', fontsize=11)
+    ax.set_ylim(0, 700)
+    ax.set_yticks([0, 100, 200, 300, 400, 500, 600, 700])
+    legend_order_top_to_bottom = ['8', '2', '1', '<1']
+    ax.legend(
+        handles=[cat_handles[c][0] for c in legend_order_top_to_bottom],
+        labels=legend_order_top_to_bottom,
+        title='Task GPU Req',
+        fontsize=7,
+        title_fontsize=8,
+        loc='upper left',
+        frameon=True,
+        borderpad=0.5,
+        handlelength=1.5,
+        handletextpad=0.5,
+        labelspacing=0.35,
+    )
+    ax.grid(True, linestyle='--', alpha=0.35, axis='y')
 
     # --- 9(d): Fragmentation breakdown (stacked bar) ---
-    ax = axes[1, 1]
+    ax = axes[3]
     causes = ['deficient', 'stranded', 'non_gpu']
     cause_colors = {'deficient': 'blue', 'stranded': 'orange', 'non_gpu': 'green'}
     cause_labels = {'deficient': 'Deficient', 'stranded': 'Stranded', 'non_gpu': 'Non-GPU'}
@@ -416,19 +440,44 @@ def plot_figure9(results: Dict[str, List[Figure9Result]], total_nodes: int,
             avg_val = sum(r.frag_breakdown.get(cause, 0) for r in results[name]) / len(results[name])
             values.append(avg_val)
         ax.bar(x_pos, values, bottom=bottoms, label=cause_labels[cause],
-               color=cause_colors[cause])
+               color=cause_colors[cause], edgecolor='0', linewidth=0.3)
         bottoms += np.array(values)
 
     ax.set_xticks(x_pos)
-    ax.set_xticklabels(scheduler_names, rotation=45, ha='right', fontsize=8)
+    ax.set_xticklabels(scheduler_names, rotation=0, fontsize=10)
     ax.set_ylabel('Fragmented GPUs (%)')
-    ax.set_title('(d) Fragmentation Breakdown')
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=9, loc='lower left', frameon=True)
     ax.set_ylim(0, 100)
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_yticks([0, 25, 50, 75, 100])
+    ax.grid(True, linestyle='--', alpha=0.35, axis='y')
 
-    plt.suptitle('Figure 9: Scheduling Evaluation (Monte-Carlo)', fontsize=14)
-    plt.tight_layout()
+    # Base spacing first.
+    fig.subplots_adjust(left=0.10, right=0.98, top=0.98, bottom=0.07, hspace=1.05)
+
+    # Make 9(c)/(d) full-width; keep 9(a)/(b) slightly narrower for legends.
+    # 9(a)/(b) chart width is still extended to reduce right whitespace.
+    left = 0.10
+    right_line = 0.82
+    right_bar = 0.98
+    for i in [0, 1]:
+        p = axes[i].get_position()
+        axes[i].set_position([left, p.y0, right_line - left, p.height])
+    for i in [2, 3]:
+        p = axes[i].get_position()
+        axes[i].set_position([left, p.y0, right_bar - left, p.height])
+
+    # Add centered captions under each panel (centered to full image width).
+    captions = [
+        "(a) The percentage of unallocated GPUs given arriving workloads.",
+        "(b) The number of GPU nodes occupied during the scheduling.",
+        "(c) GPU requests of failed tasks when the cluster is almost full\n(i.e., cumulative GPU requests reach 96% of the cluster capacity).",
+        "(d) The breakdown of GPU fragmentation into three causes.",
+    ]
+    # Increase spacing between x-axis labels and captions for all panels.
+    caption_offsets = [0.060, 0.060, 0.050, 0.045]
+    for i, cap in enumerate(captions):
+        p = axes[i].get_position()
+        fig.text(0.5, p.y0 - caption_offsets[i], cap, ha='center', va='top', fontsize=9)
 
     if output_dir:
         path = os.path.join(output_dir, 'figure9.png')

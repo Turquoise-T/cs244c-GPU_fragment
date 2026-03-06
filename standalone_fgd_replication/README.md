@@ -16,7 +16,7 @@ command to result directory and the files produced inside it.
 
 | Command | Result directory | Files |
 |---|---|---|
-| `python3 exp_fig7.py --num-runs 10 --seed 42` | `result/fig7-runs10-seed42/` | `figure7_results.csv`, `figure7a.png`, `figure7b.png`, `experiment_summary.log` |
+| `python3 exp_fig7.py --num-runs 10 --seed 42` | `result/fig7-runs10-seed42/` | `figure7_results.csv`, `figure7.png`, `experiment_summary.log` |
 | `python3 exp_fig9.py --num-runs 10 --seed 42` | `result/fig9-runs10-seed42/` | `figure9a_unalloc.csv`, `figure9b_occupied.csv`, `figure9c_failed.csv`, `figure9d_breakdown.csv`, `figure9.png`, `experiment_summary.log` |
 | `python3 exp_fig11_14.py --figures 11 --num-runs 10 --seed 42` | `result/fig11-runs10-seed42/` | `figure11_results.csv`, `figure11.png`, `experiment_summary.log` |
 | `python3 exp_fig11_14.py --figures 12 --num-runs 10 --seed 42` | `result/fig12-runs10-seed42/` | `figure12_results.csv`, `figure12.png`, `experiment_summary.log` |
@@ -68,8 +68,7 @@ Runs Monte-Carlo workload inflation using the default trace
 
 **Output files:**
 - `figure7_results.csv` — columns: `scheduler, arrived_workload_pct, frag_rate, frag_total_pct, run`
-- `figure7a.png`
-- `figure7b.png`
+- `figure7.png`
 - `experiment_summary.log`
 
 **Examples**

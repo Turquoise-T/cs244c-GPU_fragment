@@ -303,6 +303,7 @@ def plot_sensitivity(results: Dict[float, List[SensitivityResult]],
                      figure_num: int, output_dir: str = None):
     """Grouped bar chart for one figure (paper style)."""
     try:
+        import matplotlib
         import matplotlib.pyplot as plt
         import numpy as np
     except ImportError:
@@ -331,7 +332,12 @@ def plot_sensitivity(results: Dict[float, List[SensitivityResult]],
     n_bars = len(sched_names)
     bar_width = 0.12
 
-    fig, ax = plt.subplots(figsize=(10, 5))
+    matplotlib.rcdefaults()
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams.update({"font.size": 14})
+    matplotlib.rcParams['lines.linewidth'] = 2
+
+    fig, ax = plt.subplots(figsize=(10, 3), dpi=120)
 
     for i, name in enumerate(sched_names):
         x_positions = []
@@ -349,28 +355,31 @@ def plot_sensitivity(results: Dict[float, List[SensitivityResult]],
                       label=name,
                       color=colors.get(name, 'gray'),
                       hatch=hatches.get(name, ''),
-                      edgecolor='black', linewidth=0.5,
+                      edgecolor='0', linewidth=0.5,
                       yerr=stds,
                       error_kw={'ecolor': 'gray', 'capsize': 3,
                                 'elinewidth': 1.2, 'capthick': 1.2})
 
-        # Annotate FGD bars with values (place above the error bar cap)
+        # Match paper-style labeling: only annotate FGD bars.
         if name == 'FGD':
-            for bar, val, std in zip(bars, values, stds):
-                ax.text(bar.get_x() + bar.get_width() / 2,
-                        val + std + 0.3,
-                        f'{val:.1f}', ha='center', va='bottom',
-                        fontsize=7, fontweight='bold')
+            ax.bar_label(bars, label_type='edge', fmt='%.1f%%', padding=5)
 
     ax.set_xticks(range(n_groups))
     ax.set_xticklabels([f'{int(p)}%' for p in proportions])
     ax.set_xlabel(config['xlabel'])
     ax.set_ylabel('Unallocated GPU (%)')
-    ax.set_title(f"Figure {figure_num}: {config['name']}")
-    ax.legend(fontsize=8, ncol=3, loc='upper left')
-    ax.set_ylim(0, 25)
-    ax.set_yticks(range(0, 26, 5))
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_title('')
+    ax.set_ylim(0, 21.7)
+    ax.set_yticks([0, 5, 10, 15, 20])
+    ax.grid(linestyle='-.', alpha=0.8, axis='y')
+    # Keep legend low and compact across Figures 11-14.
+    # Target placement: legend top edge around the y=5 dashed gridline.
+    ax.legend(
+        ncol=3,
+        fontsize=7,
+        loc='upper left',
+        frameon=True,
+    )
     plt.tight_layout()
 
     if output_dir:

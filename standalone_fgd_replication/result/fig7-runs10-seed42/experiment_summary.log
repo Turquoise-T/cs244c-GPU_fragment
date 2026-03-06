@@ -1,0 +1,18 @@
+Experiment: Figure 7(a) Replication
+Seed: 42
+Num runs: 10
+Max workload: 120.0%
+Sample interval: 5.0%
+
+============================================================
+EXPERIMENT SUMMARY
+============================================================
+
+Scheduler     Avg Frag%  Frag/Total%   Avg Alloc%    Scheduled     Failed
+------------------------------------------------------------
+Random             99.5         12.0         88.0         7984       2018
+BestFit            99.7          6.8         93.2         8089       1901
+DotProd            99.6         10.1         89.9         7854       2137
+Packing            99.6          5.5         94.5         8185       1805
+Clustering         99.3          5.5         94.5         8184       1806
+FGD                99.3          4.8         95.2         8240       1751
