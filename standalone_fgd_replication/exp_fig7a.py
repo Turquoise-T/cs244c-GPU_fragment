@@ -1,7 +1,9 @@
 """
 Experiment Runner for FGD Replication
 
-Replicates Figure 7(a): Fragmentation rate vs arrived workloads
+Replicates Figure 7(a) and Figure 7(b):
+  7(a): Fragmentation rate vs arrived workloads
+  7(b): Fragmented GPUs / total resources vs arrived workloads
 Using Monte-Carlo workload inflation approach from Section 6.1
 """
 
@@ -23,10 +25,13 @@ from trace_loader import AlibabaTraceLoader
 class ExperimentResult:
     """Results from a single experiment run"""
     scheduler_name: str
-    # List of (arrived_workload_pct, fragmentation_rate) tuples
+    # Figure 7(a): List of (arrived_workload_pct, fragmentation_rate) tuples
     fragmentation_curve: List[Tuple[float, float]] = field(default_factory=list)
+    # Figure 7(b): List of (arrived_workload_pct, fragmented/total_gpu_pct) tuples
+    frag_total_curve: List[Tuple[float, float]] = field(default_factory=list)
     # Final metrics
     final_frag_rate: float = 0.0
+    final_frag_total_pct: float = 0.0
     final_gpu_alloc_rate: float = 0.0
     tasks_scheduled: int = 0
     tasks_failed: int = 0
@@ -34,12 +39,14 @@ class ExperimentResult:
 
 class Figure7aExperiment:
     """
-    Replicates Figure 7(a): Fragmentation rate grows to 100% as more resources are allocated.
+    Replicates Figure 7(a) and Figure 7(b).
 
     Methodology (Monte-Carlo Workload Inflation from Section 6.1):
     - Randomly sample tasks from trace with replacement
     - Submit tasks until cumulative GPU requests reach target % of cluster capacity
-    - Track fragmentation rate at regular intervals
+    - Track:
+        Figure 7(a): fragmentation rate (% of unallocated GPUs)
+        Figure 7(b): fragmented GPUs / total cluster GPUs (%)
     """
 
     def __init__(self, data_dir: str, seed: int = 42):
@@ -162,7 +169,12 @@ class Figure7aExperiment:
             # Record fragmentation at intervals
             if arrived_pct >= next_sample_pct:
                 frag_rate = cluster.compute_fragmentation_rate()
+                frag_total_pct = (
+                    cluster.compute_cluster_fragmentation()
+                    / cluster.total_gpu_capacity
+                ) * 100.0
                 result.fragmentation_curve.append((next_sample_pct, frag_rate))
+                result.frag_total_curve.append((next_sample_pct, frag_total_pct))
                 next_sample_pct += sample_interval_pct
 
             # Stop condition
@@ -173,6 +185,9 @@ class Figure7aExperiment:
 
         # Record final metrics
         result.final_frag_rate = cluster.compute_fragmentation_rate()
+        result.final_frag_total_pct = (
+            cluster.compute_cluster_fragmentation() / cluster.total_gpu_capacity
+        ) * 100.0
         result.final_gpu_alloc_rate = cluster.gpu_allocation_rate
 
         return result
@@ -226,6 +241,7 @@ class Figure7aExperiment:
                 results[scheduler.name].append(result)
 
                 print(f"  {scheduler.name:12}: Frag={result.final_frag_rate:.1f}%, "
+                      f"Frag/Total={result.final_frag_total_pct:.1f}%, "
                       f"Alloc={result.final_gpu_alloc_rate:.1f}%, "
                       f"Scheduled={result.tasks_scheduled}, Failed={result.tasks_failed}")
 
@@ -311,22 +327,104 @@ def plot_figure7a(results: Dict[str, List[ExperimentResult]], output_path: str =
     plt.show()
 
 
+def plot_figure7b(results: Dict[str, List[ExperimentResult]], output_path: str = None):
+    """
+    Plot Figure 7(b): Fragmented GPUs / total resources (%) vs arrived workloads.
+
+    Args:
+        results: Dict mapping scheduler name to list of results
+        output_path: Path to save the plot (optional)
+    """
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("matplotlib not installed. Skipping plot.")
+        return
+
+    plt.figure(figsize=(10, 6))
+
+    styles = {
+        'Random': {'color': 'brown', 'linestyle': '-.'},
+        'DotProd': {'color': 'purple', 'linestyle': '--'},
+        'Clustering': {'color': 'red', 'linestyle': '--'},
+        'Packing': {'color': 'darkgreen', 'linestyle': ':'},
+        'BestFit': {'color': 'orange', 'linestyle': '--'},
+        'FGD': {'color': 'blue', 'linestyle': '-'},
+    }
+
+    for name, result_list in results.items():
+        # Average Figure 7(b) curve across runs
+        all_x = set()
+        for r in result_list:
+            for x, _ in r.frag_total_curve:
+                all_x.add(x)
+        avg_curve = []
+        for x in sorted(all_x):
+            y_values = []
+            for r in result_list:
+                for rx, ry in r.frag_total_curve:
+                    if rx == x:
+                        y_values.append(ry)
+                        break
+            if y_values:
+                avg_curve.append((x, sum(y_values) / len(y_values)))
+
+        if avg_curve:
+            x_vals = [p[0] for p in avg_curve]
+            y_vals = [p[1] for p in avg_curve]
+
+            style = styles.get(name, {'color': 'black', 'linestyle': '-'})
+            plt.plot(x_vals, y_vals, label=name,
+                    color=style['color'],
+                    linestyle=style['linestyle'],
+                    linewidth=2)
+
+    plt.xlabel('Arrived workloads (in % of cluster GPU capacity)', fontsize=12)
+    plt.ylabel('Frag / Total (%)', fontsize=12)
+    plt.title('Figure 7(b): Fragmented GPUs / Total Resources', fontsize=14)
+    plt.legend(loc='upper left')
+    plt.grid(True, alpha=0.3)
+    plt.xlim(0, 120)
+    plt.ylim(bottom=0)
+
+    if output_path:
+        plt.savefig(output_path, dpi=150, bbox_inches='tight')
+        print(f"Plot saved to {output_path}")
+
+    plt.show()
+
+
 def save_results_to_csv(results: Dict[str, List[ExperimentResult]], output_path: str):
     """
     Save experiment results to CSV file.
 
-    CSV format: scheduler,arrived_workload_pct,frag_rate,run
+    CSV format: scheduler,arrived_workload_pct,frag_rate,frag_total_pct,run
     """
     import csv
 
     with open(output_path, 'w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(['scheduler', 'arrived_workload_pct', 'frag_rate', 'run'])
+        writer.writerow([
+            'scheduler',
+            'arrived_workload_pct',
+            'frag_rate',
+            'frag_total_pct',
+            'run',
+        ])
 
         for scheduler_name, result_list in results.items():
             for run_idx, result in enumerate(result_list):
+                # Curves are sampled at the same x-values.
+                by_x_total = {x: y for x, y in result.frag_total_curve}
                 for arrived_pct, frag_rate in result.fragmentation_curve:
-                    writer.writerow([scheduler_name, arrived_pct, frag_rate, run_idx])
+                    frag_total = by_x_total.get(arrived_pct, '')
+                    writer.writerow([
+                        scheduler_name,
+                        arrived_pct,
+                        frag_rate,
+                        frag_total,
+                        run_idx,
+                    ])
 
     print(f"Results saved to {output_path}")
 
@@ -341,8 +439,12 @@ def load_results_from_csv(csv_path: str) -> Dict[str, List[ExperimentResult]]:
     import csv
     from collections import defaultdict
 
-    # Temporary storage: scheduler -> run -> [(x, y), ...]
-    data = defaultdict(lambda: defaultdict(list))
+    # Temporary storage:
+    # scheduler -> run -> {'frag_rate': [(x, y)], 'frag_total': [(x, y)]}
+    data = defaultdict(lambda: defaultdict(lambda: {
+        'frag_rate': [],
+        'frag_total': [],
+    }))
 
     with open(csv_path, 'r') as f:
         reader = csv.DictReader(f)
@@ -351,7 +453,13 @@ def load_results_from_csv(csv_path: str) -> Dict[str, List[ExperimentResult]]:
             run = int(row['run'])
             x = float(row['arrived_workload_pct'])
             y = float(row['frag_rate'])
-            data[scheduler][run].append((x, y))
+            data[scheduler][run]['frag_rate'].append((x, y))
+
+            # Backward compatibility: older CSVs may not have frag_total_pct.
+            frag_total_raw = row.get('frag_total_pct', '')
+            if frag_total_raw != '':
+                y_total = float(frag_total_raw)
+                data[scheduler][run]['frag_total'].append((x, y_total))
 
     # Convert to ExperimentResult objects
     results = {}
@@ -359,7 +467,10 @@ def load_results_from_csv(csv_path: str) -> Dict[str, List[ExperimentResult]]:
         results[scheduler] = []
         for run_idx in sorted(runs.keys()):
             result = ExperimentResult(scheduler_name=scheduler)
-            result.fragmentation_curve = sorted(runs[run_idx], key=lambda p: p[0])
+            result.fragmentation_curve = sorted(
+                runs[run_idx]['frag_rate'], key=lambda p: p[0])
+            result.frag_total_curve = sorted(
+                runs[run_idx]['frag_total'], key=lambda p: p[0])
             results[scheduler].append(result)
 
     return results
@@ -371,16 +482,17 @@ def format_summary(results: Dict[str, List[ExperimentResult]]) -> str:
     lines.append("=" * 60)
     lines.append("EXPERIMENT SUMMARY")
     lines.append("=" * 60)
-    lines.append(f"\n{'Scheduler':<12} {'Avg Frag%':>10} {'Avg Alloc%':>12} {'Scheduled':>12} {'Failed':>10}")
+    lines.append(f"\n{'Scheduler':<12} {'Avg Frag%':>10} {'Frag/Total%':>12} {'Avg Alloc%':>12} {'Scheduled':>12} {'Failed':>10}")
     lines.append("-" * 60)
 
     for name, result_list in results.items():
         avg_frag = sum(r.final_frag_rate for r in result_list) / len(result_list)
+        avg_frag_total = sum(r.final_frag_total_pct for r in result_list) / len(result_list)
         avg_alloc = sum(r.final_gpu_alloc_rate for r in result_list) / len(result_list)
         total_scheduled = sum(r.tasks_scheduled for r in result_list) / len(result_list)
         total_failed = sum(r.tasks_failed for r in result_list) / len(result_list)
 
-        lines.append(f"{name:<12} {avg_frag:>10.1f} {avg_alloc:>12.1f} {total_scheduled:>12.0f} {total_failed:>10.0f}")
+        lines.append(f"{name:<12} {avg_frag:>10.1f} {avg_frag_total:>12.1f} {avg_alloc:>12.1f} {total_scheduled:>12.0f} {total_failed:>10.0f}")
 
     return "\n".join(lines)
 
@@ -394,7 +506,7 @@ if __name__ == "__main__":
     import argparse
     from datetime import datetime
 
-    parser = argparse.ArgumentParser(description="Figure 7(a) Replication Experiment")
+    parser = argparse.ArgumentParser(description="Figure 7(a)/(b) Replication Experiment")
     parser.add_argument('--seed', type=int, default=42, help='Random seed (default: 42)')
     parser.add_argument('--num-runs', type=int, default=3, help='Number of runs per scheduler (default: 3, paper uses 10)')
     parser.add_argument('--max-workload', type=float, default=120.0, help='Max arrived workload %% (default: 120)')
@@ -413,13 +525,18 @@ if __name__ == "__main__":
         plot_dir = os.path.dirname(args.plot_csv)
         plot_path = os.path.join(plot_dir, 'figure7a.png')
         plot_figure7a(results, plot_path)
+        # Figure 7(b) can be drawn only from new CSVs that include frag_total_pct.
+        if any(r.frag_total_curve for runs in results.values() for r in runs):
+            plot_figure7b(results, os.path.join(plot_dir, 'figure7b.png'))
+        else:
+            print("INFO: CSV has no 'frag_total_pct' column; skipping Figure 7(b) plot.")
         exit(0)
 
     # Run the experiment
     data_dir = os.path.join(os.path.dirname(__file__), '..', 'alibaba_traces', 'cluster-trace-gpu-v2023')
 
     print("=" * 60)
-    print("Figure 7(a) Replication Experiment")
+    print("Figure 7(a)/(b) Replication Experiment")
     print(f"  seed={args.seed}, runs={args.num_runs}, "
           f"max_workload={args.max_workload}%, interval={args.sample_interval}%")
     print("=" * 60)
@@ -450,7 +567,7 @@ if __name__ == "__main__":
     )
 
     # Create result directory
-    result_name = f"fig7a-runs{args.num_runs}-seed{args.seed}"
+    result_name = f"fig7-runs{args.num_runs}-seed{args.seed}"
     result_dir = os.path.join(os.path.dirname(__file__), 'result', result_name)
     os.makedirs(result_dir, exist_ok=True)
 
@@ -469,9 +586,11 @@ if __name__ == "__main__":
     print(f"Summary log saved to {log_path}")
 
     # Save results to CSV
-    csv_path = os.path.join(result_dir, 'figure7a_results.csv')
+    csv_path = os.path.join(result_dir, 'figure7_results.csv')
     save_results_to_csv(results, csv_path)
 
     # Plot results
     plot_path = os.path.join(result_dir, 'figure7a.png')
     plot_figure7a(results, plot_path)
+    plot_path_b = os.path.join(result_dir, 'figure7b.png')
+    plot_figure7b(results, plot_path_b)
