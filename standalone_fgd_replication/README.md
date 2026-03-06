@@ -16,7 +16,7 @@ command to result directory and the files produced inside it.
 
 | Command | Result directory | Files |
 |---|---|---|
-| `python3 exp_fig7a.py --num-runs 10 --seed 42` | `result/fig7a-runs10-seed42/` | `figure7a_results.csv`, `figure7a.png`, `experiment_summary.log` |
+| `python3 exp_fig7.py --num-runs 10 --seed 42` | `result/fig7-runs10-seed42/` | `figure7_results.csv`, `figure7a.png`, `figure7b.png`, `experiment_summary.log` |
 | `python3 exp_fig9.py --num-runs 10 --seed 42` | `result/fig9-runs10-seed42/` | `figure9a_unalloc.csv`, `figure9b_occupied.csv`, `figure9c_failed.csv`, `figure9d_breakdown.csv`, `figure9.png`, `experiment_summary.log` |
 | `python3 exp_fig11_14.py --figures 11 --num-runs 10 --seed 42` | `result/fig11-runs10-seed42/` | `figure11_results.csv`, `figure11.png`, `experiment_summary.log` |
 | `python3 exp_fig11_14.py --figures 12 --num-runs 10 --seed 42` | `result/fig12-runs10-seed42/` | `figure12_results.csv`, `figure12.png`, `experiment_summary.log` |
@@ -28,7 +28,7 @@ command to result directory and the files produced inside it.
 | `python3 exp_dist_shift.py --task-order phased --tier-order 1,2,0,3,4 --schedulers Random,BestFit,DotProd,Packing,Clustering,FGD-Full,FGD-2000,W-FGD-2000,U-FGD` | `result/dist-shift-phased-12034-100/` | `experiment_summary.log` |
 
 **Key naming rules:**
-- `fig7a` and `fig9` are fixed prefixes for their scripts.
+- `fig7` and `fig9` are fixed prefixes for their scripts.
 - `fig11_14` uses `fig{N}` for a single figure or `fig{A}-{B}-...` when
   multiple figures are run together in one invocation.
 - Changing `--num-runs` or `--seed` produces a separate directory, so results
@@ -46,11 +46,12 @@ the updated PNG back into the same directory. It does not create a new directory
 
 ## Scripts
 
-### `exp_fig7a.py` — Figure 7(a): Fragmentation rate vs arrived workload
+### `exp_fig7.py` — Figure 7(a)/(b): Fragmentation vs arrived workload
 
 Runs Monte-Carlo workload inflation using the default trace
-(`openb_pod_list_default.csv`) and plots fragmentation rate (%) as a function
-of arrived GPU workload (%).
+(`openb_pod_list_default.csv`) and plots:
+- **Figure 7(a):** fragmentation rate (%) vs arrived GPU workload (%)
+- **Figure 7(b):** fragmented GPUs / total resources (%) vs arrived GPU workload (%)
 
 **Arguments**
 
@@ -63,26 +64,27 @@ of arrived GPU workload (%).
 | `--schedulers` | `all` | Comma-separated subset to run, e.g. `FGD,Packing` |
 | `--plot-csv` | — | Path to existing result CSV; skips experiment and plots only |
 
-**Result directory:** `result/fig7a-runs{N}-seed{S}/`
+**Result directory:** `result/fig7-runs{N}-seed{S}/`
 
 **Output files:**
-- `figure7a_results.csv` — columns: `scheduler, arrived_pct, frag_rate, run`
+- `figure7_results.csv` — columns: `scheduler, arrived_workload_pct, frag_rate, frag_total_pct, run`
 - `figure7a.png`
+- `figure7b.png`
 - `experiment_summary.log`
 
 **Examples**
 ```bash
 # Full run (paper settings)
-python3 exp_fig7a.py --num-runs 10 --seed 42
+python3 exp_fig7.py --num-runs 10 --seed 42
 
 # Quick test
-python3 exp_fig7a.py --num-runs 1
+python3 exp_fig7.py --num-runs 1
 
 # Run only FGD and Packing
-python3 exp_fig7a.py --schedulers FGD,Packing
+python3 exp_fig7.py --schedulers FGD,Packing
 
 # Plot from saved CSV
-python3 exp_fig7a.py --plot-csv result/fig7a-runs10-seed42/figure7a_results.csv
+python3 exp_fig7.py --plot-csv result/fig7-runs10-seed42/figure7_results.csv
 ```
 
 ---
@@ -191,7 +193,7 @@ python3 exp_fig11_14.py --plot-csv result/fig11-runs10-seed42/figure11_results.c
 
 Replays the full default trace (`openb_pod_list_default.csv`) through the real
 cluster in a single pass and measures final fragmentation, GPU allocation, and
-throughput for each scheduler. Unlike `exp_fig7a.py`, there is no random
+throughput for each scheduler. Unlike `exp_fig7.py`, there is no random
 sampling — the trace is played exactly once in the chosen order.
 
 The key question is how well each FGD variant handles a mismatch between the
@@ -266,10 +268,11 @@ throughout all scripts.
 
 ### Per-figure assumptions
 
-**Figure 7(a) — `exp_fig7a.py`**
+**Figure 7(a)/(b) — `exp_fig7.py`**
 - Trace: `openb_pod_list_default.csv` (8,152 tasks, 13.3% non-GPU)
 - FGD distribution: computed from the full default trace (oracle knowledge)
 - Fragmentation snapshot: every 5% of arrived workload
+- Outputs both 7(a) and 7(b) from the same run and CSV
 
 **Figure 9 — `exp_fig9.py`**
 - Trace: `openb_pod_list_default.csv`
