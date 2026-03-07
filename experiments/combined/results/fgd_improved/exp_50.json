@@ -1,0 +1,32 @@
+[
+  {
+    "name": "fgd_buddy_50jph_s0",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 0,
+    "lam": 72.0,
+    "avg_jct": 66566.83954600719,
+    "wall_time_seconds": 1711.4282784461975,
+    "num_completed_jobs": 9922,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 5718,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 36.79979597460319,
+    "avg_frag_rate": 5.249725006682774,
+    "avg_frag_total": 3.2753195303275406,
+    "avg_unalloc_pct": 63.20020402539681,
+    "avg_occupied_nodes": 657.6951219512196,
+    "std_utilization": 10.093510861981095,
+    "std_frag_rate": 2.9270264930182606,
+    "std_frag_total": 1.90363475082403,
+    "std_unalloc_pct": 10.093510861981095,
+    "std_occupied_nodes": 124.2140843732805,
+    "num_metric_samples": 902,
+    "avg_dyn_frag_penalty_weight": 0.0,
+    "std_dyn_frag_penalty_weight": 0.0,
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 20.6434172787688
+  }
+]

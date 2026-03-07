@@ -1,0 +1,32 @@
+[
+  {
+    "name": "gavelfgd_full_210jph_s0",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 0,
+    "lam": 17.14,
+    "avg_jct": 28013.21985818128,
+    "wall_time_seconds": 145.27071475982666,
+    "num_completed_jobs": 7910,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 242,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 68.61581541218638,
+    "avg_frag_rate": 1.0667284791472298,
+    "avg_frag_total": 0.3114314516129032,
+    "avg_unalloc_pct": 31.384184587813618,
+    "avg_occupied_nodes": 559.6481481481482,
+    "std_utilization": 5.256108946903842,
+    "std_frag_rate": 1.1197306690561053,
+    "std_frag_total": 0.2613023558432538,
+    "std_unalloc_pct": 5.256108946903842,
+    "std_occupied_nodes": 53.620634988506474,
+    "num_metric_samples": 216,
+    "avg_dyn_frag_penalty_weight": 0.2506944444444444,
+    "std_dyn_frag_penalty_weight": 0.07476493512798202,
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 13.315619834710745
+  }
+]

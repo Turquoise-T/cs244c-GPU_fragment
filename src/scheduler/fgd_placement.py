@@ -71,18 +71,32 @@ class GavelFGDPlacement:
     """
 
     def __init__(self, workload=None, placement_mode='fgd',
-                 enable_gpu_sharing=False):
+                 enable_gpu_sharing=False, use_paper_scoring=False,
+                 popularity_threshold=None, use_buddy_tiebreak=True,
+                 use_cluster_fragmentation=False):
         """
         Args:
             workload: FGD Workload for fragmentation calculation.
             placement_mode: 'fgd', 'bestfit', or 'firstfit'.
             enable_gpu_sharing: When True, support fractional GPU placement.
+            use_paper_scoring: If True, use paper's sigmoid scoring with
+                integer quantization. Default False uses raw delta.
+            popularity_threshold: If set (e.g., 60), filter workload to only
+                top task types covering this percentage. Paper default: 60%.
+            use_buddy_tiebreak: If True, use buddy-aware tie-breaking when
+                scores tie (prefer leaving 2^n free GPUs). Default True.
+            use_cluster_fragmentation: If True, compute fragmentation delta
+                across entire cluster. If False (default), per-node only.
         """
         if workload is None:
             workload = build_fgd_workload('philly')
         self.workload = workload
         self.placement_mode = placement_mode
         self.enable_gpu_sharing = enable_gpu_sharing
+        self.use_paper_scoring = use_paper_scoring
+        self.popularity_threshold = popularity_threshold
+        self.use_buddy_tiebreak = use_buddy_tiebreak
+        self.use_cluster_fragmentation = use_cluster_fragmentation
         self._round_metrics = []
         # Sub-timers for profiling FGD internals
         self._profile = {
@@ -172,7 +186,13 @@ class GavelFGDPlacement:
         # All modes enforce single-node placement (FGD paper semantics).
         _t0 = time.perf_counter()
         if self.placement_mode == 'fgd':
-            fgd = FGDScheduler(nodes, self.workload)
+            fgd = FGDScheduler(
+                nodes, self.workload,
+                use_paper_scoring=self.use_paper_scoring,
+                popularity_threshold=self.popularity_threshold,
+                use_buddy_tiebreak=self.use_buddy_tiebreak,
+                use_cluster_fragmentation=self.use_cluster_fragmentation,
+            )
         elif self.placement_mode == 'bestfit':
             from baselines import BestFitPlacer
             placer = BestFitPlacer()

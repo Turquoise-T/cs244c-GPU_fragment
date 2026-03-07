@@ -89,6 +89,11 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
     solver_kwargs = config.get('solver_kwargs', {})
     enable_gpu_sharing = config.get('enable_gpu_sharing', False)
     completion_rate_threshold = config.get('completion_rate_threshold', 0.1)
+    fgd_frag_penalty_weight = config.get('fgd_frag_penalty_weight', 0.0)
+    fgd_use_paper_scoring = config.get('fgd_use_paper_scoring', False)
+    fgd_popularity_threshold = config.get('fgd_popularity_threshold', None)
+    fgd_use_buddy_tiebreak = config.get('fgd_use_buddy_tiebreak', True)
+    fgd_use_cluster_fragmentation = config.get('fgd_use_cluster_fragmentation', False)
 
     print(f"\n{'='*70}")
     print(f"Experiment: {name}")
@@ -106,6 +111,8 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
         print(f"  Mode: fixed_jobs, Jobs: {num_total_jobs}")
     print(f"  Lambda: {lam}, Seed: {seed}, Round: {time_per_iteration}s")
     print(f"  Solver: {solver}, kwargs: {solver_kwargs}")
+    if fgd_frag_penalty_weight > 0:
+        print(f"  Frag penalty weight: {fgd_frag_penalty_weight}")
     if enable_gpu_sharing:
         print(f"  GPU sharing: ENABLED")
     print(f"{'='*70}")
@@ -134,6 +141,11 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
         fgd_workload_mode=fgd_workload_mode,
         enable_migration_penalty=enable_migration_penalty,
         enable_gpu_sharing=enable_gpu_sharing,
+        fgd_frag_penalty_weight=fgd_frag_penalty_weight,
+        fgd_use_paper_scoring=fgd_use_paper_scoring,
+        fgd_popularity_threshold=fgd_popularity_threshold,
+        fgd_use_buddy_tiebreak=fgd_use_buddy_tiebreak,
+        fgd_use_cluster_fragmentation=fgd_use_cluster_fragmentation,
         log_level=log_level,
     )
 
@@ -218,6 +230,11 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
     if round_metrics and mode == 'steady_state':
         window_metrics = round_metrics  # Use all recorded metrics
         if window_metrics:
+            dyn_weights = [
+                m.get('dyn_frag_penalty_weight')
+                for m in window_metrics
+                if m.get('dyn_frag_penalty_weight') is not None
+            ]
             frag_metrics = {
                 'avg_utilization': float(np.mean([m['utilization'] for m in window_metrics])),
                 'avg_frag_rate': float(np.mean([m['frag_rate'] for m in window_metrics])),
@@ -231,6 +248,11 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
                 'std_occupied_nodes': float(np.std([m['occupied_nodes'] for m in window_metrics])),
                 'num_metric_samples': len(window_metrics),
             }
+            if dyn_weights:
+                frag_metrics.update({
+                    'avg_dyn_frag_penalty_weight': float(np.mean(dyn_weights)),
+                    'std_dyn_frag_penalty_weight': float(np.std(dyn_weights)),
+                })
 
     # Count jobs with actual completion times (not None from deadlock)
     completed_count = sum(

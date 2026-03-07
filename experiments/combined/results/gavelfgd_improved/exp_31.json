@@ -1,0 +1,31 @@
+[
+  {
+    "name": "gavel_310jph_s1",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": false,
+    "fgd_placement_mode": "strided",
+    "seed": 1,
+    "lam": 11.61,
+    "avg_jct": 25426.05406993578,
+    "wall_time_seconds": 137.70115184783936,
+    "num_completed_jobs": 6595,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 0,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 77.69738863287252,
+    "avg_frag_rate": 2.177893650718926,
+    "avg_frag_total": 0.5225334649989027,
+    "avg_unalloc_pct": 22.302611367127497,
+    "avg_occupied_nodes": 647.578231292517,
+    "std_utilization": 6.834886304710766,
+    "std_frag_rate": 1.4731401599192921,
+    "std_frag_total": 0.4065848424631792,
+    "std_unalloc_pct": 6.834886304710767,
+    "std_occupied_nodes": 42.98408583379333,
+    "num_metric_samples": 147,
+    "avg_dyn_frag_penalty_weight": 0.0,
+    "std_dyn_frag_penalty_weight": 0.0,
+    "generate_multi_gpu_jobs": true
+  }
+]

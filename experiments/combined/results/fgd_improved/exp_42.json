@@ -1,0 +1,32 @@
+[
+  {
+    "name": "fgd_paper_250jph_s0",
+    "policy": "max_min_fairness",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 0,
+    "lam": 14.4,
+    "avg_jct": 26646.177690775254,
+    "wall_time_seconds": 568.7851257324219,
+    "num_completed_jobs": 7508,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 1686,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 87.20519660635564,
+    "avg_frag_rate": 6.050631254402368,
+    "avg_frag_total": 0.7667904375084027,
+    "avg_unalloc_pct": 12.794803393644345,
+    "avg_occupied_nodes": 989.4065934065934,
+    "std_utilization": 6.204928220781146,
+    "std_frag_rate": 3.0487364905587104,
+    "std_frag_total": 0.5348132066095042,
+    "std_unalloc_pct": 6.204928220781145,
+    "std_occupied_nodes": 167.83884722508574,
+    "num_metric_samples": 182,
+    "avg_dyn_frag_penalty_weight": 0.0,
+    "std_dyn_frag_penalty_weight": 0.0,
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 2.985990510083037
+  }
+]
