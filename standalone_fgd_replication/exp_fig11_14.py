@@ -134,8 +134,9 @@ class SensitivityResult:
 class SensitivityExperiment:
     """Runs sensitivity experiments for Figures 11-14."""
 
-    def __init__(self, data_dir: str):
+    def __init__(self, data_dir: str, fgd_popularity_threshold: float = 95):
         self.data_dir = data_dir
+        self.fgd_popularity_threshold = fgd_popularity_threshold
         self.csv_dir = os.path.join(data_dir, 'csv')
 
         # Load nodes once (shared across all figures)
@@ -156,21 +157,41 @@ class SensitivityExperiment:
         self.loader.load_tasks(filename=filename)
         return self.loader.tasks
 
-    def _compute_task_distribution(self, tasks: List[Task]) -> TaskDistribution:
-        """Compute task type distribution from a task list."""
+    def _compute_task_distribution(self, tasks: List[Task], popularity_threshold: float = None) -> TaskDistribution:
+        """Compute task type distribution from a task list.
+
+        If popularity_threshold is set, keep top task types by frequency until
+        cumulative count reaches the threshold percentage, then renormalize.
+        """
         from collections import Counter
         type_counts: Counter = Counter()
         for t in tasks:
             gpu_rounded = round(t.gpu_demand, 2)
             cpu_bucket = round(t.cpu_demand / 4) * 4
             type_counts[(cpu_bucket, gpu_rounded)] += 1
+
         total = sum(type_counts.values())
+        if popularity_threshold is not None:
+            expected = popularity_threshold * total / 100.0
+            sorted_types = sorted(type_counts.items(), key=lambda x: x[1], reverse=True)
+            selected = {}
+            cum = 0
+            for type_key, count in sorted_types:
+                selected[type_key] = count
+                cum += count
+                if cum >= expected:
+                    break
+            dist = TaskDistribution()
+            for (cpu, gpu), count in selected.items():
+                dist.add_task_type(cpu, gpu, count / cum)
+            return dist
+
         dist = TaskDistribution()
         for (cpu, gpu), count in type_counts.items():
             dist.add_task_type(cpu, gpu, count / total)
         return dist
 
-    def _compute_task_distribution_typed(self, tasks: List[Task]) -> List:
+    def _compute_task_distribution_typed(self, tasks: List[Task], popularity_threshold: float = None) -> List:
         """Compute task type distribution with gpu_spec included.
 
         Returns a list of ((cpu, gpu, gpu_spec), popularity) tuples suitable
@@ -186,6 +207,19 @@ class SensitivityExperiment:
             gpu_spec = t.gpu_spec or ''
             type_counts[(cpu_bucket, gpu_rounded, gpu_spec)] += 1
         total = sum(type_counts.values())
+        if popularity_threshold is not None:
+            expected = popularity_threshold * total / 100.0
+            sorted_types = sorted(type_counts.items(), key=lambda x: x[1], reverse=True)
+            selected = {}
+            cum = 0
+            for type_key, count in sorted_types:
+                selected[type_key] = count
+                cum += count
+                if cum >= expected:
+                    break
+            return [((cpu, gpu, spec), count / cum)
+                    for (cpu, gpu, spec), count in selected.items()]
+
         return [((cpu, gpu, spec), count / total)
                 for (cpu, gpu, spec), count in type_counts.items()]
 
@@ -257,16 +291,24 @@ class SensitivityExperiment:
         for pct in proportions:
             filename = file_map[pct]
             tasks = self.load_tasks(filename)
+            # Full distribution is used for evaluation metrics.
             dist = self._compute_task_distribution(tasks)
+            # Paper script default for typical pods is 95%; use this for FGD scoring.
+            fgd_dist = self._compute_task_distribution(
+                tasks, popularity_threshold=self.fgd_popularity_threshold)
             print(f"\n  [{figure_num}] {pct}% — {filename} ({len(tasks)} tasks)")
 
             # For GPU-type-constrained figure, give FGD a typed distribution
             # so it can account for GPU type compatibility in its gradient.
             typed_dist = (self._compute_task_distribution_typed(tasks)
                           if gpu_type_aware else None)
+            typed_fgd_dist = (self._compute_task_distribution_typed(
+                tasks, popularity_threshold=self.fgd_popularity_threshold)
+                if gpu_type_aware else None)
             for s in schedulers:
                 if isinstance(s, FGDScheduler):
-                    s.typed_task_types = typed_dist
+                    s.scheduling_task_types = fgd_dist.get_task_types()
+                    s.typed_task_types = typed_fgd_dist
 
             results[pct] = []
 
@@ -492,6 +534,8 @@ if __name__ == "__main__":
     parser.add_argument('--schedulers', type=str, default='all',
                         help='Comma-separated scheduler names to run (default: all). '
                              'Available: Random,BestFit,DotProd,Packing,Clustering,FGD')
+    parser.add_argument('--fgd-popularity-threshold', type=float, default=95.0,
+                        help='Typical-pod popularity threshold (%) used for FGD scoring (default: 95)')
     args = parser.parse_args()
 
     # ---- Plot-only mode ----
@@ -520,7 +564,10 @@ if __name__ == "__main__":
     print(f"  Seed: {args.seed}")
     print("=" * 60)
 
-    experiment = SensitivityExperiment(data_dir)
+    experiment = SensitivityExperiment(
+        data_dir,
+        fgd_popularity_threshold=args.fgd_popularity_threshold,
+    )
 
     all_sched_map = {s.name: s for s in get_all_schedulers_with_bestfit_variants()}
     if args.schedulers == 'all':

@@ -52,25 +52,26 @@ class Figure9Experiment:
     until cumulative GPU requests reach max_arrival_pct% of cluster capacity.
     """
 
-    def __init__(self, data_dir: str):
+    def __init__(self, data_dir: str, fgd_popularity_threshold: float = 95):
         self.data_dir = data_dir
+        self.fgd_popularity_threshold = fgd_popularity_threshold
         self.loader = AlibabaTraceLoader(data_dir)
         self.loader.load_nodes()
         self.loader.load_tasks()
 
         self.task_distribution = self.loader.compute_task_distribution()
-        # Paper's GetTypicalPods: filter to top types covering 60% of tasks,
-        # renormalize. Rare types (4-GPU, 8-GPU) are excluded, preventing FGD
-        # from "protecting" large nodes for multi-GPU tasks it won't see often.
+        # Paper's experiment scripts use pod-popularity-threshold=95 by default.
+        # Keep a filtered distribution for FGD scoring only.
         self.fgd_scoring_distribution = self.loader.compute_task_distribution(
-            popularity_threshold=60
+            popularity_threshold=self.fgd_popularity_threshold
         )
         self.total_gpu_capacity = sum(n.num_gpus for n in self.loader.nodes)
 
         print(f"Loaded trace: {len(self.loader.nodes)} nodes, {self.total_gpu_capacity} GPUs")
         print(f"Tasks in trace: {len(self.loader.tasks)}")
         print(f"Task types (full): {len(self.task_distribution.get_task_types())}")
-        print(f"Task types (FGD scoring, top 60%): {len(self.fgd_scoring_distribution.get_task_types())}")
+        print(f"Task types (FGD scoring, top {self.fgd_popularity_threshold:.0f}%): "
+              f"{len(self.fgd_scoring_distribution.get_task_types())}")
 
     def create_fresh_cluster(self) -> Cluster:
         """Create a fresh cluster from trace nodes"""
@@ -193,7 +194,7 @@ class Figure9Experiment:
         if isinstance(scheduler, ClusteringScheduler):
             scheduler.reset()
 
-        # Use filtered distribution for FGD scoring (paper's GetTypicalPods, 60% threshold).
+        # Use filtered distribution for FGD scoring (paper scripts default: 95% threshold).
         # Cluster distribution (full) is kept for fragmentation metric computation.
         if isinstance(scheduler, FGDScheduler):
             scheduler.scheduling_task_types = self.fgd_scoring_distribution.get_task_types()
@@ -659,6 +660,8 @@ if __name__ == "__main__":
     parser.add_argument('--seed', type=int, default=42, help='Base random seed (default: 42)')
     parser.add_argument('--sample-interval', type=float, default=2.0, help='Sampling interval %% (default: 2)')
     parser.add_argument('--max-arrival', type=float, default=120.0, help='Max arrival %% (default: 120)')
+    parser.add_argument('--fgd-popularity-threshold', type=float, default=95.0,
+                        help='Typical-pod popularity threshold (%) used for FGD scoring (default: 95)')
     parser.add_argument('--plot-csv', type=str, default=None,
                         help='Plot from existing CSV directory instead of running experiment')
     parser.add_argument('--schedulers', type=str, default='all',
@@ -682,7 +685,10 @@ if __name__ == "__main__":
     print(f"  interval={args.sample_interval}%, max_arrival={args.max_arrival}%")
     print("=" * 60)
 
-    experiment = Figure9Experiment(data_dir)
+    experiment = Figure9Experiment(
+        data_dir,
+        fgd_popularity_threshold=args.fgd_popularity_threshold,
+    )
 
     all_sched_map = {s.name: s for s in get_all_schedulers_with_bestfit_variants()}
     if args.schedulers == 'all':

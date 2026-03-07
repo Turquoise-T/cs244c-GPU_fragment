@@ -115,6 +115,13 @@ class Node:
         if self.remaining_cpu < task.cpu_demand:
             return False
 
+        # Check GPU-type compatibility (paper behavior):
+        # - Empty task gpu_spec means no type constraint.
+        # - Non-empty gpu_spec requires this node's gpu_model to match one of
+        #   the '|' separated allowed types.
+        if not self._is_gpu_type_compatible(task):
+            return False
+
         # Check GPU
         if task.is_no_gpu():
             return True
@@ -128,6 +135,21 @@ class Node:
             return self.fully_unallocated_gpus >= int(task.gpu_demand)
 
         return False
+
+    def _is_gpu_type_compatible(self, task: Task) -> bool:
+        """Return whether this node can host task's gpu_spec constraint."""
+        pod_gpu_type = (task.gpu_spec or "").strip()
+        if pod_gpu_type == "":
+            return True
+
+        node_gpu_type = (self.gpu_model or "").strip()
+        if node_gpu_type == "":
+            return False
+
+        requested_types = [t.strip() for t in pod_gpu_type.split("|") if t.strip()]
+        if not requested_types:
+            return True
+        return node_gpu_type in requested_types
 
     def allocate_task(self, task: Task) -> bool:
         """

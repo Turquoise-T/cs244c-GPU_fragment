@@ -61,6 +61,7 @@ Runs Monte-Carlo workload inflation using the default trace
 | `--seed` | 42 | Base random seed |
 | `--max-workload` | 120.0 | Stop when arrived workload reaches this % of GPU capacity |
 | `--sample-interval` | 5.0 | Record fragmentation every this many % of arrived workload |
+| `--fgd-popularity-threshold` | 95.0 | Typical-pod popularity threshold (%) used for FGD scoring |
 | `--schedulers` | `all` | Comma-separated subset to run, e.g. `FGD,Packing` |
 | `--plot-csv` | — | Path to existing result CSV; skips experiment and plots only |
 
@@ -104,6 +105,7 @@ Monte-Carlo workload inflation producing four sub-figures:
 | `--seed` | 42 | Base random seed |
 | `--sample-interval` | 2.0 | Record metrics every this many % of arrived workload |
 | `--max-arrival` | 120.0 | Stop when arrived workload reaches this % of GPU capacity |
+| `--fgd-popularity-threshold` | 95.0 | Typical-pod popularity threshold (%) used for FGD scoring |
 | `--schedulers` | `all` | Comma-separated subset to run, e.g. `FGD,Packing` |
 | `--plot-csv` | — | Path to result directory containing all 4 CSVs; plots only |
 
@@ -146,6 +148,7 @@ different set of pre-built trace files; no synthetic sampling is performed.
 | `--figures` | `11,12,13,14` | Comma-separated list of figures to run |
 | `--num-runs` | 10 | Monte-Carlo runs per (proportion, scheduler) combination |
 | `--seed` | 42 | Base random seed |
+| `--fgd-popularity-threshold` | 95.0 | Typical-pod popularity threshold (%) used for FGD scoring |
 | `--schedulers` | `all` | Comma-separated subset to run, e.g. `FGD,Packing` |
 | `--plot-csv` | — | One or more CSV paths; plots only. Accepts multiple files |
 

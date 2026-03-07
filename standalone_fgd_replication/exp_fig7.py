@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from simulator import Task, Node, Cluster, TaskDistribution
 from schedulers import (
     Scheduler, get_all_schedulers, get_scheduler,
-    ClusteringScheduler
+    ClusteringScheduler, FGDScheduler
 )
 from trace_loader import AlibabaTraceLoader
 
@@ -49,7 +49,7 @@ class Figure7aExperiment:
         Figure 7(b): fragmented GPUs / total cluster GPUs (%)
     """
 
-    def __init__(self, data_dir: str, seed: int = 42):
+    def __init__(self, data_dir: str, seed: int = 42, fgd_popularity_threshold: float = 95):
         """
         Initialize the experiment.
 
@@ -59,6 +59,7 @@ class Figure7aExperiment:
         """
         self.data_dir = data_dir
         self.seed = seed
+        self.fgd_popularity_threshold = fgd_popularity_threshold
         self.loader = AlibabaTraceLoader(data_dir)
 
         # Load trace data
@@ -67,12 +68,18 @@ class Figure7aExperiment:
 
         # Compute task distribution from trace
         self.task_distribution = self.loader.compute_task_distribution()
+        # Paper's script default for typical pods is 95% popularity threshold.
+        self.fgd_scoring_distribution = self.loader.compute_task_distribution(
+            popularity_threshold=self.fgd_popularity_threshold
+        )
 
         # Get cluster capacity
         self.total_gpu_capacity = sum(n.num_gpus for n in self.loader.nodes)
 
         print(f"Loaded trace: {len(self.loader.nodes)} nodes, {self.total_gpu_capacity} GPUs")
         print(f"Task pool: {len(self.loader.tasks)} tasks")
+        print(f"Task types (FGD scoring, top {self.fgd_popularity_threshold:.0f}%): "
+              f"{len(self.fgd_scoring_distribution.get_task_types())}")
 
     def create_fresh_cluster(self) -> Cluster:
         """Create a fresh cluster with the same nodes as the trace"""
@@ -128,6 +135,8 @@ class Figure7aExperiment:
         # Reset clustering scheduler state if needed
         if isinstance(scheduler, ClusteringScheduler):
             scheduler.reset()
+        if isinstance(scheduler, FGDScheduler):
+            scheduler.scheduling_task_types = self.fgd_scoring_distribution.get_task_types()
 
         cumulative_gpu_demand = 0.0
         task_id = 0
@@ -517,6 +526,8 @@ if __name__ == "__main__":
     parser.add_argument('--num-runs', type=int, default=3, help='Number of runs per scheduler (default: 3, paper uses 10)')
     parser.add_argument('--max-workload', type=float, default=120.0, help='Max arrived workload %% (default: 120)')
     parser.add_argument('--sample-interval', type=float, default=5.0, help='Fragmentation sampling interval %% (default: 5)')
+    parser.add_argument('--fgd-popularity-threshold', type=float, default=95.0,
+                        help='Typical-pod popularity threshold (%) used for FGD scoring (default: 95)')
     parser.add_argument('--plot-csv', type=str, default=None,
                         help='Plot from existing CSV file instead of running experiment')
     parser.add_argument('--schedulers', type=str, default='all',
@@ -546,7 +557,11 @@ if __name__ == "__main__":
           f"max_workload={args.max_workload}%, interval={args.sample_interval}%")
     print("=" * 60)
 
-    experiment = Figure7aExperiment(data_dir, seed=args.seed)
+    experiment = Figure7aExperiment(
+        data_dir,
+        seed=args.seed,
+        fgd_popularity_threshold=args.fgd_popularity_threshold,
+    )
 
     # Filter schedulers
     all_sched_map = {s.name: s for s in get_all_schedulers()}
