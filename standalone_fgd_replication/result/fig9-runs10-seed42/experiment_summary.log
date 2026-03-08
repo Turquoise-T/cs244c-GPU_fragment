@@ -1,0 +1,23 @@
+Experiment: Figure 9 Replication - Monte-Carlo
+Result: fig9-runs10-seed42
+Runs: 10
+Base seed: 42
+Sample interval: 2.0%
+Max arrival: 120.0%
+Nodes: 1213
+GPUs: 6212
+Task pool: 8152
+
+======================================================================
+EXPERIMENT SUMMARY (Figure 9)
+======================================================================
+
+Scheduler     Scheduled   Failed  Unalloc%  Occupied  Deficient  Stranded  Non-GPU
+--------------------------------------------------------------------------------
+Random             7990     2000      12.1      1213       34.5      52.1     13.4
+BestFit            8089     1901       6.8      1213       61.3      25.3     13.4
+BestFit-PN         8143     1848       6.1      1213       69.2      17.4     13.4
+DotProd            7854     2137      10.1      1213       40.2      46.4     13.4
+Packing            8185     1805       5.5      1213       72.5      14.1     13.4
+Clustering         8184     1806       5.5      1213       72.7      13.9     13.4
+FGD                8241     1750       4.8      1213       77.4       9.1     13.4

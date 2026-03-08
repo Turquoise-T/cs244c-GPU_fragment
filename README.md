@@ -45,7 +45,14 @@ Solid lines = our replication, dashed lines = paper reference curves:
 
 Alibaba Cluster H (1,200 nodes, 5,592 GPUs, mixed node sizes 1/2/4/8 GPUs). Inflation-based evaluation with 6 placement strategies.
 
-![FGD Standalone](experiments/fgd-standalone/figures/full_run/comparison_all.png)
+| Figure | Ours | Paper |
+|:--:|:--:|:--:|
+| Fig. 7 | ![Figure 7 Ours](standalone_fgd_replication/result/fig7-runs10-seed42/figure7.png) | ![Figure 7 Paper](standalone_fgd_replication/result/fig7-runs10-seed42/paper-figure7.png) |
+| Fig. 9 | ![Figure 9 Ours](standalone_fgd_replication/result/fig9-runs10-seed42/figure9.png) | ![Figure 9 Paper](standalone_fgd_replication/result/fig9-runs10-seed42/paper-figure9.png) |
+| Fig. 11 | ![Figure 11 Ours](standalone_fgd_replication/result/fig11-runs10-seed42/figure11.png) | ![Figure 11 Paper](standalone_fgd_replication/result/fig11-runs10-seed42/paper-figure11.png) |
+| Fig. 12 | ![Figure 12 Ours](standalone_fgd_replication/result/fig12-runs10-seed42/figure12.png) | ![Figure 12 Paper](standalone_fgd_replication/result/fig12-runs10-seed42/paper-figure12.png) |
+| Fig. 13 | ![Figure 13 Ours](standalone_fgd_replication/result/fig13-runs10-seed42/figure13.png) | ![Figure 13 Paper](standalone_fgd_replication/result/fig13-runs10-seed42/paper-figure13.png) |
+| Fig. 14 | ![Figure 14 Ours](standalone_fgd_replication/result/fig14-runs10-seed42/figure14.png) | ![Figure 14 Paper](standalone_fgd_replication/result/fig14-runs10-seed42/paper-figure14.png) |
 
 ### FGD via Gavel -- Alibaba Split Cluster
 

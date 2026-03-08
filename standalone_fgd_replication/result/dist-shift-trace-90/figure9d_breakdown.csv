@@ -1,0 +1,13 @@
+scheduler,cause,pct,run
+Random,deficient,31.742174487365176,0
+Random,stranded,54.80276646463693,0
+Random,non_gpu,13.4550590479979,0
+Clustering,deficient,49.40122363908484,0
+Clustering,stranded,37.16395690272077,0
+Clustering,non_gpu,13.434819458194402,0
+FGD-Full,deficient,22.65009631998931,0
+FGD-Full,stranded,63.92528196978186,0
+FGD-Full,non_gpu,13.424621710228829,0
+FGD-2000,deficient,26.0131784874932,0
+FGD-2000,stranded,60.57948839348867,0
+FGD-2000,non_gpu,13.407333119018135,0

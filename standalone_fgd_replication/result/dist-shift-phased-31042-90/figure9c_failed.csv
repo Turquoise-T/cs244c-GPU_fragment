@@ -1,0 +1,6 @@
+scheduler,gpu_category,sum_gpu_demand,run
+Random,8,356.0,0
+Random,<1,65.70000000000006,0
+Clustering,<1,267.8900000000007,0
+FGD-Full,8,124.0,0
+FGD-2000,8,124.0,0
