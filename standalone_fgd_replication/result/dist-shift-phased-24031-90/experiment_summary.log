@@ -1,0 +1,29 @@
+Experiment: Distribution-Shift - Trace Replay
+Result: dist-shift-phased-24031-90
+Mode: replay
+FGD popularity threshold: 95
+Figure9 sample interval (%): 2.0
+Figure9 max arrival (%): 120.0
+Figure9 snapshot (%): 96.0
+Task order: phased
+Tier order: [2, 4, 0, 3, 1]
+  Phase 0: Tier 2 - 1478 tasks (gpu range: 0.55-0.81)
+  Phase 1: Tier 4 - 75 tasks (gpu range: 2.00-8.00)
+  Phase 2: Tier 0 - 1088 tasks (gpu range: 0.00-0.00)
+  Phase 3: Tier 3 - 3911 tasks (gpu range: 1.00-1.00)
+  Phase 4: Tier 1 - 1600 tasks (gpu range: 0.05-0.48)
+Cluster: 1213 nodes -> 1100 nodes (90.0%)
+Full distribution: 55 task types
+FGD scoring distribution (top 95%): 21 task types
+First-2000 distribution (FGD-2000, top 95%): 8 task types
+
+============================================================================
+EXPERIMENT SUMMARY
+============================================================================
+
+Scheduler         Avg Frag%   Avg Alloc%    Scheduled     Failed    Time(s)
+----------------------------------------------------------------------------
+Random                 99.4         87.4         6274       1878       25.6
+Clustering             99.3         95.3         6781       1371       23.1
+FGD-Full               99.4         81.2         5972       2180      104.8
+FGD-2000               99.6         83.3         5827       2325       64.9

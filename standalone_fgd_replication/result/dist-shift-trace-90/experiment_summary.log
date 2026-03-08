@@ -1,0 +1,23 @@
+Experiment: Distribution-Shift - Trace Replay
+Result: dist-shift-trace-90
+Mode: replay
+FGD popularity threshold: 95
+Figure9 sample interval (%): 2.0
+Figure9 max arrival (%): 120.0
+Figure9 snapshot (%): 96.0
+Task order: trace
+Cluster: 1213 nodes -> 1100 nodes (90.0%)
+Full distribution: 55 task types
+FGD scoring distribution (top 95%): 21 task types
+First-2000 distribution (FGD-2000, top 95%): 20 task types
+
+============================================================================
+EXPERIMENT SUMMARY
+============================================================================
+
+Scheduler         Avg Frag%   Avg Alloc%    Scheduled     Failed    Time(s)
+----------------------------------------------------------------------------
+Random                 99.2         87.1         6948       1204       14.5
+Clustering             99.3         92.4         7112       1040       13.5
+FGD-Full               99.4         87.5         6828       1324       65.3
+FGD-2000               99.5         88.6         6900       1252       63.4
