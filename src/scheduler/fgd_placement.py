@@ -81,8 +81,8 @@ class GavelFGDPlacement:
             enable_gpu_sharing: When True, support fractional GPU placement.
             use_paper_scoring: If True, use paper's sigmoid scoring with
                 integer quantization. Default False uses raw delta.
-            popularity_threshold: If set (e.g., 60), filter workload to only
-                top task types covering this percentage. Paper default: 60%.
+            popularity_threshold: If set (e.g., 85), filter workload to only
+                top task types covering this percentage. Paper default: 85%.
             use_buddy_tiebreak: If True, use buddy-aware tie-breaking when
                 scores tie (prefer leaving 2^n free GPUs). Default True.
             use_cluster_fragmentation: If True, compute fragmentation delta

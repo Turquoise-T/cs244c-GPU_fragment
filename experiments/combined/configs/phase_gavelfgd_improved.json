@@ -1,5 +1,5 @@
 {
-  "description": "Gavel+FGD improvements: Compare vanilla gavelfgd vs gavelfgd with paper scoring + 60% threshold + buddy tiebreak. 7 load levels (60-360 jph), 2 seeds. GPU sharing enabled.",
+  "description": "Gavel+FGD improvements: Compare vanilla gavelfgd vs gavelfgd with paper scoring + 85% threshold + buddy tiebreak. 7 load levels (60-360 jph), 2 seeds. GPU sharing enabled.",
   "common": {
     "cluster_spec": {
       "G2": 4392,
@@ -25,49 +25,49 @@
     {"name": "gavel_60jph_s1", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 60.0, "seed": 1},
     {"name": "gavelfgd_60jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 60.0, "seed": 0},
     {"name": "gavelfgd_60jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 60.0, "seed": 1},
-    {"name": "gavelfgd_improved_60jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 60.0, "seed": 0},
-    {"name": "gavelfgd_improved_60jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 60.0, "seed": 1},
+    {"name": "gavelfgd_improved_60jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 60.0, "seed": 0},
+    {"name": "gavelfgd_improved_60jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 60.0, "seed": 1},
 
     {"name": "gavel_110jph_s0", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 32.73, "seed": 0},
     {"name": "gavel_110jph_s1", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 32.73, "seed": 1},
     {"name": "gavelfgd_110jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 32.73, "seed": 0},
     {"name": "gavelfgd_110jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 32.73, "seed": 1},
-    {"name": "gavelfgd_improved_110jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 32.73, "seed": 0},
-    {"name": "gavelfgd_improved_110jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 32.73, "seed": 1},
+    {"name": "gavelfgd_improved_110jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 32.73, "seed": 0},
+    {"name": "gavelfgd_improved_110jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 32.73, "seed": 1},
 
     {"name": "gavel_160jph_s0", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 22.5, "seed": 0},
     {"name": "gavel_160jph_s1", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 22.5, "seed": 1},
     {"name": "gavelfgd_160jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 22.5, "seed": 0},
     {"name": "gavelfgd_160jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 22.5, "seed": 1},
-    {"name": "gavelfgd_improved_160jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 22.5, "seed": 0},
-    {"name": "gavelfgd_improved_160jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 22.5, "seed": 1},
+    {"name": "gavelfgd_improved_160jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 22.5, "seed": 0},
+    {"name": "gavelfgd_improved_160jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 22.5, "seed": 1},
 
     {"name": "gavel_210jph_s0", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 17.14, "seed": 0},
     {"name": "gavel_210jph_s1", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 17.14, "seed": 1},
     {"name": "gavelfgd_210jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 17.14, "seed": 0},
     {"name": "gavelfgd_210jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 17.14, "seed": 1},
-    {"name": "gavelfgd_improved_210jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 17.14, "seed": 0},
-    {"name": "gavelfgd_improved_210jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 17.14, "seed": 1},
+    {"name": "gavelfgd_improved_210jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 17.14, "seed": 0},
+    {"name": "gavelfgd_improved_210jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 17.14, "seed": 1},
 
     {"name": "gavel_260jph_s0", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 13.85, "seed": 0},
     {"name": "gavel_260jph_s1", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 13.85, "seed": 1},
     {"name": "gavelfgd_260jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 13.85, "seed": 0},
     {"name": "gavelfgd_260jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 13.85, "seed": 1},
-    {"name": "gavelfgd_improved_260jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 13.85, "seed": 0},
-    {"name": "gavelfgd_improved_260jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 13.85, "seed": 1},
+    {"name": "gavelfgd_improved_260jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 13.85, "seed": 0},
+    {"name": "gavelfgd_improved_260jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 13.85, "seed": 1},
 
     {"name": "gavel_310jph_s0", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 11.61, "seed": 0},
     {"name": "gavel_310jph_s1", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 11.61, "seed": 1},
     {"name": "gavelfgd_310jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 11.61, "seed": 0},
     {"name": "gavelfgd_310jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 11.61, "seed": 1},
-    {"name": "gavelfgd_improved_310jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 11.61, "seed": 0},
-    {"name": "gavelfgd_improved_310jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 11.61, "seed": 1},
+    {"name": "gavelfgd_improved_310jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 11.61, "seed": 0},
+    {"name": "gavelfgd_improved_310jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 11.61, "seed": 1},
 
     {"name": "gavel_360jph_s0", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 10.0, "seed": 0},
     {"name": "gavel_360jph_s1", "enable_fgd": false, "fgd_placement_mode": "strided", "lam": 10.0, "seed": 1},
     {"name": "gavelfgd_360jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 10.0, "seed": 0},
     {"name": "gavelfgd_360jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "lam": 10.0, "seed": 1},
-    {"name": "gavelfgd_improved_360jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 10.0, "seed": 0},
-    {"name": "gavelfgd_improved_360jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 60, "fgd_use_buddy_tiebreak": true, "lam": 10.0, "seed": 1}
+    {"name": "gavelfgd_improved_360jph_s0", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 10.0, "seed": 0},
+    {"name": "gavelfgd_improved_360jph_s1", "enable_fgd": true, "fgd_placement_mode": "fgd", "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 85, "fgd_use_buddy_tiebreak": true, "lam": 10.0, "seed": 1}
   ]
 }

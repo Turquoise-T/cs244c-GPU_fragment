@@ -122,16 +122,16 @@ class Workload:
             for task_id in self.popularity:
                 self.popularity[task_id] /= total
 
-    def filter_by_popularity_threshold(self, threshold_pct: float = 60.0) -> 'Workload':
+    def filter_by_popularity_threshold(self, threshold_pct: float = 85.0) -> 'Workload':
         """Apply paper's GetTypicalPods filter.
 
         Keep only the most popular task types that together cover threshold_pct
         of all tasks (sorted by popularity descending), then renormalize.
 
-        Paper default: 60% (DefaultTypicalPodPopularityThreshold).
+        Paper default: 85% (DefaultTypicalPodPopularityThreshold).
 
         Args:
-            threshold_pct: Percentage threshold (0-100). Default 60.
+            threshold_pct: Percentage threshold (0-100). Default 85.
 
         Returns:
             New Workload with filtered and renormalized task types.
