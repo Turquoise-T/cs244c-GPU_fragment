@@ -122,10 +122,10 @@ class ThroughputEstimator:
                 try:
                     estimated_throughputs = \
                         matrix_completion.pmf_solve(throughputs_matrix,
-                                                    mask, k=k, mu=mu),
+                                                    mask, k=k, mu=mu)
                     throughputs_matrix = \
                         np.where(mask, throughputs_matrix,
-                                 np.clip(estimated_throughputs, 0, 1))[0]
+                                 np.clip(estimated_throughputs, 0, 1))
                 except np.linalg.LinAlgError as e:
                     if self._verbose:
                         print('WARNING: could not estimate throughputs!',

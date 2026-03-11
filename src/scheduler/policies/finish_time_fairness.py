@@ -5,30 +5,8 @@ import copy
 import cvxpy as cp
 import numpy as np
 
-from policy import Policy, PolicyWithPacking
+from policy import Policy, PolicyWithPacking, solve_with_fallback
 from isolated import IsolatedPolicy
-
-
-def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS"):
-    """Solve CVXPY problem with automatic fallback on solver failure.
-
-    Attempts to solve with the primary solver (typically ECOS for speed).
-    If the primary solver fails with a SolverError, automatically retries
-    with the fallback solver (SCS, which is slower but more numerically stable).
-
-    Args:
-        cvxprob: CVXPY Problem object
-        primary_solver: Primary solver to try first (e.g., "ECOS")
-        fallback_solver: Fallback solver if primary fails (default: "SCS")
-
-    Returns:
-        The solve result value
-    """
-    try:
-        return cvxprob.solve(solver=primary_solver)
-    except cp.error.SolverError as e:
-        print(f"WARNING: Solver '{primary_solver}' failed, retrying with '{fallback_solver}'")
-        return cvxprob.solve(solver=fallback_solver)
 
 # PAPER[§4.2] "Finish-time fairness (Themis): equalize completion-time ratio ρ across jobs"
 # PAPER[§4.2|eq] "rho(m,X) = (t_m + remaining/throughput) / (t_isolated + remaining/throughput_isolated)"
@@ -138,7 +116,7 @@ class FinishTimeFairnessPolicyWithPerf(Policy):
                     constraints.append(x[i, j] == 0)
 
         cvxprob = cp.Problem(objective, constraints)
-        result = _solve_with_fallback(cvxprob, self._solver)
+        result = solve_with_fallback(cvxprob, self._solver)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')
@@ -240,7 +218,7 @@ class FinishTimeFairnessPolicyWithPacking(PolicyWithPacking):
                 if scale_factors_array[i,j] == 0:
                     constraints.append(x[i,j] == 0)
         cvxprob = cp.Problem(objective, constraints)
-        result = _solve_with_fallback(cvxprob, self._solver)
+        result = solve_with_fallback(cvxprob, self._solver)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')

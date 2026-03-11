@@ -1,5 +1,3 @@
-import hashlib
-
 # PAPER[§3.1] "Space sharing: multiple jobs can share a single accelerator"
 # PAPER[§3.1] "JobIdPair represents either a single job or a pair of co-located jobs"
 class JobIdPair():

@@ -38,16 +38,6 @@ class Job:
             self._num_steps_arg, self._needs_data_dir, self._total_steps,
             self._scale_factor, self._priority_weight, SLO))
 
-    @staticmethod
-    def from_proto(job_proto):
-        duration = None
-        if job_proto.has_duration:
-            duration = job_proto.duration
-        return Job(job_proto.job_id, job_proto.job_type, job_proto.command,
-                   job_proto.working_directory, job_proto.num_steps_arg,
-                   job_proto.num_steps, duration,
-                   needs_data_dir=job_proto.needs_data_dir)
-
     @property
     def job_id(self):
         return self._job_id

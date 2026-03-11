@@ -71,18 +71,32 @@ class GavelFGDPlacement:
     """
 
     def __init__(self, workload=None, placement_mode='fgd',
-                 enable_gpu_sharing=False):
+                 enable_gpu_sharing=False, use_paper_scoring=False,
+                 popularity_threshold=None, use_buddy_tiebreak=True,
+                 use_cluster_fragmentation=False):
         """
         Args:
             workload: FGD Workload for fragmentation calculation.
             placement_mode: 'fgd', 'bestfit', or 'firstfit'.
             enable_gpu_sharing: When True, support fractional GPU placement.
+            use_paper_scoring: If True, use paper's sigmoid scoring with
+                integer quantization. Default False uses raw delta.
+            popularity_threshold: If set (e.g., 85), filter workload to only
+                top task types covering this percentage. Paper default: 85%.
+            use_buddy_tiebreak: If True, use buddy-aware tie-breaking when
+                scores tie (prefer leaving 2^n free GPUs). Default True.
+            use_cluster_fragmentation: If True, compute fragmentation delta
+                across entire cluster. If False (default), per-node only.
         """
         if workload is None:
             workload = build_fgd_workload('philly')
         self.workload = workload
         self.placement_mode = placement_mode
         self.enable_gpu_sharing = enable_gpu_sharing
+        self.use_paper_scoring = use_paper_scoring
+        self.popularity_threshold = popularity_threshold
+        self.use_buddy_tiebreak = use_buddy_tiebreak
+        self.use_cluster_fragmentation = use_cluster_fragmentation
         self._round_metrics = []
         # Sub-timers for profiling FGD internals
         self._profile = {
@@ -172,7 +186,13 @@ class GavelFGDPlacement:
         # All modes enforce single-node placement (FGD paper semantics).
         _t0 = time.perf_counter()
         if self.placement_mode == 'fgd':
-            fgd = FGDScheduler(nodes, self.workload)
+            fgd = FGDScheduler(
+                nodes, self.workload,
+                use_paper_scoring=self.use_paper_scoring,
+                popularity_threshold=self.popularity_threshold,
+                use_buddy_tiebreak=self.use_buddy_tiebreak,
+                use_cluster_fragmentation=self.use_cluster_fragmentation,
+            )
         elif self.placement_mode == 'bestfit':
             from baselines import BestFitPlacer
             placer = BestFitPlacer()
@@ -260,46 +280,3 @@ class GavelFGDPlacement:
         )
         self._profile['frag_calc'] += time.perf_counter() - _t0
         return frag
-
-    def get_round_fragmentation(self, scheduler):
-        """Compute current cluster fragmentation from scheduler state.
-
-        Can be called externally for metrics collection.
-        """
-        total_frag = 0.0
-        for worker_type, servers in scheduler._worker_type_to_worker_id_mapping.items():
-            # Build capacity map from current assignments
-            if self.enable_gpu_sharing:
-                worker_gpu_used = {}
-                for job_id, worker_ids in scheduler._current_worker_assignments.items():
-                    single_id = job_id.singletons()[0]
-                    job = scheduler._jobs.get(single_id)
-                    gpu_req = (job.gpu_request
-                               if (job and job.gpu_request is not None)
-                               else 1.0)
-                    for wid in worker_ids:
-                        worker_gpu_used[wid] = (
-                            worker_gpu_used.get(wid, 0.0) + gpu_req)
-
-            nodes = []
-            for server_idx, server_wids in enumerate(servers):
-                gpus = []
-                for wid in server_wids:
-                    if self.enable_gpu_sharing:
-                        used = worker_gpu_used.get(wid, 0.0)
-                        gpus.append(max(0.0, 1.0 - used))
-                    else:
-                        if wid in scheduler._current_worker_assignments.values():
-                            gpus.append(0.0)
-                        else:
-                            gpus.append(1.0)
-                node = Node(
-                    id=f'{worker_type}-{server_idx}',
-                    total_cpu=1000.0, total_memory=1000.0,
-                    gpus=gpus, gpu_type=worker_type,
-                )
-                nodes.append(node)
-            total_frag += FragmentationCalculator.compute_cluster_fragmentation(
-                nodes, self.workload
-            )
-        return total_frag

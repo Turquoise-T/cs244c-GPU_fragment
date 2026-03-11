@@ -1,0 +1,32 @@
+[
+  {
+    "name": "gavelfgd_paper_310jph_s1",
+    "policy": "max_min_fairness_perf",
+    "enable_fgd": true,
+    "fgd_placement_mode": "fgd",
+    "seed": 1,
+    "lam": 11.61,
+    "avg_jct": 24802.462790455338,
+    "wall_time_seconds": 224.07214903831482,
+    "num_completed_jobs": 6968,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 520,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 79.51228878648233,
+    "avg_frag_rate": 1.1503988948837824,
+    "avg_frag_total": 0.2632949308755761,
+    "avg_unalloc_pct": 20.487711213517667,
+    "avg_occupied_nodes": 640.6122448979592,
+    "std_utilization": 5.148269293973794,
+    "std_frag_rate": 1.4851221931640237,
+    "std_frag_total": 0.36137182064596285,
+    "std_unalloc_pct": 5.148269293973794,
+    "std_occupied_nodes": 39.831182701102364,
+    "num_metric_samples": 147,
+    "avg_dyn_frag_penalty_weight": 0.0,
+    "std_dyn_frag_penalty_weight": 0.0,
+    "generate_multi_gpu_jobs": true,
+    "avg_fragmentation": 5.978096153846154
+  }
+]

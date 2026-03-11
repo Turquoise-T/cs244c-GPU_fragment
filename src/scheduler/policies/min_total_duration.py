@@ -4,21 +4,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import cvxpy as cp
 import numpy as np
 
-from policy import Policy, PolicyWithPacking
-
-
-def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS"):
-    """Solve CVXPY problem with automatic fallback on solver failure.
-
-    Attempts to solve with the primary solver (typically ECOS for speed).
-    If the primary solver fails with a SolverError, automatically retries
-    with the fallback solver (SCS, which is slower but more numerically stable).
-    """
-    try:
-        return cvxprob.solve(solver=primary_solver)
-    except cp.error.SolverError as e:
-        print(f"WARNING: Solver '{primary_solver}' failed, retrying with '{fallback_solver}'")
-        return cvxprob.solve(solver=fallback_solver)
+from policy import Policy, PolicyWithPacking, solve_with_fallback
 
 # PAPER[§4.2] "Makespan minimization: minimize time for all jobs to complete"
 # PAPER[§4.2|eq] "MinimizeX max_m num_steps_m / throughput(m,X)"
@@ -66,7 +52,7 @@ class MinTotalDurationPolicyWithPerf(Policy):
                     constraints.append(x[i, j] == 0)
 
         cvxprob = cp.Problem(objective, constraints)
-        result = _solve_with_fallback(cvxprob, self._solver)
+        result = solve_with_fallback(cvxprob, self._solver)
 
         return cvxprob.status, x
 
@@ -139,7 +125,7 @@ class MinTotalDurationPolicyWithPacking(PolicyWithPacking):
                 cp.sum(cp.multiply(throughputs[indexes], x[indexes])) >=
                     (num_steps_remaining / T))
         cvxprob = cp.Problem(objective, constraints)
-        result = _solve_with_fallback(cvxprob, self._solver)
+        result = solve_with_fallback(cvxprob, self._solver)
 
         return cvxprob.status, x
 

@@ -2,12 +2,9 @@ import csv
 from datetime import datetime
 import json
 import os
-import pickle
-import psutil
 import random
 import re
 import socket
-import subprocess
 
 from job import Job
 from job_table import JobTable
@@ -266,71 +263,10 @@ def generate_job(throughputs, reference_worker_type='v100', rng=None,
 
     return job
 
-def load_philly_job_distribution():
-    with open('philly_job_distribution.pickle', 'rb') as f:
-        return pickle.load(f)
-
 def get_ip_address():
     hostname = socket.gethostname()
     ip_address = socket.gethostbyname(hostname)
     return ip_address
-
-def get_num_gpus():
-    command = 'nvidia-smi -L'
-    output = subprocess.run(command, stdout=subprocess.PIPE, check=True,
-                            shell=True).stdout.decode('utf-8').strip()
-    return len(output.split('\n'))
-
-def get_pid_for_job(command):
-    pids = []
-    for proc in psutil.process_iter():
-        cmdline = ' '.join(proc.cmdline())
-        if cmdline == command:
-            pids.append(proc.pid)
-    return min(pids)
-
-def get_gpu_processes():
-    output = subprocess.check_output('nvidia-smi').decode('utf-8')
-    gpu_processes = {}
-    processes_flag = False
-    for line in output.split('\n'):
-        if 'Processes' in line:
-            processes_flag = True
-            continue
-        if processes_flag:
-            res = re.search('(\d+) +(\d+) +(\w+) +(.+) +(\d+)MiB', line)
-            if res is not None:
-                gpu_id = int(res.group(1))
-                if gpu_id not in gpu_processes:
-                    gpu_processes[gpu_id] = []
-                pid = int(res.group(2))
-                process_name = res.group(4)
-                if process_name != 'nvidia-cuda-mps-server':
-                    gpu_processes[gpu_id].append(pid)
-    return gpu_processes
-
-def get_available_policies():
-    return ['allox',
-            'fifo', 'fifo_perf', 'fifo_packed',
-            'finish_time_fairness',
-            'finish_time_fairness_perf',
-            'finish_time_fairness_packed',
-            'gandiva',
-            'isolated',
-            'max_min_fairness',
-            'max_min_fairness_perf',
-            'max_min_fairness_packed',
-            'max_min_fairness_water_filling',
-            'max_min_fairness_water_filling_perf',
-            'max_min_fairness_water_filling_packed',
-            'max_sum_throughput_perf',
-            'max_sum_throughput_normalized_by_cost_perf',
-            'max_sum_throughput_normalized_by_cost_perf_SLOs',
-            'max_sum_throughput_normalized_by_cost_packed_SLOs',
-            'min_total_duration',
-            'min_total_duration_perf',
-            'min_total_duration_packed',
-            ]
 
 def read_per_instance_type_spot_prices_aws(directory):
     # TODO: Make this flexible.
@@ -489,16 +425,6 @@ def get_latest_price_for_worker_type(worker_type, current_time,
 
     return min(prices)
 
-def parse_job_type_str(job_type):
-    if job_type is None:
-        return None
-    match = re.match('(.*) \(scale factor (\d+)\)', job_type)
-    if match is None:
-        return (job_type, 1)
-    model = match.group(1)
-    scale_factor = int(match.group(2))
-    return (model, scale_factor)
-
 def parse_job_type_tuple(job_type):
     match = re.match('\(\'(.*)\', (\d+)\)', job_type)
     if match is None:
@@ -506,17 +432,6 @@ def parse_job_type_tuple(job_type):
     model = match.group(1)
     scale_factor = int(match.group(2))
     return (model, scale_factor)
-
-def stringify_throughputs(throughputs):
-    stringified_throughputs = {}
-    for worker_type in throughputs:
-        stringified_throughputs[worker_type] = {}
-        for key in throughputs[worker_type]:
-            stringified_throughputs[worker_type][str(key)] = {}
-            for other_key in throughputs[worker_type][key]:
-                stringified_throughputs[worker_type][str(key)][str(other_key)] = \
-                    throughputs[worker_type][key][other_key]
-    return stringified_throughputs
 
 def read_all_throughputs_json_v2(file_name):
     with open(file_name, 'r') as f:
@@ -537,11 +452,6 @@ def read_all_throughputs_json_v2(file_name):
                 parsed_throughputs[worker_type][key][other_key] =\
                     raw_throughputs[worker_type][job_type][other_job_type]
     return parsed_throughputs
-
-def read_all_throughputs_json(throughputs_file):
-    with open(throughputs_file, 'r') as f:
-        throughputs = json.load(f)
-    return throughputs
 
 def get_policy(policy_name, solver=None, seed=None,
                priority_reweighting_policies=None, solver_kwargs=None):
@@ -642,20 +552,3 @@ def parse_trace(trace_file):
             arrival_times.append(float(arrival_time))
     return jobs, arrival_times
 
-def print_allocation(allocation, current_time=None):
-    """Prints the allocation.
-
-       Debug method used for printing the allocation of each job on each
-       worker type.
-    """
-    print('=' * 80)
-    if current_time is not None:
-        print('Allocation\t(Current_time: %f)' % (current_time))
-        print('-' * 80)
-    for job_id in sorted(list(allocation.keys())):
-        allocation_str = 'Job ID %s:' % (job_id)
-        for worker_type in sorted(list(allocation[job_id].keys())):
-            value = allocation[job_id][worker_type]
-            allocation_str += ' [%s: %f]' % (worker_type, value)
-        print(allocation_str)
-    print('=' * 80)

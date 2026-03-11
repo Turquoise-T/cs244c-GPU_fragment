@@ -1,0 +1,31 @@
+[
+  {
+    "name": "strided_50jph_s0",
+    "policy": "max_min_fairness",
+    "enable_fgd": false,
+    "fgd_placement_mode": "fgd",
+    "seed": 0,
+    "lam": 72.0,
+    "avg_jct": 68420.43793163585,
+    "wall_time_seconds": 414.3715271949768,
+    "num_completed_jobs": 9845,
+    "num_failed_jobs": 0,
+    "fragmentation_samples": 0,
+    "saturated": true,
+    "mode": "steady_state",
+    "avg_utilization": 35.934865356087855,
+    "avg_frag_rate": 2.3582013248043663,
+    "avg_frag_total": 1.4342412511082905,
+    "avg_unalloc_pct": 64.06513464391215,
+    "avg_occupied_nodes": 424.94678492239467,
+    "std_utilization": 11.0105309208193,
+    "std_frag_rate": 1.353239392445427,
+    "std_frag_total": 0.6217387220725149,
+    "std_unalloc_pct": 11.0105309208193,
+    "std_occupied_nodes": 181.94254059248053,
+    "num_metric_samples": 902,
+    "avg_dyn_frag_penalty_weight": 0.0,
+    "std_dyn_frag_penalty_weight": 0.0,
+    "generate_multi_gpu_jobs": true
+  }
+]

@@ -1,0 +1,73 @@
+{
+  "description": "GavelFGD-Combined: merge FGD paper scoring improvements (paper_scoring + 85% threshold + buddy_tiebreak) with POA LP bonus into a single combined method. Compare: Gavel baseline vs GavelFGD (base) vs GavelFGD-Combined (all improvements). 7 load levels x 3 configs x 2 seeds = 42 experiments.",
+  "common": {
+    "cluster_spec": {
+      "G2": 4392,
+      "T4": 840,
+      "G3": 312,
+      "P100": 264,
+      "V100M32": 200,
+      "V100M16": 192
+    },
+    "num_gpus_per_server": 8,
+    "workload_mode": "alibaba",
+    "fgd_workload_mode": "alibaba",
+    "generate_multi_gpu_jobs": true,
+    "enable_gpu_sharing": true,
+    "mode": "steady_state",
+    "window_start": 4000,
+    "window_end": 5000,
+    "max_jct": 360000,
+    "policy": "max_min_fairness_perf"
+  },
+  "experiments": [
+    {"name": "gavel_60jph_s0",            "enable_fgd": false, "lam": 60.0,   "seed": 0},
+    {"name": "gavel_60jph_s1",            "enable_fgd": false, "lam": 60.0,   "seed": 1},
+    {"name": "gavelfgd_60jph_s0",         "enable_fgd": true,  "lam": 60.0,   "seed": 0},
+    {"name": "gavelfgd_60jph_s1",         "enable_fgd": true,  "lam": 60.0,   "seed": 1},
+    {"name": "gavelfgd_combined_60jph_s0","enable_fgd": true,  "lam": 60.0,   "seed": 0, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+    {"name": "gavelfgd_combined_60jph_s1","enable_fgd": true,  "lam": 60.0,   "seed": 1, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+
+    {"name": "gavel_110jph_s0",            "enable_fgd": false, "lam": 32.73,  "seed": 0},
+    {"name": "gavel_110jph_s1",            "enable_fgd": false, "lam": 32.73,  "seed": 1},
+    {"name": "gavelfgd_110jph_s0",         "enable_fgd": true,  "lam": 32.73,  "seed": 0},
+    {"name": "gavelfgd_110jph_s1",         "enable_fgd": true,  "lam": 32.73,  "seed": 1},
+    {"name": "gavelfgd_combined_110jph_s0","enable_fgd": true,  "lam": 32.73,  "seed": 0, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+    {"name": "gavelfgd_combined_110jph_s1","enable_fgd": true,  "lam": 32.73,  "seed": 1, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+
+    {"name": "gavel_160jph_s0",            "enable_fgd": false, "lam": 22.5,   "seed": 0},
+    {"name": "gavel_160jph_s1",            "enable_fgd": false, "lam": 22.5,   "seed": 1},
+    {"name": "gavelfgd_160jph_s0",         "enable_fgd": true,  "lam": 22.5,   "seed": 0},
+    {"name": "gavelfgd_160jph_s1",         "enable_fgd": true,  "lam": 22.5,   "seed": 1},
+    {"name": "gavelfgd_combined_160jph_s0","enable_fgd": true,  "lam": 22.5,   "seed": 0, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+    {"name": "gavelfgd_combined_160jph_s1","enable_fgd": true,  "lam": 22.5,   "seed": 1, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+
+    {"name": "gavel_210jph_s0",            "enable_fgd": false, "lam": 17.14,  "seed": 0},
+    {"name": "gavel_210jph_s1",            "enable_fgd": false, "lam": 17.14,  "seed": 1},
+    {"name": "gavelfgd_210jph_s0",         "enable_fgd": true,  "lam": 17.14,  "seed": 0},
+    {"name": "gavelfgd_210jph_s1",         "enable_fgd": true,  "lam": 17.14,  "seed": 1},
+    {"name": "gavelfgd_combined_210jph_s0","enable_fgd": true,  "lam": 17.14,  "seed": 0, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+    {"name": "gavelfgd_combined_210jph_s1","enable_fgd": true,  "lam": 17.14,  "seed": 1, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+
+    {"name": "gavel_260jph_s0",            "enable_fgd": false, "lam": 13.85,  "seed": 0},
+    {"name": "gavel_260jph_s1",            "enable_fgd": false, "lam": 13.85,  "seed": 1},
+    {"name": "gavelfgd_260jph_s0",         "enable_fgd": true,  "lam": 13.85,  "seed": 0},
+    {"name": "gavelfgd_260jph_s1",         "enable_fgd": true,  "lam": 13.85,  "seed": 1},
+    {"name": "gavelfgd_combined_260jph_s0","enable_fgd": true,  "lam": 13.85,  "seed": 0, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+    {"name": "gavelfgd_combined_260jph_s1","enable_fgd": true,  "lam": 13.85,  "seed": 1, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+
+    {"name": "gavel_310jph_s0",            "enable_fgd": false, "lam": 11.61,  "seed": 0},
+    {"name": "gavel_310jph_s1",            "enable_fgd": false, "lam": 11.61,  "seed": 1},
+    {"name": "gavelfgd_310jph_s0",         "enable_fgd": true,  "lam": 11.61,  "seed": 0},
+    {"name": "gavelfgd_310jph_s1",         "enable_fgd": true,  "lam": 11.61,  "seed": 1},
+    {"name": "gavelfgd_combined_310jph_s0","enable_fgd": true,  "lam": 11.61,  "seed": 0, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+    {"name": "gavelfgd_combined_310jph_s1","enable_fgd": true,  "lam": 11.61,  "seed": 1, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+
+    {"name": "gavel_360jph_s0",            "enable_fgd": false, "lam": 10.0,   "seed": 0},
+    {"name": "gavel_360jph_s1",            "enable_fgd": false, "lam": 10.0,   "seed": 1},
+    {"name": "gavelfgd_360jph_s0",         "enable_fgd": true,  "lam": 10.0,   "seed": 0},
+    {"name": "gavelfgd_360jph_s1",         "enable_fgd": true,  "lam": 10.0,   "seed": 1},
+    {"name": "gavelfgd_combined_360jph_s0","enable_fgd": true,  "lam": 10.0,   "seed": 0, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10},
+    {"name": "gavelfgd_combined_360jph_s1","enable_fgd": true,  "lam": 10.0,   "seed": 1, "fgd_use_paper_scoring": true, "fgd_popularity_threshold": 95, "fgd_use_buddy_tiebreak": true, "fgd_poa_weight": 0.10}
+  ]
+}

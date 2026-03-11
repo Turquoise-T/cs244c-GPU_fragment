@@ -73,6 +73,12 @@ class Scheduler:
                  fgd_workload_mode='philly',
                  enable_migration_penalty=False,
                  enable_gpu_sharing=False,
+                 fgd_frag_penalty_weight=0.0,
+                 fgd_poa_weight=0.0,
+                 fgd_use_paper_scoring=False,
+                 fgd_popularity_threshold=None,
+                 fgd_use_buddy_tiebreak=True,
+                 fgd_use_cluster_fragmentation=False,
                  log_level=None):
 
         # Flag to control whether scheduler runs in simulation mode.
@@ -86,12 +92,29 @@ class Scheduler:
         self._fgd_placement = None
         self._fgd_fragmentation_history = []
         self._round_metrics_history = []
+
+        # Fragmentation-aware allocation: track per-GPU-type fragmentation EMA
+        # and penalize allocation to highly fragmented GPU types in the LP.
+        self._fragmentation_ema = {}  # {worker_type: float}
+        self._fragmentation_ema_alpha = 0.3  # EMA smoothing coefficient
+        self._fgd_frag_penalty_weight = fgd_frag_penalty_weight
+
+        # Placement-Opportunity-Aware (POA) allocation: per-type fit scores
+        # {worker_type: {demand: fraction_of_nodes_that_fit}}
+        # Updated each round before LP; guides LP toward GPU types where jobs
+        # can actually be packed, rather than away from fragmented types.
+        self._poa_fit_scores = {}
+        self._fgd_poa_weight = fgd_poa_weight
         if enable_fgd:
             from fgd_placement import GavelFGDPlacement, build_fgd_workload
             self._fgd_placement = GavelFGDPlacement(
                 workload=build_fgd_workload(fgd_workload_mode),
                 placement_mode=fgd_placement_mode,
-                enable_gpu_sharing=enable_gpu_sharing)
+                enable_gpu_sharing=enable_gpu_sharing,
+                use_paper_scoring=fgd_use_paper_scoring,
+                popularity_threshold=fgd_popularity_threshold,
+                use_buddy_tiebreak=fgd_use_buddy_tiebreak,
+                use_cluster_fragmentation=fgd_use_cluster_fragmentation)
 
         # For metrics recording: always have a workload + frag calculator,
         # even when FGD placement is disabled (strided mode).
@@ -738,6 +761,25 @@ class Scheduler:
             return None
         return sum(utilizations) / len(utilizations)
 
+    def _update_fragmentation_ema(self, worker_type, frag):
+        """Update the exponential moving average of fragmentation for a GPU type.
+
+        This EMA is used to inform the LP allocation: GPU types with high
+        fragmentation will be penalized to reduce placement failures.
+
+        Args:
+            worker_type: The GPU type (e.g., 'v100', 'p100').
+            frag: Current fragmentation value from FGD (0 to N).
+        """
+        alpha = self._fragmentation_ema_alpha
+        if worker_type not in self._fragmentation_ema:
+            self._fragmentation_ema[worker_type] = frag
+        else:
+            old_ema = self._fragmentation_ema[worker_type]
+            self._fragmentation_ema[worker_type] = (
+                alpha * frag + (1 - alpha) * old_ema
+            )
+
     def _record_round_metrics(self, cluster_spec, num_gpus_per_server):
         """Record fragmentation and utilization metrics for the current round.
 
@@ -1306,6 +1348,28 @@ class Scheduler:
                                 for prev_worker_id in prev_worker_ids:
                                     assigned_worker_ids.add(prev_worker_id)
 
+            # POA fit-score snapshot: after lease extensions (Phase 1) but
+            # before new placements (Phase 2), compute per-demand fit fractions
+            # so the next LP round knows how well each job size fits here.
+            if self._fgd_poa_weight > 0:
+                node_free = []
+                for server_wids in per_worker_state['worker_ids']:
+                    if self._enable_gpu_sharing:
+                        free = sum(
+                            max(0.0, 1.0 - assigned_worker_ids.get(wid, 0.0))
+                            for wid in server_wids)
+                    else:
+                        free = sum(
+                            1 for wid in server_wids
+                            if wid not in assigned_worker_ids)
+                    node_free.append(free)
+                n_nodes = max(1, len(node_free))
+                demands = set(sf for _, sf in scheduled_jobs[worker_type])
+                self._poa_fit_scores[worker_type] = {
+                    d: sum(1 for f in node_free if f >= d) / n_nodes
+                    for d in demands
+                }
+
             # Phase 2: Place remaining jobs (new or preempted).
             if self._enable_fgd:
                 # FGD placement: use fragmentation-aware assignment.
@@ -1325,6 +1389,9 @@ class Scheduler:
                     )
                     self._fgd_fragmentation_history.append(
                         (self.get_current_timestamp(), worker_type, frag))
+                    # Update fragmentation EMA for this GPU type to inform
+                    # future LP allocation decisions.
+                    self._update_fragmentation_ema(worker_type, frag)
                 # Update running job state for FGD-placed jobs
                 for (job_id, scale_factor) in jobs_needing_placement:
                     if job_id in new_worker_assignments:
@@ -2867,6 +2934,22 @@ class Scheduler:
                         break
             self._policy.set_migration_context(
                 migration_times, self._time_per_iteration)
+
+        # Provide fragmentation context to the policy for fragmentation-aware
+        # allocation. Only active when fgd_frag_penalty_weight > 0.
+        if (self._fgd_frag_penalty_weight > 0
+                and self._fragmentation_ema
+                and hasattr(self._policy, 'set_fragmentation_context')):
+            self._policy.set_fragmentation_context(
+                self._fragmentation_ema, self._fgd_frag_penalty_weight)
+
+        # Provide placement-opportunity context for POA allocation.
+        # Only active when fgd_poa_weight > 0 and fit scores are available.
+        if (self._fgd_poa_weight > 0
+                and self._poa_fit_scores
+                and hasattr(self._policy, 'set_placement_opportunity_context')):
+            self._policy.set_placement_opportunity_context(
+                self._poa_fit_scores, self._fgd_poa_weight)
 
         # Compute the allocation.
         if self._policy.name == "AlloX_Perf":

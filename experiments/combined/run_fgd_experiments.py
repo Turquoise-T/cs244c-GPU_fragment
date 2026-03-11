@@ -89,6 +89,8 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
     solver_kwargs = config.get('solver_kwargs', {})
     enable_gpu_sharing = config.get('enable_gpu_sharing', False)
     completion_rate_threshold = config.get('completion_rate_threshold', 0.1)
+    fgd_frag_penalty_weight = config.get('fgd_frag_penalty_weight', 0.0)
+    fgd_poa_weight = config.get('fgd_poa_weight', 0.0)
 
     print(f"\n{'='*70}")
     print(f"Experiment: {name}")
@@ -106,6 +108,10 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
         print(f"  Mode: fixed_jobs, Jobs: {num_total_jobs}")
     print(f"  Lambda: {lam}, Seed: {seed}, Round: {time_per_iteration}s")
     print(f"  Solver: {solver}, kwargs: {solver_kwargs}")
+    if fgd_frag_penalty_weight > 0:
+        print(f"  Frag penalty weight: {fgd_frag_penalty_weight}")
+    if fgd_poa_weight > 0:
+        print(f"  POA bonus weight: {fgd_poa_weight}")
     if enable_gpu_sharing:
         print(f"  GPU sharing: ENABLED")
     print(f"{'='*70}")
@@ -134,6 +140,8 @@ def run_experiment(exp_config, common=None, log_dir=None, max_wall_time=None,
         fgd_workload_mode=fgd_workload_mode,
         enable_migration_penalty=enable_migration_penalty,
         enable_gpu_sharing=enable_gpu_sharing,
+        fgd_frag_penalty_weight=fgd_frag_penalty_weight,
+        fgd_poa_weight=fgd_poa_weight,
         log_level=log_level,
     )
 

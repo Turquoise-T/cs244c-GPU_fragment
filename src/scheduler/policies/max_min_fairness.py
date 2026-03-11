@@ -4,33 +4,8 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import cvxpy as cp
 import numpy as np
 
-from policy import Policy, PolicyWithPacking
+from policy import Policy, PolicyWithPacking, solve_with_fallback
 from proportional import ProportionalPolicy
-
-
-def _solve_with_fallback(cvxprob, primary_solver, fallback_solver="SCS",
-                         warm_start=False, solver_kwargs=None, **kwargs):
-    """Solve CVXPY problem with automatic fallback on solver failure.
-
-    Attempts to solve with the primary solver (typically ECOS for speed).
-    If the primary solver fails with a SolverError, automatically retries
-    with the fallback solver (SCS, which is slower but more numerically stable).
-
-    When warm_start=True, the solver is seeded with the current .value of
-    the cp.Variable (set by the caller before invoking this function).
-    """
-    if solver_kwargs is None:
-        solver_kwargs = {}
-    merged = {**kwargs, **solver_kwargs}
-    try:
-        return cvxprob.solve(solver=primary_solver, warm_start=warm_start,
-                             **merged)
-    except cp.error.SolverError as e:
-        print(f"WARNING: Solver '{primary_solver}' failed, retrying with '{fallback_solver}'")
-        # Use SCS-specific kwargs when falling back to SCS
-        fallback_kwargs = {'acceleration_lookback': 0} if fallback_solver == "SCS" else {}
-        return cvxprob.solve(solver=fallback_solver, warm_start=warm_start,
-                             **fallback_kwargs)
 
 # PAPER[§4.1] "MaximizeX min_m (1/w_m) * throughput(m,X) / throughput(m,X^equal)"
 # PAPER[§4.1] "Max-min fairness: maximize minimum normalized throughput across jobs"
@@ -45,6 +20,14 @@ class MaxMinFairnessPolicy(Policy):
     def set_migration_context(self, migration_times, time_per_iteration):
         self._max_min_fairness_perf_policy.set_migration_context(
             migration_times, time_per_iteration)
+
+    def set_fragmentation_context(self, frag_ema, penalty_weight):
+        self._max_min_fairness_perf_policy.set_fragmentation_context(
+            frag_ema, penalty_weight)
+
+    def set_placement_opportunity_context(self, poa_scores, poa_weight):
+        self._max_min_fairness_perf_policy.set_placement_opportunity_context(
+            poa_scores, poa_weight)
 
     def get_allocation(self, unflattened_throughputs, scale_factors,
                        priority_weights, cluster_spec, gpu_demands=None):
@@ -78,6 +61,38 @@ class MaxMinFairnessPolicyWithPerf(Policy):
         # Only used when migration penalty is active (penalty stabilizes
         # allocations, giving high cache hit rate).
         self._dpp_cache = None  # dict with shape, x, t, params, problem
+        # Fragmentation-aware allocation: penalize allocation to GPU types
+        # with high fragmentation EMA.
+        self._frag_ema = None  # {worker_type: float}
+        self._frag_penalty_weight = 0.0
+
+        # Placement-Opportunity-Aware (POA) allocation: bonus for allocating
+        # to GPU types where jobs can actually be packed onto single nodes.
+        # {worker_type: {demand: fit_fraction}}
+        self._poa_scores = None
+        self._poa_weight = 0.0
+
+    def set_fragmentation_context(self, frag_ema, penalty_weight):
+        """Set fragmentation context for fragmentation-aware allocation.
+
+        Args:
+            frag_ema: Dict mapping worker_type to fragmentation EMA value.
+            penalty_weight: Weight (lambda) for fragmentation penalty in LP.
+        """
+        self._frag_ema = frag_ema
+        self._frag_penalty_weight = penalty_weight
+
+    def set_placement_opportunity_context(self, poa_scores, poa_weight):
+        """Set placement-opportunity context for POA allocation.
+
+        Args:
+            poa_scores: Dict {worker_type: {demand: fit_fraction}} where
+                fit_fraction = fraction of nodes that can fit a job of
+                'demand' GPUs. Computed after lease extensions each round.
+            poa_weight: Bonus weight (mu) for the POA term in LP objective.
+        """
+        self._poa_scores = poa_scores
+        self._poa_weight = poa_weight
 
     def _build_dpp_problem(self, m, n):
         """Build a DPP-parametrized LP for shape (m, n).
@@ -194,6 +209,20 @@ class MaxMinFairnessPolicyWithPerf(Policy):
         # 50000 comfortably covers Alibaba-scale (3500*6 = 21000).
         _DPP_MAX_ELEMENTS = 50000
 
+        # Build POA bonus matrix [m x n] when POA context is set.
+        # poa_matrix[j, t] = fit_fraction for job j's demand on type t.
+        # Fit fraction = fraction of nodes with >= demand free GPU slots.
+        # Natural scaling: at high utilization, fractions -> 0 everywhere,
+        # so the bonus vanishes and LP reverts to pure Gavel fairness.
+        poa_matrix = None
+        if self._poa_scores is not None and self._poa_weight > 0:
+            poa_matrix = np.zeros((m, n))
+            for i, job_id in enumerate(job_ids):
+                demand = int(scale_factors.get(job_id, 1))
+                for j, wt in enumerate(worker_types):
+                    poa_matrix[i, j] = self._poa_scores.get(
+                        wt, {}).get(demand, 0.0)
+
         if use_penalty and m * n <= _DPP_MAX_ELEMENTS:
             solved_x = self._solve_dpp(
                 m, n, job_ids, worker_types, throughputs,
@@ -204,7 +233,8 @@ class MaxMinFairnessPolicyWithPerf(Policy):
                 coefficients, capacity_array, x_prev)
         else:
             solved_x = self._solve_standard(
-                m, n, throughputs, coefficients, capacity_array, x_prev)
+                m, n, throughputs, coefficients, capacity_array, x_prev,
+                worker_types, poa_matrix=poa_matrix)
 
         # Always save allocation for warm-start seeding and switching penalty
         self._prev_allocation = {}
@@ -216,11 +246,47 @@ class MaxMinFairnessPolicyWithPerf(Policy):
         return super().unflatten(solved_x, index)
 
     def _solve_standard(self, m, n, throughputs, coefficients,
-                        scale_factors_array, x_prev):
-        """Original non-cached solve path (no migration penalty)."""
+                        scale_factors_array, x_prev, worker_types=None,
+                        poa_matrix=None):
+        """Original non-cached solve path (no migration penalty).
+
+        Supports two optional objective modifiers (independently composable):
+        - Fragmentation penalty (via set_fragmentation_context): subtracts a
+          per-type EMA-based term to steer away from fragmented GPU types.
+        - POA bonus (via set_placement_opportunity_context): adds a per-job
+          per-type fit-fraction bonus to steer toward types where jobs pack.
+          Vanishes naturally at high utilization (all fit fractions -> 0),
+          so it does not degrade LP quality under saturation.
+        """
         x = cp.Variable((m, n))
         per_job_throughput = cp.sum(cp.multiply(coefficients, x), axis=1)
-        objective = cp.Maximize(cp.min(per_job_throughput))
+
+        # Start with the base objective value expression.
+        obj_expr = cp.min(per_job_throughput)
+
+        # Optional: fragmentation penalty term.
+        # Normalisation: frag_ema stores total-cluster fragmentation
+        # (O(10-100 GPUs)); dividing by num_workers[t] gives a per-GPU rate
+        # (≈ 0.001-0.1) comparable to the normalised throughput objective.
+        if (self._frag_ema is not None
+                and self._frag_penalty_weight > 0
+                and worker_types is not None):
+            frag_weights = np.array([
+                self._frag_ema.get(wt, 0.0) / max(1.0, self._num_workers[j])
+                for j, wt in enumerate(worker_types)
+            ])
+            frag_penalty = cp.sum(x @ frag_weights)
+            obj_expr = obj_expr - self._frag_penalty_weight * frag_penalty
+
+        # Optional: POA bonus term.
+        # poa_matrix[j, t] = fraction of nodes of type t with >= demand_j
+        # free GPU slots. Values in [0, 1]; bonus weight mu keeps the term
+        # on the same scale as the min-throughput objective.
+        if poa_matrix is not None and self._poa_weight > 0:
+            poa_bonus = cp.sum(cp.multiply(poa_matrix, x))
+            obj_expr = obj_expr + self._poa_weight * poa_bonus
+
+        objective = cp.Maximize(obj_expr)
 
         constraints = self.get_base_constraints(x, scale_factors_array)
         for i in range(m):
@@ -235,7 +301,7 @@ class MaxMinFairnessPolicyWithPerf(Policy):
             x.value = x_prev
             use_warm_start = True
 
-        _solve_with_fallback(cvxprob, self._solver, warm_start=use_warm_start,
+        solve_with_fallback(cvxprob, self._solver, warm_start=use_warm_start,
                              solver_kwargs=self._solver_kwargs)
 
         if cvxprob.status != "optimal":
@@ -284,7 +350,7 @@ class MaxMinFairnessPolicyWithPerf(Policy):
             x.value = x_prev
             use_warm_start = True
 
-        _solve_with_fallback(cvxprob, self._solver, warm_start=use_warm_start,
+        solve_with_fallback(cvxprob, self._solver, warm_start=use_warm_start,
                              solver_kwargs=self._solver_kwargs)
 
         if cvxprob.status != "optimal":
@@ -325,7 +391,7 @@ class MaxMinFairnessPolicyWithPerf(Policy):
             x.value = x_prev
             use_warm_start = True
 
-        _solve_with_fallback(cache['problem'], self._solver,
+        solve_with_fallback(cache['problem'], self._solver,
                              warm_start=use_warm_start,
                              solver_kwargs=self._solver_kwargs)
 
@@ -505,7 +571,7 @@ class MaxMinFairnessPolicyWithPacking(PolicyWithPacking):
                                       axis=1)))
 
         cvxprob = cp.Problem(objective, constraints)
-        result = _solve_with_fallback(cvxprob, self._solver)
+        result = solve_with_fallback(cvxprob, self._solver)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')
@@ -605,7 +671,7 @@ class MaxMinFairnessPolicyWithPacking(PolicyWithPacking):
         else:
             kwargs = {}
 
-        result = _solve_with_fallback(cvxprob, self._solver, **kwargs)
+        result = solve_with_fallback(cvxprob, self._solver, **kwargs)
 
         if cvxprob.status != "optimal":
             print('WARNING: Allocation returned by policy not optimal!')

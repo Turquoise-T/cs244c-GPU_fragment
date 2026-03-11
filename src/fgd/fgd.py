@@ -1,7 +1,6 @@
-import numpy as np
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
-from collections import defaultdict
+import math
 
 @dataclass
 class Task:
@@ -70,6 +69,14 @@ class Node:
         
         return True
     
+    def num_allocated_gpus(self) -> int:
+        """Return the number of fully or partially allocated GPUs."""
+        return sum(1 for gpu in self.gpus if gpu < 1.0)
+
+    def num_free_gpus(self) -> int:
+        """Return the number of completely free GPUs."""
+        return sum(1 for gpu in self.gpus if gpu == 1.0)
+
     def find_suitable_gpus(self, task: Task) -> Optional[List[int]]:
         # Find which GPU(s) can accommodate the task and return list of GPU indices or None if not possible.
         if task.gpu_request == 0:
@@ -98,22 +105,66 @@ class Node:
 
 class Workload:
     # Represent the target workload with task popularity distribution
-    
+
     def __init__(self):
         self.tasks: Dict[str, Task] = {}
         self.popularity: Dict[str, float] = {}  # Normalized popularity (sums to 1)
-    
+
     def add_task_type(self, task: Task, popularity: float):
         """Add a task type with its popularity"""
         self.tasks[task.id] = task
         self.popularity[task.id] = popularity
-    
+
     def normalize_popularity(self):
         """Ensure popularity sums to 1"""
         total = sum(self.popularity.values())
         if total > 0:
             for task_id in self.popularity:
                 self.popularity[task_id] /= total
+
+    def filter_by_popularity_threshold(self, threshold_pct: float = 85.0) -> 'Workload':
+        """Apply paper's GetTypicalPods filter.
+
+        Keep only the most popular task types that together cover threshold_pct
+        of all tasks (sorted by popularity descending), then renormalize.
+
+        Paper default: 85% (DefaultTypicalPodPopularityThreshold).
+
+        Args:
+            threshold_pct: Percentage threshold (0-100). Default 85.
+
+        Returns:
+            New Workload with filtered and renormalized task types.
+        """
+        if not self.tasks:
+            return Workload()
+
+        # Sort tasks by popularity descending
+        sorted_tasks = sorted(
+            self.popularity.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        # Accumulate until we reach threshold
+        target = threshold_pct / 100.0
+        cumulative = 0.0
+        selected_ids = []
+
+        for task_id, pop in sorted_tasks:
+            selected_ids.append(task_id)
+            cumulative += pop
+            if cumulative >= target:
+                break
+
+        # Create filtered workload and renormalize
+        filtered = Workload()
+        for task_id in selected_ids:
+            filtered.tasks[task_id] = self.tasks[task_id]
+            filtered.popularity[task_id] = self.popularity[task_id]
+
+        filtered.normalize_popularity()
+        return filtered
 
 
 class FragmentationCalculator:
@@ -176,10 +227,40 @@ class FragmentationCalculator:
 
 class FGDScheduler:
     # Fragmentation Gradient Descent Scheduler
-    
-    def __init__(self, nodes: List[Node], workload: Workload):
+
+    def __init__(self, nodes: List[Node], workload: Workload,
+                 use_paper_scoring: bool = False,
+                 popularity_threshold: Optional[float] = None,
+                 use_buddy_tiebreak: bool = True,
+                 use_cluster_fragmentation: bool = False):
+        """Initialize FGD Scheduler.
+
+        Args:
+            nodes: List of cluster nodes.
+            workload: Target workload distribution for fragmentation scoring.
+            use_paper_scoring: If True, use paper's sigmoid scoring with integer
+                quantization: score = int(100 / (1 + exp(delta))). Creates ties
+                that can be broken by buddy score. Default False uses raw delta.
+            popularity_threshold: If set, filter workload to only top task types
+                covering this percentage (paper default: 60%). None = use all.
+            use_buddy_tiebreak: If True, use buddy-aware tie-breaking when scores
+                tie (prefer leaving 2^n free GPUs). Default True.
+            use_cluster_fragmentation: If True, compute fragmentation delta across
+                the entire cluster (sum of all nodes). If False (default), compute
+                delta only for the candidate node (per-node). Per-cluster considers
+                global impact but is more expensive to compute.
+        """
         self.nodes = nodes
-        self.workload = workload
+        self.use_paper_scoring = use_paper_scoring
+        self.use_buddy_tiebreak = use_buddy_tiebreak
+        self.use_cluster_fragmentation = use_cluster_fragmentation
+
+        # Apply popularity threshold filter if specified
+        if popularity_threshold is not None:
+            self.workload = workload.filter_by_popularity_threshold(popularity_threshold)
+        else:
+            self.workload = workload
+
         self.task_queue = []
         self.scheduled_tasks: Dict[str, Tuple[str, List[int]]] = {}  # task_id -> (node_id, gpu_indices)
     
@@ -198,7 +279,9 @@ class FGDScheduler:
         best_gpu_indices = None
         min_delta = float('inf')
         
-        # Track candidate nodes and their scores
+        # Track candidate nodes and their scores.
+        # Each candidate stores:
+        #   (node, gpu_indices, delta_frag, new_frag_after_assignment)
         candidates = []
         
         for node in self.nodes:
@@ -206,56 +289,156 @@ class FGDScheduler:
             if not node.can_fit_task(task):
                 continue
             
-            # Find suitable GPU(s) for this task
+            # Find suitable GPU(s) for this task.
             gpu_indices = node.find_suitable_gpus(task)
             if gpu_indices is None:
                 continue
             
-            # If partial GPU task, try each suitable GPU
+            # If partial GPU task, try each suitable GPU.
             if 0 < task.gpu_request < 1:
                 for gpu_idx in gpu_indices:
-                    delta = self._compute_fragmentation_delta(
+                    delta, new_frag = self._compute_fragmentation_delta(
                         node, task, [gpu_idx]
                     )
-                    candidates.append((node, [gpu_idx], delta))
+                    candidates.append((node, [gpu_idx], delta, new_frag))
             else:
-                # Full GPU(s) task
-                delta = self._compute_fragmentation_delta(
+                # Full GPU(s) task.
+                delta, new_frag = self._compute_fragmentation_delta(
                     node, task, gpu_indices
                 )
-                candidates.append((node, gpu_indices, delta))
+                candidates.append((node, gpu_indices, delta, new_frag))
         
-        # Select node with minimum fragmentation increment
+        # Select best node based on scoring mode
         if candidates:
-            best_node, best_gpu_indices, min_delta = min(
-                candidates, key=lambda x: x[2]
-            )
-        
+            if self.use_paper_scoring:
+                # Paper's approach: sigmoid scoring with integer quantization.
+                # score = int(100 / (1 + exp(delta))) - higher is better.
+                # Integer quantization creates ties, broken by buddy score.
+                def paper_key(x):
+                    delta = x[2]
+                    # Sigmoid score: higher = better, so negate for min()
+                    sigmoid_score = int(100.0 / (1.0 + math.exp(delta)))
+                    neg_score = -sigmoid_score  # negate so min() finds highest
+
+                    if self.use_buddy_tiebreak:
+                        buddy = self._compute_buddy_score(x[0], x[1])
+                    else:
+                        buddy = 0
+
+                    return (neg_score, buddy, x[3], x[0].id)
+
+                best_node, best_gpu_indices, _, _ = min(candidates, key=paper_key)
+            else:
+                # Original approach: raw delta comparison with buddy tie-breaking.
+                # Tie-breaking (Buddy-Aware FGD):
+                #   1) smaller fragmentation delta (primary FGD objective)
+                #   2) smaller buddy score (prefer 2^n free GPUs after allocation)
+                #   3) smaller final fragmentation on the chosen node
+                #   4) lexicographically smaller node id (stable deterministic choice)
+                def original_key(x):
+                    if self.use_buddy_tiebreak:
+                        buddy = self._compute_buddy_score(x[0], x[1])
+                    else:
+                        buddy = 0
+                    return (x[2], buddy, x[3], x[0].id)
+
+                best_node, best_gpu_indices, _, _ = min(candidates, key=original_key)
+
         return best_node, best_gpu_indices
     
-    def _compute_fragmentation_delta(
-        self, 
-        node: Node, 
-        task: Task, 
-        gpu_indices: List[int]
-    ) -> float:
-        # Compute fragmentation increment: Δ = F_n'(M) - F_n(M) where n' is the node state after hypothetically assigning the task.
+    def _compute_buddy_score(self, node: Node, gpu_indices: List[int]) -> int:
+        """Compute buddy alignment score (lower = better).
 
-        # Calculate current fragmentation
-        current_frag = FragmentationCalculator.compute_node_fragmentation_for_workload(
-            node, self.workload
-        )
-        
+        Prefers allocations that leave 2^n GPUs free on the node,
+        making it easier to accommodate future multi-GPU jobs.
+
+        The buddy system in memory allocation keeps blocks in powers of 2,
+        which reduces external fragmentation. We apply the same principle:
+        leaving 0, 1, 2, 4, or 8 free GPUs is preferred over odd numbers
+        like 3, 5, 6, 7.
+
+        Args:
+            node: The node being considered for allocation.
+            gpu_indices: The GPU indices that would be allocated.
+
+        Returns:
+            Integer score representing distance to nearest buddy size.
+            Lower is better (0 = perfect alignment).
+        """
+        gpus_per_node = len(node.gpus)
+        # Count GPUs that will be free after this allocation
+        currently_free = node.num_free_gpus()
+        gpus_to_allocate = len(gpu_indices)
+        free_after = currently_free - gpus_to_allocate
+
+        # Buddy sizes: powers of 2 from 0 to gpus_per_node
+        # For 8-GPU nodes: [0, 1, 2, 4, 8]
+        buddy_sizes = [0]
+        power = 1
+        while power <= gpus_per_node:
+            buddy_sizes.append(power)
+            power *= 2
+
+        # Return minimum distance to any buddy size
+        return min(abs(free_after - b) for b in buddy_sizes)
+
+    def _compute_fragmentation_delta(
+        self,
+        node: Node,
+        task: Task,
+        gpu_indices: List[int]
+    ) -> Tuple[float, float]:
+        """Compute fragmentation increment and new fragmentation for a candidate.
+
+        When use_cluster_fragmentation=False (default, per-node):
+            delta_frag = F_n'(M) - F_n(M)  (only the candidate node)
+            new_frag   = F_n'(M)
+
+        When use_cluster_fragmentation=True (per-cluster):
+            delta_frag = F_N'(M) - F_N(M)  (sum over all nodes)
+            new_frag   = F_N'(M)
+            Note: Only the target node changes; other nodes contribute the same
+            fragmentation before and after, so they cancel out in delta.
+            But new_frag is the total cluster fragmentation.
+
+        Returns:
+            (delta_frag, new_frag)
+        """
         # Create hypothetical node state
         hypothetical_node = self._create_hypothetical_assignment(node, task, gpu_indices)
-        
-        # Calculate fragmentation after assignment
-        new_frag = FragmentationCalculator.compute_node_fragmentation_for_workload(
-            hypothetical_node, self.workload
-        )
-        
-        # Return the delta
-        return new_frag - current_frag
+
+        if self.use_cluster_fragmentation:
+            # Per-cluster: compute fragmentation across all nodes
+            # Current cluster fragmentation
+            current_cluster_frag = sum(
+                FragmentationCalculator.compute_node_fragmentation_for_workload(n, self.workload)
+                for n in self.nodes
+            )
+
+            # New cluster fragmentation: replace target node with hypothetical
+            new_cluster_frag = 0.0
+            for n in self.nodes:
+                if n.id == node.id:
+                    new_cluster_frag += FragmentationCalculator.compute_node_fragmentation_for_workload(
+                        hypothetical_node, self.workload
+                    )
+                else:
+                    new_cluster_frag += FragmentationCalculator.compute_node_fragmentation_for_workload(
+                        n, self.workload
+                    )
+
+            delta = new_cluster_frag - current_cluster_frag
+            return delta, new_cluster_frag
+        else:
+            # Per-node (default): compute fragmentation only for candidate node
+            current_frag = FragmentationCalculator.compute_node_fragmentation_for_workload(
+                node, self.workload
+            )
+            new_frag = FragmentationCalculator.compute_node_fragmentation_for_workload(
+                hypothetical_node, self.workload
+            )
+            delta = new_frag - current_frag
+            return delta, new_frag
     
     def _create_hypothetical_assignment(
         self, 
@@ -307,100 +490,3 @@ class FGDScheduler:
                     node.gpus[idx] = 0.0
         
         self.scheduled_tasks[task.id] = (node.id, gpu_indices)
-    
-    def schedule_all(self, tasks: List[Task]) -> Dict[str, str]:
-        # Schedule all tasks in FCFS order and return mapping of task_id -> status ("scheduled" or "pending")
-        results = {}
-        
-        for task in tasks:
-            node, gpu_indices = self.schedule_task(task)
-            
-            if node:
-                self.allocate_task(task, node, gpu_indices)
-                results[task.id] = "scheduled"
-                print(f"✓ Scheduled {task.id} on {node.id}, GPUs {gpu_indices}")
-            else:
-                results[task.id] = "pending"
-                print(f"✗ Could not schedule {task.id}")
-        
-        return results
-
-
-# Example usage and testing
-def create_example_cluster() -> List[Node]:
-    # Create an example cluster
-    nodes = [
-        Node(id="node-0", total_cpu=16, total_memory=64, 
-             gpus=[1.0, 1.0, 1.0, 1.0], gpu_type="V100"),
-        Node(id="node-1", total_cpu=32, total_memory=128, 
-             gpus=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], gpu_type="A100"),
-        Node(id="node-2", total_cpu=16, total_memory=64, 
-             gpus=[1.0, 1.0, 1.0, 1.0], gpu_type="V100"),
-    ]
-    return nodes
-
-
-def create_example_workload() -> Workload:
-    # Create an example workload with task distribution
-    workload = Workload()
-    
-    # Add different task types with their popularity
-    workload.add_task_type(
-        Task(id="small-gpu", cpu_request=2, gpu_request=0.25),
-        popularity=0.4
-    )
-    workload.add_task_type(
-        Task(id="medium-gpu", cpu_request=4, gpu_request=0.5),
-        popularity=0.3
-    )
-    workload.add_task_type(
-        Task(id="large-gpu", cpu_request=8, gpu_request=1.0),
-        popularity=0.2
-    )
-    workload.add_task_type(
-        Task(id="multi-gpu", cpu_request=16, gpu_request=2.0),
-        popularity=0.1
-    )
-    
-    workload.normalize_popularity()
-    return workload
-
-
-if __name__ == "__main__":
-    # Create cluster and workload
-    nodes = create_example_cluster()
-    workload = create_example_workload()
-    
-    # Create scheduler
-    scheduler = FGDScheduler(nodes, workload)
-    
-    # Create tasks to schedule
-    tasks_to_schedule = [
-        Task(id="task-1", cpu_request=4, gpu_request=0.5),
-        Task(id="task-2", cpu_request=2, gpu_request=0.25),
-        Task(id="task-3", cpu_request=8, gpu_request=1.0),
-        Task(id="task-4", cpu_request=4, gpu_request=0.5),
-        Task(id="task-5", cpu_request=16, gpu_request=2.0),
-        Task(id="task-6", cpu_request=2, gpu_request=0.25),
-    ]
-    
-    # Schedule all tasks
-    print("=" * 60)
-    print("FGD Scheduling Results")
-    print("=" * 60)
-    results = scheduler.schedule_all(tasks_to_schedule)
-    
-    # Print cluster state
-    print("\n" + "=" * 60)
-    print("Final Cluster State")
-    print("=" * 60)
-    for node in nodes:
-        print(f"\n{node.id}:")
-        print(f"  CPU: {node.available_cpu:.1f}/{node.total_cpu}")
-        print(f"  GPUs: {[f'{g:.2f}' for g in node.gpus]}")
-    
-    # Calculate final fragmentation
-    final_frag = FragmentationCalculator.compute_cluster_fragmentation(nodes, workload)
-    print(f"\n" + "=" * 60)
-    print(f"Total Cluster Fragmentation: {final_frag:.2f} GPUs")
-    print("=" * 60)
