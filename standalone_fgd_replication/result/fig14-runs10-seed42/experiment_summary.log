@@ -1,0 +1,20 @@
+Experiment: Sensitivity Analysis (Figures 11-14)
+Result: fig14-runs10-seed42
+Figures: [14]
+Runs: 10
+Seed: 42
+Nodes: 1213
+GPUs: 6212
+
+Figure 14 (6.6): Non-GPU Task Proportion
+======================================================================
+Scheduler         5%     10%     20%     25%
+--------------------------------------------
+Random          9.5%   11.2%   16.7%   19.8%
+BestFit         6.3%    6.5%    7.9%    8.7%
+BestFit-PN      5.9%    5.9%    7.4%    9.8%
+DotProd         7.2%    9.0%   13.3%   16.4%
+Packing         5.8%    5.6%    7.9%   11.8%
+Clustering      5.7%    5.7%    5.7%    6.5%
+FGD             4.9%    4.9%    5.9%    8.0%
+
