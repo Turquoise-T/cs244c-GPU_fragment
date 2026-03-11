@@ -74,6 +74,7 @@ class Scheduler:
                  enable_migration_penalty=False,
                  enable_gpu_sharing=False,
                  fgd_frag_penalty_weight=0.0,
+                 fgd_poa_weight=0.0,
                  fgd_use_paper_scoring=False,
                  fgd_popularity_threshold=None,
                  fgd_use_buddy_tiebreak=True,
@@ -97,10 +98,13 @@ class Scheduler:
         self._fragmentation_ema = {}  # {worker_type: float}
         self._fragmentation_ema_alpha = 0.3  # EMA smoothing coefficient
         self._fgd_frag_penalty_weight = fgd_frag_penalty_weight
-        # Debug/metrics: the most recent dynamic penalty weight applied to the
-        # LP (may differ from _fgd_frag_penalty_weight when dynamic scaling is
-        # enabled).
-        self._last_dynamic_frag_penalty_weight = fgd_frag_penalty_weight
+
+        # Placement-Opportunity-Aware (POA) allocation: per-type fit scores
+        # {worker_type: {demand: fraction_of_nodes_that_fit}}
+        # Updated each round before LP; guides LP toward GPU types where jobs
+        # can actually be packed, rather than away from fragmented types.
+        self._poa_fit_scores = {}
+        self._fgd_poa_weight = fgd_poa_weight
         if enable_fgd:
             from fgd_placement import GavelFGDPlacement, build_fgd_workload
             self._fgd_placement = GavelFGDPlacement(
@@ -776,48 +780,6 @@ class Scheduler:
                 alpha * frag + (1 - alpha) * old_ema
             )
 
-    def _compute_dynamic_frag_penalty_weight(self):
-        """Compute a dynamic fragmentation penalty weight based on recent metrics.
-
-        This scales the base fgd_frag_penalty_weight using the current cluster
-        state so that fragmentation is emphasized more when the cluster is
-        lightly loaded and highly fragmented, and de-emphasized under heavy
-        load.
-
-        Returns:
-            Scalar weight to pass to the policy. When no metrics are available
-            yet, this falls back to the static base weight.
-        """
-        base_weight = self._fgd_frag_penalty_weight
-        if base_weight <= 0:
-            return 0.0
-        if not self._round_metrics_history:
-            return base_weight
-
-        # Use the most recent round metrics as a simple state snapshot.
-        last = self._round_metrics_history[-1]
-        utilization = float(last.get('utilization', 0.0))  # in percent [0, 100]
-        frag_total = float(last.get('frag_total', 0.0))    # in percent [0, 100]
-
-        # Load factor: down-weight fragmentation under very high load so that
-        # JCT/fairness remains the dominant objective.
-        if utilization > 90.0:
-            load_factor = 0.5
-        elif utilization > 70.0:
-            load_factor = 1.0
-        else:
-            load_factor = 2.0
-
-        # Fragmentation factor: up-weight penalty when fragmentation is high.
-        if frag_total < 5.0:
-            frag_factor = 0.5
-        elif frag_total > 15.0:
-            frag_factor = 2.0
-        else:
-            frag_factor = 1.0
-
-        return base_weight * load_factor * frag_factor
-
     def _record_round_metrics(self, cluster_spec, num_gpus_per_server):
         """Record fragmentation and utilization metrics for the current round.
 
@@ -944,7 +906,6 @@ class Scheduler:
             'frag_value': frag_value,
             'frag_rate': frag_rate,
             'frag_total': frag_total,
-            'dyn_frag_penalty_weight': self._last_dynamic_frag_penalty_weight,
             'unalloc_pct': unallocated_gpus / total_gpus * 100.0 if total_gpus > 0 else 0.0,
             'occupied_nodes': occupied_nodes,
             'allocated_gpus': allocated_gpus,
@@ -1386,6 +1347,28 @@ class Scheduler:
                                 new_worker_assignments[job_id] = prev_worker_ids
                                 for prev_worker_id in prev_worker_ids:
                                     assigned_worker_ids.add(prev_worker_id)
+
+            # POA fit-score snapshot: after lease extensions (Phase 1) but
+            # before new placements (Phase 2), compute per-demand fit fractions
+            # so the next LP round knows how well each job size fits here.
+            if self._fgd_poa_weight > 0:
+                node_free = []
+                for server_wids in per_worker_state['worker_ids']:
+                    if self._enable_gpu_sharing:
+                        free = sum(
+                            max(0.0, 1.0 - assigned_worker_ids.get(wid, 0.0))
+                            for wid in server_wids)
+                    else:
+                        free = sum(
+                            1 for wid in server_wids
+                            if wid not in assigned_worker_ids)
+                    node_free.append(free)
+                n_nodes = max(1, len(node_free))
+                demands = set(sf for _, sf in scheduled_jobs[worker_type])
+                self._poa_fit_scores[worker_type] = {
+                    d: sum(1 for f in node_free if f >= d) / n_nodes
+                    for d in demands
+                }
 
             # Phase 2: Place remaining jobs (new or preempted).
             if self._enable_fgd:
@@ -2953,15 +2936,20 @@ class Scheduler:
                 migration_times, self._time_per_iteration)
 
         # Provide fragmentation context to the policy for fragmentation-aware
-        # allocation. Only active when the (possibly dynamic) penalty weight is
-        # positive.
-        if self._fgd_frag_penalty_weight > 0 and self._fragmentation_ema:
-            if hasattr(self._policy, 'set_fragmentation_context'):
-                dynamic_weight = self._compute_dynamic_frag_penalty_weight()
-                if dynamic_weight > 0:
-                    self._last_dynamic_frag_penalty_weight = dynamic_weight
-                    self._policy.set_fragmentation_context(
-                        self._fragmentation_ema, dynamic_weight)
+        # allocation. Only active when fgd_frag_penalty_weight > 0.
+        if (self._fgd_frag_penalty_weight > 0
+                and self._fragmentation_ema
+                and hasattr(self._policy, 'set_fragmentation_context')):
+            self._policy.set_fragmentation_context(
+                self._fragmentation_ema, self._fgd_frag_penalty_weight)
+
+        # Provide placement-opportunity context for POA allocation.
+        # Only active when fgd_poa_weight > 0 and fit scores are available.
+        if (self._fgd_poa_weight > 0
+                and self._poa_fit_scores
+                and hasattr(self._policy, 'set_placement_opportunity_context')):
+            self._policy.set_placement_opportunity_context(
+                self._poa_fit_scores, self._fgd_poa_weight)
 
         # Compute the allocation.
         if self._policy.name == "AlloX_Perf":
